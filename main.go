@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -11,28 +12,24 @@ import (
 	"px.dev/pxapi/types"
 )
 
-// Define PxL script with one table output.
-var (
-
-//	pxl = `
-//
-// import px
-// df = px.DataFrame('http_events')
-// df = df[['upid', 'req_path', 'remote_addr', 'req_method']]
-// df = df.head(10)
-// px.display(df, 'http')
-// `
-)
-
 func main() {
-	setupApiServer("px-api-b65a1334-5d5a-40a3-9e84-b21f46990764", "89a7771a-17f4-4577-9cf9-6ec605c9b16b", "pxtest1.getanton.com:443")
+	pxApiKey := flag.String("api-key", "", "PX API key")
+	clusterId := flag.String("cluster-id", "", "PX cluster ID")
+	cloudAddr := flag.String("cloud-addr", "", "Cloud address")
+	flag.Parse()
+	fmt.Println("PX API key : ", *pxApiKey)
+	fmt.Println("PX cluster ID : ", *clusterId)
+	fmt.Println("Cloud address : ", *cloudAddr)
+
+	fmt.Println("------------------")
+
+	setupApiServer(*pxApiKey, *clusterId, *cloudAddr+":443")
 }
 
 func setupApiServer(apiKey string, clusterId string, cloudAddress string) {
-	var API_KEY = apiKey //"px-api-b65a1334-5d5a-40a3-9e84-b21f46990764"
-	// var API_KEY_ID = "d820bb34-e4a0-4d8d-878c-f8d43984167d"
-	var CLUSTER_ID = clusterId    //"89a7771a-17f4-4577-9cf9-6ec605c9b16b"
-	var CLOUD_ADDR = cloudAddress //"pxtest1.getanton.com:443"
+	var API_KEY = apiKey
+	var CLUSTER_ID = clusterId
+	var CLOUD_ADDR = cloudAddress
 
 	dat, err := os.ReadFile("./getNamespaceHTTPTraffic.pxl")
 	pxl := string(dat)
