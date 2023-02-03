@@ -1,8 +1,8 @@
-package main
+package pxclient
 
 import (
 	"context"
-	"flag"
+	// "flag"
 	"fmt"
 	"io"
 	"os"
@@ -12,40 +12,47 @@ import (
 	"px.dev/pxapi/types"
 )
 
-func main() {
-	pxApiKey := flag.String("api-key", "", "PX API key")
-	clusterId := flag.String("cluster-id", "", "PX cluster ID")
-	cloudAddr := flag.String("cloud-addr", "", "Cloud address")
-	flag.Parse()
-	fmt.Println("PX API key : ", *pxApiKey)
-	fmt.Println("PX cluster ID : ", *clusterId)
-	fmt.Println("Cloud address : ", *cloudAddr)
+// func main() {
+// 	pxApiKey := flag.String("api-key", "", "PX API key")
+// 	clusterId := flag.String("cluster-id", "", "PX cluster ID")
+// 	cloudAddr := flag.String("cloud-addr", "", "Cloud address")
+// 	flag.Parse()
+// 	fmt.Println("PX API key : ", *pxApiKey)
+// 	fmt.Println("PX cluster ID : ", *clusterId)
+// 	fmt.Println("Cloud address : ", *cloudAddr)
 
-	fmt.Println("------------------")
+// 	fmt.Println("------------------")
 
-	setupApiServer(*pxApiKey, *clusterId, *cloudAddr+":443")
-}
+// 	PixieClient(*pxApiKey, *clusterId, *cloudAddr+":443")
+// }
 
-func setupApiServer(apiKey string, clusterId string, cloudAddress string) {
+func PixieClient(apiKey string, clusterId string, cloudAddress string, pxlPath string) error {
 	var API_KEY = apiKey
 	var CLUSTER_ID = clusterId
 	var CLOUD_ADDR = cloudAddress
 
-	dat, err := os.ReadFile("./getNamespaceHTTPTraffic.pxl")
+	fmt.Println("PX API key : ", apiKey)
+	fmt.Println("PX cluster ID : ", clusterId)
+	fmt.Println("Cloud address : ", cloudAddress)
+
+	dat, err := os.ReadFile(pxlPath)
 	pxl := string(dat)
 	// fmt.Print(pxl)
+	if err != nil {
+		return err
+	}
 
 	// Create a Pixie client.
 	ctx := context.Background()
 	client, err := pxapi.NewClient(ctx, pxapi.WithAPIKey(API_KEY), pxapi.WithCloudAddr(CLOUD_ADDR))
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Create a connection to the cluster.
 	vz, err := client.NewVizierClient(ctx, CLUSTER_ID)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Create TableMuxer to accept results table.
@@ -54,7 +61,7 @@ func setupApiServer(apiKey string, clusterId string, cloudAddress string) {
 	// Execute the PxL script.
 	resultSet, err := vz.ExecuteScript(ctx, pxl, tm)
 	if err != nil && err != io.EOF {
-		panic(err)
+		return err
 	}
 
 	// Receive the PxL script results.
@@ -72,6 +79,8 @@ func setupApiServer(apiKey string, clusterId string, cloudAddress string) {
 	stats := resultSet.Stats()
 	fmt.Printf("Execution Time: %v\n", stats.ExecutionTime)
 	fmt.Printf("Bytes received: %v\n", stats.TotalBytes)
+
+	return nil
 }
 
 // Satisfies the TableRecordHandler interface.
