@@ -31,9 +31,9 @@ func PixieClient(apiKey string, clusterId string, cloudAddress string, pxlPath s
 	var CLUSTER_ID = clusterId
 	var CLOUD_ADDR = cloudAddress
 
-	fmt.Println("PX API key : ", apiKey)
-	fmt.Println("PX cluster ID : ", clusterId)
-	fmt.Println("Cloud address : ", cloudAddress)
+	// fmt.Println("PX API key : ", apiKey)
+	// fmt.Println("PX cluster ID : ", clusterId)
+	// fmt.Println("Cloud address : ", cloudAddress)
 
 	dat, err := os.ReadFile(pxlPath)
 	pxl := string(dat)
