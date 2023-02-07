@@ -101,4 +101,4 @@ def http_data(start_time: str, source_filter: str, destination_filter: str, num_
 
     return df
 
-px.display(http_data('-15m', '', 'zerok-demoapp', 10), 'http')
+px.display(http_data('-15m', '', 'zerok-demoapp', 100), 'http')
