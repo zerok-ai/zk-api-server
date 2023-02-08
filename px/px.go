@@ -1,58 +1,48 @@
-package pxclient
+package px
 
 import (
 	"context"
-	// "flag"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/kataras/iris"
 	"px.dev/pxapi"
 	"px.dev/pxapi/errdefs"
 	"px.dev/pxapi/types"
 )
 
-// func main() {
-// 	pxApiKey := flag.String("api-key", "", "PX API key")
-// 	clusterId := flag.String("cluster-id", "", "PX cluster ID")
-// 	cloudAddr := flag.String("cloud-addr", "", "Cloud address")
-// 	flag.Parse()
-// 	fmt.Println("PX API key : ", *pxApiKey)
-// 	fmt.Println("PX cluster ID : ", *clusterId)
-// 	fmt.Println("Cloud address : ", *cloudAddr)
+func GetPXData(ctx iris.Context) {
+	apiKey := ""
+	clusterId := ""
+	cloudAddress := ""
+	setupApiServer(apiKey, clusterId, cloudAddress)
+}
 
-// 	fmt.Println("------------------")
-
-// 	PixieClient(*pxApiKey, *clusterId, *cloudAddr+":443")
-// }
-
-func PixieClient(apiKey string, clusterId string, cloudAddress string, pxlPath string) error {
+func setupApiServer(apiKey string, clusterId string, cloudAddress string) {
 	var API_KEY = apiKey
 	var CLUSTER_ID = clusterId
 	var CLOUD_ADDR = cloudAddress
 
-	// fmt.Println("PX API key : ", apiKey)
-	// fmt.Println("PX cluster ID : ", clusterId)
-	// fmt.Println("Cloud address : ", cloudAddress)
+	dat, err := os.ReadFile("./getNamespaceHTTPTraffic.pxl")
+	if err != nil {
+		fmt.Printf("Error %s", err)
+	}
 
-	dat, err := os.ReadFile(pxlPath)
 	pxl := string(dat)
 	// fmt.Print(pxl)
-	if err != nil {
-		return err
-	}
 
 	// Create a Pixie client.
 	ctx := context.Background()
 	client, err := pxapi.NewClient(ctx, pxapi.WithAPIKey(API_KEY), pxapi.WithCloudAddr(CLOUD_ADDR))
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	// Create a connection to the cluster.
 	vz, err := client.NewVizierClient(ctx, CLUSTER_ID)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	// Create TableMuxer to accept results table.
@@ -61,7 +51,7 @@ func PixieClient(apiKey string, clusterId string, cloudAddress string, pxlPath s
 	// Execute the PxL script.
 	resultSet, err := vz.ExecuteScript(ctx, pxl, tm)
 	if err != nil && err != io.EOF {
-		return err
+		panic(err)
 	}
 
 	// Receive the PxL script results.
@@ -79,8 +69,6 @@ func PixieClient(apiKey string, clusterId string, cloudAddress string, pxlPath s
 	stats := resultSet.Stats()
 	fmt.Printf("Execution Time: %v\n", stats.ExecutionTime)
 	fmt.Printf("Bytes received: %v\n", stats.TotalBytes)
-
-	return nil
 }
 
 // Satisfies the TableRecordHandler interface.
