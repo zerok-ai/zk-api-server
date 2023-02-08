@@ -1,6 +1,6 @@
 package cluster
 
-import "github.com/kataras/iris"
+import "github.com/kataras/iris/v12"
 
 type Book struct {
 	Title string `json:"title"`

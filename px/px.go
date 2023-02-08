@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/kataras/iris"
+	"github.com/kataras/iris/v12"
 	"px.dev/pxapi"
 	"px.dev/pxapi/errdefs"
 	"px.dev/pxapi/types"

@@ -1,13 +1,14 @@
 package zerokApiServer
 
 import (
-	"github.com/kataras/iris"
-	"zerok.ai/zerok-api-server/cluster"
-	"zerok.ai/zerok-api-server/px"
+	"zerokApiServer/cluster"
+	"zerokApiServer/px"
+
+	"github.com/kataras/iris/v12"
 )
 
-func main() {
-	app := iris.New()
+func newApp() *iris.Application {
+	app := iris.Default()
 
 	v1 := app.Party("/v1")
 	clusterAPI := v1.Party("/cluster")
@@ -22,5 +23,10 @@ func main() {
 		pxAPI.Get("/", px.GetPXData)
 	}
 
+	return app
+}
+
+func Start() {
+	app := newApp()
 	app.Listen(":8080")
 }
