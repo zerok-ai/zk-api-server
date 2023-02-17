@@ -2,33 +2,50 @@ package px
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 
 	"github.com/kataras/iris/v12"
 	"px.dev/pxapi"
 	"px.dev/pxapi/errdefs"
 	"px.dev/pxapi/types"
+
+	"main/app/cluster"
 )
 
 func GetPXData(ctx iris.Context) {
-	apiKey := ""
-	clusterId := ""
-	cloudAddress := ""
-	setupApiServer(apiKey, clusterId, cloudAddress)
+	clusterId := ctx.Params().Get("clusterId")
+	clusterDetails := cluster.ClusterMap[clusterId]
+	apiKey := clusterDetails.ApiKey
+	cloudAddress := clusterDetails.Domain + ":443"
+	resultSet := setupApiServer(apiKey, clusterId, cloudAddress)
+
+	ctx.JSON(map[string]interface{}{
+		"stats":   resultSet.Stats(),
+		"results": Accumulator,
+	})
 }
 
-func setupApiServer(apiKey string, clusterId string, cloudAddress string) {
+func setupApiServer(apiKey string, clusterId string, cloudAddress string) *pxapi.ScriptResults {
 	var API_KEY = apiKey
 	var CLUSTER_ID = clusterId
 	var CLOUD_ADDR = cloudAddress
 
-	dat, err := os.ReadFile("./getNamespaceHTTPTraffic.pxl")
+	fmt.Println("API_KEY: %s, CLUSTER_ID: %s, CLOUD_ADDR: %s", API_KEY, CLUSTER_ID, CLOUD_ADDR)
+
+	path, err := os.Getwd()
 	if err != nil {
-		fmt.Printf("Error %s", err)
+		panic(err)
 	}
 
+	dat, err := os.ReadFile(path + "/app/px/getNamespaceHTTPTraffic.pxl")
+	// dat, err := os.ReadFile(path + "/app/px/getMySQLData.pxl")
+	if err != nil {
+		panic(err)
+	}
 	pxl := string(dat)
 	// fmt.Print(pxl)
 
@@ -69,20 +86,43 @@ func setupApiServer(apiKey string, clusterId string, cloudAddress string) {
 	stats := resultSet.Stats()
 	fmt.Printf("Execution Time: %v\n", stats.ExecutionTime)
 	fmt.Printf("Bytes received: %v\n", stats.TotalBytes)
+
+	return resultSet
 }
 
+var Accumulator []map[string]any
+
 // Satisfies the TableRecordHandler interface.
-type tablePrinter struct{}
+type tablePrinter struct {
+	TableRows []string
+}
 
 func (t *tablePrinter) HandleInit(ctx context.Context, metadata types.TableMetadata) error {
 	return nil
 }
 
 func (t *tablePrinter) HandleRecord(ctx context.Context, r *types.Record) error {
-	for _, d := range r.Data {
-		fmt.Printf("%s ", d.String())
+	tempObj := make(map[string]any)
+	fmt.Println(r.Data)
+	for k, d := range r.Data {
+		t.TableRows = append(t.TableRows, d.String())
+		var colName string = r.TableMetadata.ColInfo[k].Name
+		var value = d.String()
+		// fmt.Println(colName, ":", value)
+
+		var bufferSingleMap map[string]interface{}
+		json.Unmarshal([]byte(value), &bufferSingleMap)
+		if bufferSingleMap != nil {
+			tempObj[colName] = bufferSingleMap
+		} else {
+			if num, err := strconv.Atoi(value); err == nil {
+				tempObj[colName] = num
+			} else {
+				tempObj[colName] = value
+			}
+		}
 	}
-	fmt.Printf("\n")
+	Accumulator = append(Accumulator, tempObj)
 	return nil
 }
 
@@ -92,8 +132,11 @@ func (t *tablePrinter) HandleDone(ctx context.Context) error {
 
 // Satisfies the TableMuxer interface.
 type tableMux struct {
+	Table tablePrinter
 }
 
 func (s *tableMux) AcceptTable(ctx context.Context, metadata types.TableMetadata) (pxapi.TableRecordHandler, error) {
-	return &tablePrinter{}, nil
+	var Table = &tablePrinter{}
+	s.Table = *Table
+	return Table, nil
 }

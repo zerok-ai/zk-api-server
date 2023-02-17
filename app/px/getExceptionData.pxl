@@ -1,4 +1,61 @@
+# Copyright 2018- The Pixie Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+''' HTTP Data Tracer
+
+This script traces all HTTP/HTTP2 data on the cluster.
+'''
 import px
+
+def add_telemetry_headers(df):
+    df.trace_id = px.substring(px.pluck(df.req_headers, 'traceparent'), 3, 32)
+    df.span_id = px.substring(px.pluck(df.req_headers, 'traceparent'), 36, 16)
+    df.otel_flag = px.substring(px.pluck(df.req_headers, 'traceparent'), 53, 2)
+    return df
+    # df.str = px.substring(df.service, 1, 5)
+
+
+def http_exception_data(start_time: str, source_filter: str, destination_filter: str, num_head: int):
+
+    df = px.DataFrame(table='http_events', start_time=start_time)
+
+    # Add context.
+    df.node = df.ctx['node']
+    df.pid = px.upid_to_pid(df.upid)
+    df = add_source_dest_columns(df)
+    df = add_source_dest_links(df, start_time)
+
+    # Filter out entities as specified by the user.
+    df = df[px.contains(df.source, source_filter)]
+    df = df[px.contains(df.destination, "zerok-operator-system/zerok-operator-controller")]
+    df = df[px.contains(df.req_path, '/exception')]
+    # Add additional filters below:
+    df = add_telemetry_headers(df)
+
+    # Restrict number of results.
+    df = df.head(num_head)
+
+    # Order columns.
+    df = df['time_', 'trace_id', 'span_id', 'otel_flag', 
+            'source', 'destination', 'latency', 'req_path',
+            'req_method', 'req_headers',  
+            'resp_body']
+
+    return df
+
 
 def add_source_dest_columns(df):
     ''' Add source and destination columns for the HTTP request.
@@ -74,31 +131,4 @@ def add_source_dest_links(df, start_time: str):
 
     return df
 
-
-def http_data(start_time: str, source_filter: str, destination_filter: str, num_head: int):
-
-    df = px.DataFrame(table='http_events', start_time=start_time)
-
-    # Add context.
-    df.node = df.ctx['node']
-    df.pid = px.upid_to_pid(df.upid)
-    df = add_source_dest_columns(df)
-    df = add_source_dest_links(df, start_time)
-
-    # Filter out entities as specified by the user.
-    df = df[px.contains(df.source, source_filter)]
-    df = df[px.contains(df.destination, destination_filter)]
-
-    # Add additional filters below:
-
-    # Restrict number of results.
-    df = df.head(num_head)
-
-    # Order columns.
-    df = df['time_', 'source', 'destination', 'latency', 'major_version', 'req_path',
-            'req_method', 'req_headers', 'req_body', 'req_body_size', 'resp_status',
-            'resp_message', 'resp_headers', 'resp_body', 'resp_body_size']
-
-    return df
-
-px.display(http_data('-15m', '', 'zerok-demoapp', 100), 'http')
+px.display(http_exception_data("-10m", "", "", 100), 'exceptions')

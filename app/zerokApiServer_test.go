@@ -1,4 +1,4 @@
-package zerokApiServer
+package app
 
 import (
 	"testing"
