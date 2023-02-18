@@ -59,8 +59,9 @@ def get_mysql_data(start_time: str):
     df['req_path'] = ""
     df['req_method'] = ""
     df['req_headers'] = ""
+    df["type"] = "MYSQL"
 
-    df = df['time_', 'trace_id', 'span_id', 'otel_flag', 
+    df = df['time_', 'type', 'trace_id', 'span_id', 'otel_flag', 
             'source', 'destination', 'latency', 'req_body', 'resp_body',
             'req_path', 'req_method', 'req_headers']
 
@@ -74,8 +75,10 @@ def get_exception_data(start_time: str):
     df = add_http_trace_parent(df)
     df = add_telemetry_headers(df)
 
+    df["type"] = "EXCEPTION"
+
     # Order columns.
-    df = df['time_', 'trace_id', 'span_id', 'otel_flag', 
+    df = df['time_', 'type', 'trace_id', 'span_id', 'otel_flag', 
             'source', 'destination', 'latency', 'req_body', 'resp_body', 
             'req_path', 'req_method', 'req_headers']
 
@@ -83,15 +86,18 @@ def get_exception_data(start_time: str):
 
 def get_http_data(start_time: str):
     df = prepare_base_dataframe('http_events', start_time)
-
+    
     # Filter out onlu exception requests.
     df = df[px.contains(df.destination, "default")]
+    df = df[px.contains(px.pluck(df.source,"script"), "px/pod")]
 
     df = add_http_trace_parent(df)
     df = add_telemetry_headers(df)
 
+    df["type"] = "HTTP"
+
     # Order columns.
-    df = df['time_', 'trace_id', 'span_id', 'otel_flag', 
+    df = df['time_', 'type', 'trace_id', 'span_id', 'otel_flag', 
             'source', 'destination', 'latency', 'req_body', 'resp_body',
             'req_path', 'req_method', 'req_headers']
 
