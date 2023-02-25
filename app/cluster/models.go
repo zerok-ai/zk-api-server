@@ -12,8 +12,8 @@ var ClusterMap = map[string]Cluster{
 	"1": {
 		"devpx07",
 		"devpx07.getanton.com",
-		"px-api-4ccea853-5f4e-4127-969d-5a4f288a47ac",
-		"b60b7536-acad-44ad-96fe-604a528660ce",
+		"px-api-13c7defc-7e35-4ce6-a9e4-f6a623137e7c",
+		"8941bee5-6621-442c-9de8-309ecfb5ec22",
 		nil,
 	},
 	"2": {

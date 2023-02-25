@@ -14,21 +14,50 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-''' MySQL Data Tracer
-
-Shows the most recent MySQL messages in the cluster.
-'''
 import px
+
+
+def apply_column_filter(df, colName, filterVal):
+    # df[colName] = filterVal
+    # return df
+    df = df[px.contains(df[colName], filterVal)]
+    return df
+
+def prepare_column_filter(df, colName, filter):
+    filterVal = px.select(px.length(px.pluck(filter, colName)) > 0, px.pluck(filter,colName), "")
+    df = apply_column_filter(df, colName, filterVal)
+    return df
+
+def apply_filter(df, filter):
+    df = prepare_column_filter(df, "type", filter)
+    df = prepare_column_filter(df, "trace_id", filter)
+    df = prepare_column_filter(df, "span_id", filter)
+    df = prepare_column_filter(df, "otel_flag", filter)
+    df = prepare_column_filter(df, "source", filter)
+    df = prepare_column_filter(df, "destination", filter)
+    df = prepare_column_filter(df, "req_body", filter)
+    df = prepare_column_filter(df, "resp_body", filter)
+    df = prepare_column_filter(df, "req_path", filter)
+    df = prepare_column_filter(df, "req_method", filter)
+    df = prepare_column_filter(df, "req_headers", filter)
+    return df
 
 def add_mysql_trace_parent(df):
     # filter rows containing traceparent before extracting trace data.
     df = df[px.contains(df.req_body, "/* traceparent:")]
     df.traceparent = px.substring(df.req_body, 15, 55)
+    df.tracestate = px.substring(df.req_body, 82, 22)
     df = df[px.length(df.traceparent) > 0]
     return df
 
 def add_http_trace_parent(df):
-    df.traceparent = px.pluck(df.req_headers, 'traceparent')
+    req_traceparent=px.pluck(df.req_headers, 'traceparent')
+    resp_traceparent=px.pluck(df.resp_headers, 'traceparent')
+    req_tracestate=px.pluck(df.req_headers, 'tracestate')
+    resp_tracestate=px.pluck(df.resp_headers, 'tracestate')
+    df.traceparent = px.select(px.length(req_traceparent) > 0, req_traceparent, resp_traceparent)
+    df.tracestate = px.select(px.length(req_tracestate) > 0, req_tracestate, resp_tracestate)
+    
     # df = df[px.length(df.traceparent) > 0]
     return df
 
@@ -61,7 +90,7 @@ def get_mysql_data(start_time: str):
     df['req_headers'] = ""
     df["type"] = "MYSQL"
 
-    df = df['time_', 'type', 'trace_id', 'span_id', 'otel_flag', 
+    df = df['time_', 'type', 'tracestate', 'trace_id', 'span_id', 'otel_flag', 
             'source', 'destination', 'latency', 'req_body', 'resp_body',
             'req_path', 'req_method', 'req_headers']
 
@@ -78,7 +107,7 @@ def get_exception_data(start_time: str):
     df["type"] = "EXCEPTION"
 
     # Order columns.
-    df = df['time_', 'type', 'trace_id', 'span_id', 'otel_flag', 
+    df = df['time_', 'type', 'tracestate', 'trace_id', 'span_id', 'otel_flag', 
             'source', 'destination', 'latency', 'req_body', 'resp_body', 
             'req_path', 'req_method', 'req_headers']
 
@@ -97,13 +126,13 @@ def get_http_data(start_time: str):
     df["type"] = "HTTP"
 
     # Order columns.
-    df = df['time_', 'type', 'trace_id', 'span_id', 'otel_flag', 
+    df = df['time_', 'type', 'tracestate', 'trace_id', 'span_id', 'otel_flag', 
             'source', 'destination', 'latency', 'req_body', 'resp_body',
             'req_path', 'req_method', 'req_headers']
 
     return df
 
-def get_roi_data(start_time: str, limit: int):
+def get_roi_data(start_time: str, limit: int, filter: str):
     mysql_df = get_mysql_data(start_time)
     http_df = get_http_data(start_time)
     exception_df = get_exception_data(start_time)
@@ -111,6 +140,7 @@ def get_roi_data(start_time: str, limit: int):
     data1_df = http_df.append(exception_df)
     roi_df = data1_df.append(mysql_df)
 
+    roi_df = apply_filter(roi_df, filter)
 
     roi_df.head(limit)
 
@@ -191,4 +221,4 @@ def add_source_dest_links(df, start_time: str):
 
     return df
 
-px.display(get_roi_data("-1m", 100), 'ROI data')
+px.display(get_roi_data("{{.StartTime}}", {{.Head}}, '{{.Filter}}'), 'ROI data')

@@ -1,12 +1,14 @@
 package px
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strconv"
+	"text/template"
 
 	"github.com/kataras/iris/v12"
 	"px.dev/pxapi"
@@ -16,12 +18,25 @@ import (
 	"main/app/cluster"
 )
 
+type Template struct {
+	StartTime string
+	Head      int
+	Filter    string
+}
+
 func GetPXData(ctx iris.Context) {
-	clusterId := ctx.Params().Get("clusterId")
-	clusterDetails := cluster.ClusterMap[clusterId]
+	clusterMapId := ctx.URLParamDefault("cluster_id", "1")
+	clusterDetails := cluster.ClusterMap[clusterMapId]
 	apiKey := clusterDetails.ApiKey
 	cloudAddress := clusterDetails.Domain + ":443"
-	resultSet := setupApiServer(apiKey, clusterId, cloudAddress)
+	clusterId := clusterDetails.ClusterId
+	resultSet, err := setupApiServer(apiKey, clusterId, cloudAddress)
+
+	if err != nil {
+		ctx.StopWithProblem(iris.StatusInternalServerError, iris.NewProblem().
+			Title(err.Error()))
+		return
+	}
 
 	ctx.JSON(map[string]interface{}{
 		"stats":   resultSet.Stats(),
@@ -29,37 +44,43 @@ func GetPXData(ctx iris.Context) {
 	})
 }
 
-func setupApiServer(apiKey string, clusterId string, cloudAddress string) *pxapi.ScriptResults {
+func setupApiServer(apiKey string, clusterId string, cloudAddress string) (*pxapi.ScriptResults, error) {
 	var API_KEY = apiKey
 	var CLUSTER_ID = clusterId
 	var CLOUD_ADDR = cloudAddress
 
-	fmt.Println("API_KEY: %s, CLUSTER_ID: %s, CLOUD_ADDR: %s", API_KEY, CLUSTER_ID, CLOUD_ADDR)
+	fmt.Printf("API_KEY: %s, CLUSTER_ID: %s, CLOUD_ADDR: %s\n", API_KEY, CLUSTER_ID, CLOUD_ADDR)
 
 	path, err := os.Getwd()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	dat, err := os.ReadFile(path + "/app/px/getNamespaceHTTPTraffic.pxl")
+	dat, err := os.ReadFile(path + "/app/px/getROI.pxl")
 	// dat, err := os.ReadFile(path + "/app/px/getMySQLData.pxl")
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	pxl := string(dat)
-	// fmt.Print(pxl)
+	t2 := template.New("Template")
+	t2, _ = t2.Parse(string(dat))
+	tx := Template{"-20s", 100, "{}"}
+
+	var doc bytes.Buffer
+	t2.Execute(&doc, tx)
+	pxl := doc.String()
+	fmt.Print(pxl)
 
 	// Create a Pixie client.
 	ctx := context.Background()
 	client, err := pxapi.NewClient(ctx, pxapi.WithAPIKey(API_KEY), pxapi.WithCloudAddr(CLOUD_ADDR))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// Create a connection to the cluster.
 	vz, err := client.NewVizierClient(ctx, CLUSTER_ID)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// Create TableMuxer to accept results table.
@@ -68,7 +89,7 @@ func setupApiServer(apiKey string, clusterId string, cloudAddress string) *pxapi
 	// Execute the PxL script.
 	resultSet, err := vz.ExecuteScript(ctx, pxl, tm)
 	if err != nil && err != io.EOF {
-		panic(err)
+		return nil, err
 	}
 
 	// Receive the PxL script results.
@@ -80,6 +101,7 @@ func setupApiServer(apiKey string, clusterId string, cloudAddress string) *pxapi
 			println("Error")
 			fmt.Printf("Got error : %+v, while streaming\n", err)
 		}
+		return nil, err
 	}
 
 	// Get the execution stats for the script execution.
@@ -87,7 +109,7 @@ func setupApiServer(apiKey string, clusterId string, cloudAddress string) *pxapi
 	fmt.Printf("Execution Time: %v\n", stats.ExecutionTime)
 	fmt.Printf("Bytes received: %v\n", stats.TotalBytes)
 
-	return resultSet
+	return resultSet, nil
 }
 
 var Accumulator []map[string]any
@@ -103,7 +125,7 @@ func (t *tablePrinter) HandleInit(ctx context.Context, metadata types.TableMetad
 
 func (t *tablePrinter) HandleRecord(ctx context.Context, r *types.Record) error {
 	tempObj := make(map[string]any)
-	fmt.Println(r.Data)
+	// fmt.Println(r.Data)
 	for k, d := range r.Data {
 		t.TableRows = append(t.TableRows, d.String())
 		var colName string = r.TableMetadata.ColInfo[k].Name
