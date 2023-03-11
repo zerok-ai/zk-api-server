@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"main/app/cluster/models"
 	"os"
 	"strconv"
 	"text/template"
@@ -14,8 +15,6 @@ import (
 	"px.dev/pxapi"
 	"px.dev/pxapi/errdefs"
 	"px.dev/pxapi/types"
-
-	"main/app/cluster"
 )
 
 type Template struct {
@@ -26,7 +25,7 @@ type Template struct {
 
 func GetPXData(ctx iris.Context) {
 	clusterMapId := ctx.URLParamDefault("cluster_id", "1")
-	clusterDetails := cluster.ClusterMap[clusterMapId]
+	clusterDetails := models.ClusterMap[clusterMapId]
 	apiKey := clusterDetails.ApiKey
 	cloudAddress := clusterDetails.Domain + ":443"
 	clusterId := clusterDetails.ClusterId

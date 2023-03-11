@@ -1,0 +1,203 @@
+import px
+import pxviews
+
+ns_per_ms = 1000 * 1000
+ns_per_s = 1000 * ns_per_ms
+# Window size to use on time_ column for bucketing.
+window_ns = px.DurationNanos(10 * ns_per_s)
+# Flag to filter out requests that come from an unresolvable IP.
+filter_unresolved_inbound = True
+# Flag to filter out health checks from the data.
+filter_health_checks = True
+# Flag to filter out ready checks from the data.
+filter_ready_checks = True
+# Whether or not to include traffic from IPs that don't resolve to a known pod/service.
+include_ips = True
+
+def get_namespace_data(start_time: str):
+    df = px.DataFrame(table='process_stats', start_time=start_time)
+    df.namespace = df.ctx['namespace']
+    df = df.groupby('namespace').agg()
+    df = df[['namespace']]
+
+    return df
+
+def my_fun(start_time: str):
+    pod_count = pxviews.container_process_summary(px.now() + px.parse_duration(start_time), px.now())
+    pod_count = pod_count.groupby(['service', 'pod', 'namespace']).agg()
+    pod_count = pod_count[pod_count.service != '']
+    pod_count = pod_count.groupby('service').agg(pod_count=('pod', px.count))
+    service_let = service_let_summary(start_time)
+    df = pod_count.merge(
+        service_let,
+        how="left",
+        left_on="service",
+        right_on="service",
+        suffixes=["", "_x"],
+    )
+    return df[['service', 'pod_count', 'http_latency_in', 'http_req_throughput_in', 'http_error_rate_in',
+                   'inbound_conns', 'outbound_conns']]
+
+def service_let_summary(start_time: str):
+    ''' Compute a summary of traffic by requesting service, for requests
+        on services in the current cluster.
+    Args:
+    @start_time: The timestamp of data to start at.
+    '''
+    conn_stats_df = pxviews.connection_throughput_stats(start_time, px.now()).drop('time_')
+    conn_stats_df.service = conn_stats_df.ctx['service']
+    conn_stats_df = conn_stats_df.groupby(['service']).agg(
+        inbound_conn_throughput=('inbound_conn_throughput', px.sum),
+        outbound_conn_throughput=('outbound_conn_throughput', px.sum),
+    )
+
+    window = px.DurationNanos(px.now() - (px.now() + px.parse_duration(start_time)))
+    conn_stats_df.inbound_conns = conn_stats_df.inbound_conn_throughput / window
+    conn_stats_df.outbound_conns = conn_stats_df.outbound_conn_throughput / window
+
+    http_stats_df = pxviews.inbound_http_summary(start_time=start_time, end_time=px.now())
+    http_stats_df.service = http_stats_df.ctx['service']
+
+    http_stats_df = http_stats_df.groupby(['service']).agg(
+        http_req_count_in=('num_requests', px.sum),
+        http_error_count_in=('num_errors', px.sum),
+        # TODO usse a combine_quantiles UDF to merge quantiles
+        http_latency_in=('latency_quantiles', px.any),
+    )
+
+    # Compute throughput values.
+    http_stats_df.http_req_throughput_in = http_stats_df.http_req_count_in / window
+    http_stats_df.http_error_rate_in = px.Percent(
+        px.select(
+            http_stats_df.http_req_count_in != 0,
+            http_stats_df.http_error_count_in / http_stats_df.http_req_count_in,
+            0.0,
+        )
+    )
+
+    # Merge conn_stats_df and http_stats_df.
+    df = conn_stats_df.merge(http_stats_df,
+                             how='left',
+                             left_on='service',
+                             right_on='service',
+                             suffixes=['', '_x'])
+
+    return df[['service', 'http_latency_in', 'http_req_throughput_in', 'http_error_rate_in',
+               'inbound_conns', 'outbound_conns']]
+
+def service_let_graph(start_time: str):
+    ''' Compute a summary of traffic by requesting service, for requests on services
+        in the current cluster.
+    Args:
+    @start_time: The timestamp of data to start at.
+    '''
+    df = pxviews.http_graph(start_time, px.now())
+    df.window = px.DurationNanos(px.now() - px.parse_time(start_time))
+    # Compute statistics about each edge of the service graph.
+    df.request_throughput = df.num_requests / df.window
+    df.inbound_throughput = df.req_bytes / df.window
+    df.outbound_throughput = df.resp_bytes / df.window
+    df.throughput_total = df.num_requests
+    df.error_rate = px.Percent(df.num_errors / df.num_requests)
+
+    return df[[
+        'responder_pod',
+        'requestor_pod',
+        'responder_service',
+        'requestor_service',
+        'responder_ip',
+        'requestor_ip',
+        'latency_p50',
+        'latency_p90',
+        'latency_p99',
+        'request_throughput',
+        'error_rate',
+        'inbound_throughput',
+        'outbound_throughput',
+        'throughput_total'
+    ]]
+
+
+def inbound_let_timeseries(start_time: str, service: px.Service):
+    ''' Compute the let as a timeseries for requests received by `service`.
+
+    Args:
+    @start_time: The timestamp of data to start at.
+    @service: The name of the service to filter on.
+
+    '''
+    df = let_helper(start_time)
+    df = df[px.has_service_name(df.service, service)]
+
+    df = df.groupby(['timestamp']).agg(
+        latency_quantiles=('latency', px.quantiles),
+        error_rate_per_window=('failure', px.mean),
+        throughput_total=('latency', px.count),
+        bytes_total=('resp_body_size', px.sum)
+    )
+
+    # Format the result of LET aggregates into proper scalar formats and
+    # time series.
+    df.latency_p50 = px.DurationNanos(px.floor(px.pluck_float64(df.latency_quantiles, 'p50')))
+    df.latency_p90 = px.DurationNanos(px.floor(px.pluck_float64(df.latency_quantiles, 'p90')))
+    df.latency_p99 = px.DurationNanos(px.floor(px.pluck_float64(df.latency_quantiles, 'p99')))
+    df.request_throughput = df.throughput_total / window_ns
+    df.errors_per_ns = df.error_rate_per_window * df.request_throughput / px.DurationNanos(1)
+    df.error_rate = px.Percent(df.error_rate_per_window)
+    df.bytes_per_ns = df.bytes_total / window_ns
+    df.time_ = df.timestamp
+
+    return df[['time_', 'latency_p50', 'latency_p90', 'latency_p99',
+               'request_throughput', 'errors_per_ns', 'error_rate', 'bytes_per_ns']]
+
+def let_helper(start_time: str):
+    ''' Compute the initial part of the let for requests.
+        Filtering to inbound/outbound traffic by service is done by the calling function.
+
+    Args:
+    @start_time: The timestamp of data to start at.
+
+    '''
+    df = px.DataFrame(table='http_events', start_time=start_time)
+    # Filter only to inbound service traffic (server-side).
+    # Don't include traffic initiated by this service to an external location.
+    df = df[df.trace_role == 2]
+    df.service = df.ctx['service']
+    df.pod = df.ctx['pod']
+    df.latency = df.latency
+
+    df.timestamp = px.bin(df.time_, window_ns)
+
+    df.failure = df.resp_status >= 400
+    filter_out_conds = ((df.req_path != '/healthz' or not filter_health_checks) and (
+        df.req_path != '/readyz' or not filter_ready_checks)) and (
+        df['remote_addr'] != '-' or not filter_unresolved_inbound)
+
+    df = df[filter_out_conds]
+    return df
+
+def inbound_service_let_helper(start_time: str, namespace: px.Namespace):
+    ''' Compute the let as a timeseries for requests received or by services in `namespace`.
+
+    Args:
+    @start_time: The timestamp of data to start at.
+    @namespace: The namespace to filter on.
+
+    '''
+    df = px.DataFrame(table='http_events', start_time=start_time)
+    df.service = df.ctx['service']
+    df.pod = df.ctx['pod_name']
+    df = df[df.ctx['namespace'] == namespace]
+    df = df[df.pod != '']
+    df.latency = df.latency
+    df.timestamp = px.bin(df.time_, window_ns)
+
+    df.failure = df.resp_status >= 400
+    filter_out_conds = ((df.req_path != '/healthz' or not filter_health_checks) and (
+        df.req_path != '/readyz' or not filter_ready_checks)) and (
+        df['remote_addr'] != '-' or not filter_unresolved_inbound)
+
+    df = df[filter_out_conds]
+    return df
+
+px.display({{.MethodSignature}}, '{{.DataFrameName}}')

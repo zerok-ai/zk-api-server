@@ -1,4 +1,4 @@
-package cluster
+package models
 
 type Cluster struct {
 	Nickname  string  `json:"nickname"`
