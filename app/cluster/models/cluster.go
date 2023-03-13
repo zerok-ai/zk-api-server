@@ -4,10 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"sync"
 )
-
-var once sync.Once
 
 type Cluster struct {
 	Nickname  string  `json:"nickname"`

@@ -12,10 +12,10 @@ import (
 )
 
 type TableRecordHandler interface {
-	B(ctx context.Context, vz *pxapi.VizierClient, pxl string) (*pxapi.ScriptResults, error)
+	ExecutePxlScript(ctx context.Context, vz *pxapi.VizierClient, pxl string) (*pxapi.ScriptResults, error)
 }
 
-func A(cluster models.Cluster, tx models.MethodTemplate) (*pxapi.VizierClient, string, context.Context, error) {
+func CreateVizierClient(cluster models.Cluster, tx models.MethodTemplate) (*pxapi.VizierClient, string, context.Context, error) {
 	path, err := os.Getwd()
 	if err != nil {
 		return nil, "", nil, err
@@ -52,7 +52,7 @@ func A(cluster models.Cluster, tx models.MethodTemplate) (*pxapi.VizierClient, s
 
 }
 
-func C(resultSet *pxapi.ScriptResults) (*pxapi.ScriptResults, error) {
+func GetResult(resultSet *pxapi.ScriptResults) (*pxapi.ScriptResults, error) {
 	// Receive the PxL script results.
 	defer func(resultSet *pxapi.ScriptResults) {
 		err := resultSet.Close()

@@ -120,19 +120,19 @@ func getServiceDetailsList(ctx iris.Context, cluster models.Cluster, st string) 
 }
 
 func getResource(ctx iris.Context, cluster models.Cluster, t tablemux.TableRecordHandler, tx models.MethodTemplate) *pxapi.ScriptResults {
-	vz, pxl, ctxNew, err := tablemux.A(cluster, tx)
+	vz, pxl, ctxNew, err := tablemux.CreateVizierClient(cluster, tx)
 	if err != nil {
 		_ = ctx.StopWithProblem(iris.StatusInternalServerError, iris.NewProblem().
 			Title(err.Error()))
 		return nil
 	}
-	resultSet, err := t.B(ctxNew, vz, pxl)
+	resultSet, err := t.ExecutePxlScript(ctxNew, vz, pxl)
 	if err != nil {
 		_ = ctx.StopWithProblem(iris.StatusInternalServerError, iris.NewProblem().
 			Title(err.Error()))
 		return nil
 	}
-	resultSet, err = tablemux.C(resultSet)
+	resultSet, err = tablemux.GetResult(resultSet)
 	if err != nil {
 		_ = ctx.StopWithProblem(iris.StatusInternalServerError, iris.NewProblem().
 			Title(err.Error()))

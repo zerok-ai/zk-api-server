@@ -51,7 +51,7 @@ func (s *StringListMux) AcceptTable(ctx context.Context, metadata types.TableMet
 	return &s.Table, nil
 }
 
-func (s *StringListMux) B(ctx context.Context, vz *pxapi.VizierClient, pxl string) (*pxapi.ScriptResults, error) {
+func (s *StringListMux) ExecutePxlScript(ctx context.Context, vz *pxapi.VizierClient, pxl string) (*pxapi.ScriptResults, error) {
 	resultSet, err := vz.ExecuteScript(ctx, pxl, s)
 	if err != nil && err != io.EOF {
 		return nil, err

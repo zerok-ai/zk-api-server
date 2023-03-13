@@ -34,26 +34,8 @@ func DeleteCluster(ctx iris.Context) {
 	deleteCluster(ctx, clusterId)
 }
 
-//
-//func GetResourceDetails2(ctx iris.Context) {
-//	clusterIdx := ctx.Params().Get("clusterIdx")
-//	namespace := ctx.Params().Get("namespace")
-//	resource := ctx.Params().Get("resource")
-//	action := ctx.Params().Get("action")
-//	st := ctx.URLParam("st")
-//
-//	if utils.IsEmpty(st) {
-//		_ = ctx.StopWithProblem(iris.StatusBadRequest, iris.NewProblem().
-//			Title("start time cannot be empty"))
-//		return
-//	}
-//
-//	getResourceDetails(ctx, clusterIdx, namespace, resource, action, st)
-//}
-
-func GetResourceDetails(ctx iris.Context) {
+func GetResourceDetailsList(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
-	action := ctx.Params().Get("action")
 	st := ctx.URLParam("st")
 	ns := ctx.URLParam("ns")
 
@@ -61,7 +43,19 @@ func GetResourceDetails(ctx iris.Context) {
 		return
 	}
 
-	getResourceDetails(ctx, clusterIdx, ns, action, st)
+	getResourceDetails(ctx, clusterIdx, ns, "list", st)
+}
+
+func GetResourceDetailsMap(ctx iris.Context) {
+	clusterIdx := ctx.Params().Get("clusterIdx")
+	st := ctx.URLParam("st")
+	ns := ctx.URLParam("ns")
+
+	if !ValidateGetResourceDetailsApi(ctx, ns, st) {
+		return
+	}
+
+	getResourceDetails(ctx, clusterIdx, ns, "map", st)
 }
 
 func GetServiceStatsGraph(ctx iris.Context) {

@@ -33,7 +33,7 @@ func (s *ServiceListMux) AcceptTable(ctx context.Context, metadata types.TableMe
 	return &s.Table, nil
 }
 
-func (s *ServiceListMux) B(ctx context.Context, vz *pxapi.VizierClient, pxl string) (*pxapi.ScriptResults, error) {
+func (s *ServiceListMux) ExecutePxlScript(ctx context.Context, vz *pxapi.VizierClient, pxl string) (*pxapi.ScriptResults, error) {
 
 	resultSet, err := vz.ExecuteScript(ctx, pxl, s)
 	if err != nil && err != io.EOF {
