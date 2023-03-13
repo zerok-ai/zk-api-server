@@ -10,7 +10,7 @@ func Initialize(app router.Party) {
 		clusterAPI.Get("/", ListCluster)
 		clusterAPI.Post("/", UpsertCluster)
 		clusterAPI.Delete("/{clusterId}", DeleteCluster)
-		clusterAPI.Get("/{clusterIdx}/{namespace}/{resource}/{action}", GetResourceDetails)
+		clusterAPI.Get("/{clusterIdx}/service/{action}", GetResourceDetails)
 		clusterAPI.Get("/{clusterIdx}/service/graph", GetServiceStatsGraph)
 	}
 }

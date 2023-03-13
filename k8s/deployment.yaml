@@ -19,3 +19,10 @@ spec:
           image: us-west1-docker.pkg.dev/zerok-dev/api-server/zk-api-server:latest
           ports:
             - containerPort: 80
+          volumeMounts:
+            - name: cluster-details
+              mountPath: /opt
+      volumes:
+        - name: cluster-details
+          configMap:
+            name: cluster-details-config-file

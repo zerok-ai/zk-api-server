@@ -34,20 +34,34 @@ func DeleteCluster(ctx iris.Context) {
 	deleteCluster(ctx, clusterId)
 }
 
+//
+//func GetResourceDetails2(ctx iris.Context) {
+//	clusterIdx := ctx.Params().Get("clusterIdx")
+//	namespace := ctx.Params().Get("namespace")
+//	resource := ctx.Params().Get("resource")
+//	action := ctx.Params().Get("action")
+//	st := ctx.URLParam("st")
+//
+//	if utils.IsEmpty(st) {
+//		_ = ctx.StopWithProblem(iris.StatusBadRequest, iris.NewProblem().
+//			Title("start time cannot be empty"))
+//		return
+//	}
+//
+//	getResourceDetails(ctx, clusterIdx, namespace, resource, action, st)
+//}
+
 func GetResourceDetails(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
-	namespace := ctx.Params().Get("namespace")
-	resource := ctx.Params().Get("resource")
 	action := ctx.Params().Get("action")
 	st := ctx.URLParam("st")
+	ns := ctx.URLParam("ns")
 
-	if utils.IsEmpty(st) {
-		_ = ctx.StopWithProblem(iris.StatusBadRequest, iris.NewProblem().
-			Title("start time cannot be empty"))
+	if !ValidateGetResourceDetailsApi(ctx, ns, st) {
 		return
 	}
 
-	getResourceDetails(ctx, clusterIdx, namespace, resource, action, st)
+	getResourceDetails(ctx, clusterIdx, ns, action, st)
 }
 
 func GetServiceStatsGraph(ctx iris.Context) {
@@ -56,7 +70,7 @@ func GetServiceStatsGraph(ctx iris.Context) {
 	ns := ctx.URLParam("ns")
 	st := ctx.URLParam("st")
 
-	if !ValidateGraphStats(ctx, serviceName, ns, st) {
+	if !ValidateGraphStatsApi(ctx, serviceName, ns, st) {
 		return
 	}
 

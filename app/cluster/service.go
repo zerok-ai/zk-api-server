@@ -59,11 +59,7 @@ func deleteCluster(ctx iris.Context, clusterId string) {
 	ctx.StatusCode(iris.StatusOK)
 }
 
-func getResourceDetails(ctx iris.Context, clusterIdx, namespace, resource, action, st string) {
-
-	if !ValidateResource(resource, ctx) {
-		return
-	}
+func getResourceDetails(ctx iris.Context, clusterIdx, namespace, action, st string) {
 	if !ValidateAction(action, ctx) {
 		return
 	}
@@ -72,16 +68,14 @@ func getResourceDetails(ctx iris.Context, clusterIdx, namespace, resource, actio
 	}
 
 	clusterDetails := models.ClusterMap[clusterIdx]
-	apiKey := clusterDetails.ApiKey
-	cloudAddress := clusterDetails.Domain + ":443"
-	clusterId := clusterDetails.ClusterId
+	clusterDetails.Domain = clusterDetails.Domain + ":443"
 
 	if namespace != "all" {
 		var v = make([]string, 0)
 		stringListMux := tablemux.StringListMux{Table: tablemux.TablePrinterStringList{Values: v}}
 
 		tx := models.MethodTemplate{MethodSignature: utils.GetNamespaceMethodSignature(st), DataFrameName: "my_first_ns"}
-		_ = getResource(ctx, apiKey, clusterId, cloudAddress, &stringListMux, tx)
+		_ = getResource(ctx, clusterDetails, &stringListMux, tx)
 		namespaceList := stringListMux.Table.Values
 		if !utils.Contains(namespaceList, namespace) {
 			_ = ctx.StopWithProblem(iris.StatusBadRequest, iris.NewProblem().
@@ -92,20 +86,10 @@ func getResourceDetails(ctx iris.Context, clusterIdx, namespace, resource, actio
 
 	var resultSet *pxapi.ScriptResults
 	var result interface{}
-
-	//tx := models.Template{StartTime: "-20m", Resource: "pod"}
 	if strings.EqualFold(action, "list") {
-		var s = make([]models.Service, 0)
-		serviceListMux := tablemux.ServiceListMux{Table: tablemux.TablePrinterServiceList{Values: s}}
-		tx := models.MethodTemplate{MethodSignature: utils.GetServiceListMethodSignature(st), DataFrameName: "my_first_list"}
-		resultSet = getResource(ctx, apiKey, clusterId, cloudAddress, &serviceListMux, tx)
-		result = serviceListMux.Table.Values
+		resultSet, result = getServiceDetailsList(ctx, clusterDetails, st)
 	} else if strings.EqualFold(action, "map") {
-		var s = make([]models.ServiceMap, 0)
-		serviceListMux := tablemux.ServiceMapMux{Table: tablemux.TablePrinterServiceMap{Values: s}}
-		tx := models.MethodTemplate{MethodSignature: utils.GetServiceMapMethodSignature(st), DataFrameName: "my_first_map"}
-		resultSet = getResource(ctx, apiKey, clusterId, cloudAddress, &serviceListMux, tx)
-		result = serviceListMux.Table.Values
+		resultSet, result = getServiceDetailsMap(ctx, clusterDetails, st)
 	}
 
 	if result == nil {
@@ -119,8 +103,24 @@ func getResourceDetails(ctx iris.Context, clusterIdx, namespace, resource, actio
 	})
 }
 
-func getResource(ctx iris.Context, apiKey, clusterId, cloudAddress string, t tablemux.TableRecordHandler, tx models.MethodTemplate) *pxapi.ScriptResults {
-	vz, pxl, ctxNew, err := tablemux.A(apiKey, clusterId, cloudAddress, tx)
+func getServiceDetailsMap(ctx iris.Context, cluster models.Cluster, st string) (*pxapi.ScriptResults, []models.ServiceMap) {
+	var s = make([]models.ServiceMap, 0)
+	serviceListMux := tablemux.ServiceMapMux{Table: tablemux.TablePrinterServiceMap{Values: s}}
+	tx := models.MethodTemplate{MethodSignature: utils.GetServiceMapMethodSignature(st), DataFrameName: "my_first_map"}
+	resultSet := getResource(ctx, cluster, &serviceListMux, tx)
+	return resultSet, serviceListMux.Table.Values
+}
+
+func getServiceDetailsList(ctx iris.Context, cluster models.Cluster, st string) (*pxapi.ScriptResults, []models.Service) {
+	var s = make([]models.Service, 0)
+	serviceListMux := tablemux.ServiceListMux{Table: tablemux.TablePrinterServiceList{Values: s}}
+	tx := models.MethodTemplate{MethodSignature: utils.GetServiceListMethodSignature(st), DataFrameName: "my_first_list"}
+	resultSet := getResource(ctx, cluster, &serviceListMux, tx)
+	return resultSet, serviceListMux.Table.Values
+}
+
+func getResource(ctx iris.Context, cluster models.Cluster, t tablemux.TableRecordHandler, tx models.MethodTemplate) *pxapi.ScriptResults {
+	vz, pxl, ctxNew, err := tablemux.A(cluster, tx)
 	if err != nil {
 		_ = ctx.StopWithProblem(iris.StatusInternalServerError, iris.NewProblem().
 			Title(err.Error()))
@@ -149,16 +149,14 @@ func getServiceStatsGraph(ctx iris.Context, clusterIdx, name, ns, st string) {
 	//TODO: write validation for st
 
 	clusterDetails := models.ClusterMap[clusterIdx]
-	apiKey := clusterDetails.ApiKey
-	cloudAddress := clusterDetails.Domain + ":443"
-	clusterId := clusterDetails.ClusterId
+	clusterDetails.Domain = clusterDetails.Domain + ":443"
 
 	var resultSet *pxapi.ScriptResults
 	var result interface{}
 
 	var s = make([]models.ServiceStat, 0)
 	serviceStatMux := tablemux.ServiceStatMux{Table: tablemux.TablePrinterServiceStat{Values: s}}
-	resultSet = getResource(ctx, apiKey, clusterId, cloudAddress, &serviceStatMux, models.MethodTemplate{MethodSignature: utils.GetServiceStatsMethodSignature(st, ns+"/"+name), DataFrameName: "my_first_graph"})
+	resultSet = getResource(ctx, clusterDetails, &serviceStatMux, models.MethodTemplate{MethodSignature: utils.GetServiceStatsMethodSignature(st, ns+"/"+name), DataFrameName: "my_first_graph"})
 	result = serviceStatMux.Table.Values
 
 	if result == nil {

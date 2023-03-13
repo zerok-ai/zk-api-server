@@ -15,9 +15,7 @@ type TableRecordHandler interface {
 	B(ctx context.Context, vz *pxapi.VizierClient, pxl string) (*pxapi.ScriptResults, error)
 }
 
-func A(apiKey, clusterId, cloudAddress string, tx models.MethodTemplate) (*pxapi.VizierClient, string, context.Context, error) {
-	fmt.Printf("API_KEY: %s, CLUSTER_ID: %s, CLOUD_ADDR: %s\n", apiKey, clusterId, cloudAddress)
-
+func A(cluster models.Cluster, tx models.MethodTemplate) (*pxapi.VizierClient, string, context.Context, error) {
 	path, err := os.Getwd()
 	if err != nil {
 		return nil, "", nil, err
@@ -40,12 +38,12 @@ func A(apiKey, clusterId, cloudAddress string, tx models.MethodTemplate) (*pxapi
 	fmt.Print(pxl)
 
 	ctx := context.Background()
-	client, err := pxapi.NewClient(ctx, pxapi.WithAPIKey(apiKey), pxapi.WithCloudAddr(cloudAddress))
+	client, err := pxapi.NewClient(ctx, pxapi.WithAPIKey(cluster.ApiKey), pxapi.WithCloudAddr(cluster.Domain))
 	if err != nil {
 		return nil, "", nil, err
 	}
 
-	vz, err := client.NewVizierClient(ctx, clusterId)
+	vz, err := client.NewVizierClient(ctx, cluster.ClusterId)
 	if err != nil {
 		return nil, "", nil, err
 	}
