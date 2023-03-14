@@ -36,8 +36,11 @@ func GetServiceMapMethodSignature(st string) string {
 func GetServiceListMethodSignature(st string) string {
 	return fmt.Sprintf(getServiceListMethodTemplate, st)
 }
-func GetServiceStatsMethodSignature(st, serviceNameWithNs string) string {
-	return fmt.Sprintf(getServiceStatsMethodTemplate, st, serviceNameWithNs)
+func GetPXDataSignature(head int, st, filter string) string {
+	return fmt.Sprintf(getPXDataMethodTemplate, st, head, filter)
+}
+func GetServiceDetailsMethodSignature(st, serviceNameWithNs string) string {
+	return fmt.Sprintf(getServiceDetailsMethodTemplate, st, serviceNameWithNs)
 }
 
 var ResourceList = []string{"pod", "service", "workload", "namespace"}
@@ -45,4 +48,5 @@ var Actions = []string{"list", "map"}
 var getNamespaceMethodTemplate = "get_namespace_data('%s')"
 var getServiceMapMethodTemplate = "service_let_graph('%s')"
 var getServiceListMethodTemplate = "my_fun('%s')"
-var getServiceStatsMethodTemplate = "inbound_let_timeseries('%s', '%s')"
+var getPXDataMethodTemplate = "get_roi_data(\"%s\",%d,'%s')"
+var getServiceDetailsMethodTemplate = "inbound_let_timeseries('%s', '%s')"

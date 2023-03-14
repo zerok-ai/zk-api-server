@@ -30,16 +30,16 @@ func ValidateAction(action string, ctx iris.Context) bool {
 	return true
 }
 
-func ValidateCluster(clusterIdx string, ctx iris.Context) bool {
-	if !ValidCluster(clusterIdx) {
-		_ = ctx.StopWithProblem(iris.StatusBadRequest, iris.NewProblem().
-			Title("Invalid cluster ID"))
-		return false
-	}
-	return true
-}
+//func ValidateCluster(clusterIdx string, ctx iris.Context) bool {
+//	if !ValidCluster(clusterIdx) {
+//		_ = ctx.StopWithProblem(iris.StatusBadRequest, iris.NewProblem().
+//			Title("Invalid cluster ID"))
+//		return false
+//	}
+//	return true
+//}
 
-func ValidateGraphStatsApi(ctx iris.Context, serviceName, ns, st string) bool {
+func ValidateGraphDetailsApi(ctx iris.Context, serviceName, ns, st string) bool {
 	if utils.IsEmpty(serviceName) {
 		_ = ctx.StopWithProblem(iris.StatusBadRequest, iris.NewProblem().
 			Title("service name cannot be empty"))
@@ -58,12 +58,12 @@ func ValidateGraphStatsApi(ctx iris.Context, serviceName, ns, st string) bool {
 	return true
 }
 
-func ValidateGetResourceDetailsApi(ctx iris.Context, ns, st string) bool {
-	if utils.IsEmpty(ns) {
-		_ = ctx.StopWithProblem(iris.StatusBadRequest, iris.NewProblem().
-			Title("namespace cannot be empty"))
-		return false
-	}
+func ValidateGetResourceDetailsApi(ctx iris.Context, st string) bool {
+	//if utils.IsEmpty(ns) {
+	//	_ = ctx.StopWithProblem(iris.StatusBadRequest, iris.NewProblem().
+	//		Title("namespace cannot be empty"))
+	//	return false
+	//}
 	if utils.IsEmpty(st) {
 		_ = ctx.StopWithProblem(iris.StatusBadRequest, iris.NewProblem().
 			Title("start time cannot be empty"))

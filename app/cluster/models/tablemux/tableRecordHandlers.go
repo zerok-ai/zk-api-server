@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"main/app/cluster/errors"
 	"main/app/cluster/models"
 	"os"
 	"px.dev/pxapi"
@@ -66,6 +67,9 @@ func GetResult(resultSet *pxapi.ScriptResults) (*pxapi.ScriptResults, error) {
 		} else {
 			println("Error")
 			fmt.Printf("Got error : %+v, while streaming\n", err)
+		}
+		if err.Error() == "rpc error: code = Internal desc = Auth middleware failed: failed to fetch token - unauthenticated" {
+			return nil, errors.ErrAuthenticationFailed
 		}
 		return nil, err
 	}

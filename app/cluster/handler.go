@@ -37,37 +37,35 @@ func DeleteCluster(ctx iris.Context) {
 func GetResourceDetailsList(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
 	st := ctx.URLParam("st")
-	ns := ctx.URLParam("ns")
 
-	if !ValidateGetResourceDetailsApi(ctx, ns, st) {
+	if !ValidateGetResourceDetailsApi(ctx, st) {
 		return
 	}
 
-	getResourceDetails(ctx, clusterIdx, ns, "list", st)
+	getResourceDetails(ctx, clusterIdx, "list", st)
 }
 
 func GetResourceDetailsMap(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
 	st := ctx.URLParam("st")
-	ns := ctx.URLParam("ns")
 
-	if !ValidateGetResourceDetailsApi(ctx, ns, st) {
+	if !ValidateGetResourceDetailsApi(ctx, st) {
 		return
 	}
 
-	getResourceDetails(ctx, clusterIdx, ns, "map", st)
+	getResourceDetails(ctx, clusterIdx, "map", st)
 }
 
-func GetServiceStatsGraph(ctx iris.Context) {
+func GetServiceDetails(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
 	serviceName := ctx.URLParam("name")
 	ns := ctx.URLParam("ns")
 	st := ctx.URLParam("st")
 
-	if !ValidateGraphStatsApi(ctx, serviceName, ns, st) {
+	if !ValidateGraphDetailsApi(ctx, serviceName, ns, st) {
 		return
 	}
 
-	getServiceStatsGraph(ctx, clusterIdx, serviceName, ns, st)
+	getServiceDetails(ctx, clusterIdx, serviceName, ns, st)
 
 }

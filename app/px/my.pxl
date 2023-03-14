@@ -200,4 +200,210 @@ def inbound_service_let_helper(start_time: str, namespace: px.Namespace):
     df = df[filter_out_conds]
     return df
 
+
+
+def apply_column_filter(df, colName, filterVal):
+    # df[colName] = filterVal
+    # return df
+    df = df[px.contains(df[colName], filterVal)]
+    return df
+
+def prepare_column_filter(df, colName, filter):
+    filterVal = px.select(px.length(px.pluck(filter, colName)) > 0, px.pluck(filter,colName), "")
+    df = apply_column_filter(df, colName, filterVal)
+    return df
+
+def apply_filter(df, filter):
+    df = prepare_column_filter(df, "type", filter)
+    df = prepare_column_filter(df, "trace_id", filter)
+    df = prepare_column_filter(df, "span_id", filter)
+    df = prepare_column_filter(df, "otel_flag", filter)
+    df = prepare_column_filter(df, "source", filter)
+    df = prepare_column_filter(df, "destination", filter)
+    df = prepare_column_filter(df, "req_body", filter)
+    df = prepare_column_filter(df, "resp_body", filter)
+    df = prepare_column_filter(df, "req_path", filter)
+    df = prepare_column_filter(df, "req_method", filter)
+    df = prepare_column_filter(df, "req_headers", filter)
+    return df
+
+def add_mysql_trace_parent(df):
+    # filter rows containing traceparent before extracting trace data.
+    df = df[px.contains(df.req_body, "/* traceparent:")]
+    df.traceparent = px.substring(df.req_body, 15, 55)
+    df.tracestate = px.substring(df.req_body, 82, 22)
+    df = df[px.length(df.traceparent) > 0]
+    return df
+
+def add_http_trace_parent(df):
+    req_traceparent=px.pluck(df.req_headers, 'traceparent')
+    resp_traceparent=px.pluck(df.resp_headers, 'traceparent')
+    req_tracestate=px.pluck(df.req_headers, 'tracestate')
+    resp_tracestate=px.pluck(df.resp_headers, 'tracestate')
+    df.traceparent = px.select(px.length(req_traceparent) > 0, req_traceparent, resp_traceparent)
+    df.tracestate = px.select(px.length(req_tracestate) > 0, req_tracestate, resp_tracestate)
+
+    # df = df[px.length(df.traceparent) > 0]
+    return df
+
+def add_telemetry_headers(df):
+    df.trace_id = px.substring(df.traceparent, 3, 32)
+    df.span_id = px.substring(df.traceparent, 36, 16)
+    df.otel_flag = px.substring(df.traceparent, 53, 2)
+
+    df.drop(['traceparent'])
+    return df
+    # df.str = px.substring(df.service, 1, 5)
+
+def prepare_base_dataframe(table, start_time):
+    df = px.DataFrame(table=table, start_time=start_time)
+    df.node = df.ctx['node']
+    df.pid = px.upid_to_pid(df.upid)
+    df = add_source_dest_columns(df)
+    df = add_source_dest_links(df, start_time)
+    return df
+
+def get_mysql_data(start_time: str):
+    df = prepare_base_dataframe('mysql_events', start_time)
+    df = df[px.length(df.resp_body) > 0]
+
+    df = add_mysql_trace_parent(df)
+    df = add_telemetry_headers(df)
+
+    df['req_path'] = ""
+    df['req_method'] = ""
+    df['req_headers'] = ""
+    df["type"] = "MYSQL"
+
+    df = df['time_', 'type', 'tracestate', 'trace_id', 'span_id', 'otel_flag',
+            'source', 'destination', 'latency', 'req_body', 'resp_body',
+            'req_path', 'req_method', 'req_headers']
+
+    return df
+
+def get_exception_data(start_time: str):
+    df = prepare_base_dataframe('http_events', start_time)
+
+    # Filter out onlu exception requests.
+    df = df[px.contains(df.destination, "zerok-operator-system/zerok-operator-controller") and px.contains(df.req_path, '/exception')]
+    df = add_http_trace_parent(df)
+    df = add_telemetry_headers(df)
+
+    df["type"] = "EXCEPTION"
+
+    # Order columns.
+    df = df['time_', 'type', 'tracestate', 'trace_id', 'span_id', 'otel_flag',
+            'source', 'destination', 'latency', 'req_body', 'resp_body',
+            'req_path', 'req_method', 'req_headers']
+
+    return df
+
+def get_http_data(start_time: str):
+    df = prepare_base_dataframe('http_events', start_time)
+
+    # Filter out onlu exception requests.
+    df = df[px.contains(df.destination, "default")]
+    df = df[px.contains(px.pluck(df.source,"script"), "px/pod")]
+
+    df = add_http_trace_parent(df)
+    df = add_telemetry_headers(df)
+
+    df["type"] = "HTTP"
+
+    # Order columns.
+    df = df['time_', 'type', 'tracestate', 'trace_id', 'span_id', 'otel_flag',
+            'source', 'destination', 'latency', 'req_body', 'resp_body',
+            'req_path', 'req_method', 'req_headers']
+
+    return df
+
+def get_roi_data(start_time: str, limit: int, filter: str):
+    mysql_df = get_mysql_data(start_time)
+    http_df = get_http_data(start_time)
+    exception_df = get_exception_data(start_time)
+
+    data1_df = http_df.append(exception_df)
+    roi_df = data1_df.append(mysql_df)
+
+    roi_df = apply_filter(roi_df, filter)
+
+    roi_df.head(limit)
+
+    return roi_df
+
+
+def add_source_dest_columns(df):
+    ''' Add source and destination columns for the MySQL request.
+
+    MySQL requests are traced server-side (trace_role==2), unless the server is
+    outside of the cluster in which case the request is traced client-side (trace_role==1).
+
+    When trace_role==2, the MySQL request source is the remote_addr column
+    and destination is the pod column. When trace_role==1, the MySQL request
+    source is the pod column and the destination is the remote_addr column.
+
+    Input DataFrame must contain trace_role, upid, remote_addr columns.
+    '''
+    df.pod = df.ctx['pod']
+    df.namespace = df.ctx['namespace']
+
+    # If remote_addr is a pod, get its name. If not, use IP address.
+    df.ra_pod = px.pod_id_to_pod_name(px.ip_to_pod_id(df.remote_addr))
+    df.is_ra_pod = df.ra_pod != ''
+    df.ra_name = px.select(df.is_ra_pod, df.ra_pod, df.remote_addr)
+
+    df.is_server_tracing = df.trace_role == 2
+    df.is_source_pod_type = px.select(df.is_server_tracing, df.is_ra_pod, True)
+    df.is_dest_pod_type = px.select(df.is_server_tracing, True, df.is_ra_pod)
+
+    # Set source and destination based on trace_role.
+    df.source = px.select(df.is_server_tracing, df.ra_name, df.pod)
+    df.destination = px.select(df.is_server_tracing, df.pod, df.ra_name)
+
+    # Filter out messages with empty source / destination.
+    df = df[df.source != '']
+    df = df[df.destination != '']
+
+    df = df.drop(['ra_pod', 'is_ra_pod', 'ra_name', 'is_server_tracing'])
+
+    return df
+
+
+def add_source_dest_links(df, start_time: str):
+    ''' Modifies the source and destination columns to display deeplinks in the UI.
+    Clicking on a pod name in either column will run the px/pod script for that pod.
+    Clicking on an IP address, will run the px/ip script showing all network connections
+    to/from that IP address.
+
+    Input DataFrame must contain source, destination, is_source_pod_type,
+    is_dest_pod_type, and namespace columns.
+    '''
+
+    # Source linking. If source is a pod, link to px/pod. If an IP addr, link to px/net_flow_graph.
+    df.src_pod_link = px.script_reference(df.source, 'px/pod', {
+        'start_time': start_time,
+        'pod': df.source
+    })
+    df.src_link = px.script_reference(df.source, 'px/ip', {
+        'start_time': start_time,
+        'ip': df.source,
+    })
+    df.source = px.select(df.is_source_pod_type, df.src_pod_link, df.src_link)
+
+    # If destination is a pod, link to px/pod. If an IP addr, link to px/net_flow_graph.
+    df.dest_pod_link = px.script_reference(df.destination, 'px/pod', {
+        'start_time': start_time,
+        'pod': df.destination
+    })
+    df.dest_link = px.script_reference(df.destination, 'px/ip', {
+        'start_time': start_time,
+        'ip': df.destination,
+    })
+    df.destination = px.select(df.is_dest_pod_type, df.dest_pod_link, df.dest_link)
+
+    df = df.drop(['src_pod_link', 'src_link', 'is_source_pod_type', 'dest_pod_link',
+                  'dest_link', 'is_dest_pod_type'])
+
+    return df
+
 px.display({{.MethodSignature}}, '{{.DataFrameName}}')
