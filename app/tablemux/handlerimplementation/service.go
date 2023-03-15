@@ -1,8 +1,8 @@
-package models
+package handlerimplementation
 
 import (
 	"encoding/json"
-	"main/app/cluster/utils"
+	"main/app/utils"
 	"px.dev/pxapi/types"
 )
 
@@ -29,19 +29,19 @@ type Latencies struct {
 func ConvertPixieDataToService(r *types.Record) Service {
 	service := Service{}
 
-	service.ServiceName = utils.GetString("service", r)
-	service.InboundConns = utils.GetFloat64Ptr("http_req_throughput_in", r)
+	service.ServiceName = utils.GetStringFromRecord("service", r)
+	service.InboundConns = utils.GetFloat64PtrFromRecord("http_req_throughput_in", r)
 	service.HttpLatencyIn = GetLatenciesPtr("http_latency_in", r)
-	service.PodCount = utils.GetIntegerPtr("pod_count", r)
-	service.InboundConns = utils.GetFloat64Ptr("inbound_conns", r)
-	service.OutboundConns = utils.GetFloat64Ptr("outbound_conns", r)
-	service.HttpErrorRateIn = utils.GetFloat64Ptr("http_error_rate_in", r)
+	service.PodCount = utils.GetIntegerPtrFromRecord("pod_count", r)
+	service.InboundConns = utils.GetFloat64PtrFromRecord("inbound_conns", r)
+	service.OutboundConns = utils.GetFloat64PtrFromRecord("outbound_conns", r)
+	service.HttpErrorRateIn = utils.GetFloat64PtrFromRecord("http_error_rate_in", r)
 
 	return service
 }
 
 func GetLatencies(key string, r *types.Record) (Latencies, error) {
-	v := utils.GetString(key, r)
+	v := utils.GetStringFromRecord(key, r)
 	if v != "" {
 		data := Latencies{}
 		err := json.Unmarshal([]byte(v), &data)
@@ -50,7 +50,7 @@ func GetLatencies(key string, r *types.Record) (Latencies, error) {
 		}
 		return data, nil
 	}
-	return Latencies{}, nil //TODO: what to do when latencies stirng is empty
+	return Latencies{}, nil
 }
 
 func GetLatenciesPtr(key string, r *types.Record) *Latencies {
@@ -58,5 +58,5 @@ func GetLatenciesPtr(key string, r *types.Record) *Latencies {
 	if err == nil {
 		return &v
 	}
-	return &Latencies{} //TODO: what to do when latencies stirng is empty
+	return &Latencies{}
 }

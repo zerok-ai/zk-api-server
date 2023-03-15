@@ -1,4 +1,4 @@
-package models
+package tablemux
 
 type MethodTemplate struct {
 	MethodSignature string

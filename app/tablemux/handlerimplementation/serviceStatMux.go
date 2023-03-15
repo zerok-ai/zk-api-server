@@ -1,15 +1,14 @@
-package tablemux
+package handlerimplementation
 
 import (
 	"context"
 	"io"
-	"main/app/cluster/models"
 	"px.dev/pxapi"
 	"px.dev/pxapi/types"
 )
 
 type TablePrinterServiceStat struct {
-	Values []models.ServiceStat
+	Values []ServiceStat
 }
 
 type ServiceStatMux struct {
@@ -21,7 +20,7 @@ func (t *TablePrinterServiceStat) HandleInit(ctx context.Context, metadata types
 }
 
 func (t *TablePrinterServiceStat) HandleRecord(ctx context.Context, r *types.Record) error {
-	t.Values = append(t.Values, models.ConvertPixieDataToServiceStat(r))
+	t.Values = append(t.Values, ConvertPixieDataToServiceStat(r))
 	return nil
 }
 

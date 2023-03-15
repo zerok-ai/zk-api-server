@@ -141,7 +141,7 @@ def inbound_let_timeseries(start_time: str, service: px.Service):
     df.latency_p50 = px.DurationNanos(px.floor(px.pluck_float64(df.latency_quantiles, 'p50')))
     df.latency_p90 = px.DurationNanos(px.floor(px.pluck_float64(df.latency_quantiles, 'p90')))
     df.latency_p99 = px.DurationNanos(px.floor(px.pluck_float64(df.latency_quantiles, 'p99')))
-    df.request_throughput = df.throughput_total / window_ns
+    df.request_throughput = df.throughput_total / window_ns * 1000000000
     df.errors_per_ns = df.error_rate_per_window * df.request_throughput / px.DurationNanos(1)
     df.error_rate = px.Percent(df.error_rate_per_window)
     df.bytes_per_ns = df.bytes_total / window_ns

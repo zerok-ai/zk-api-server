@@ -1,8 +1,8 @@
-package models
+package handlerimplementation
 
 import (
 	"encoding/json"
-	"main/app/cluster/utils"
+	"main/app/utils"
 	"px.dev/pxapi/types"
 )
 
@@ -44,23 +44,23 @@ type PixieTraceData struct {
 func ConvertPixieDataToPixieTraceData(r *types.Record) PixieTraceData {
 	var p = PixieTraceData{}
 
-	p.Time = utils.GetString("time_", r)
-	p.Type = utils.GetString("type", r)
-	p.TraceState = utils.GetString("tracestate", r)
-	p.TraceId = utils.GetString("trace_id", r)
-	p.SpanId = utils.GetString("span_id", r)
-	p.OtelFlag = utils.GetString("otel_flag", r)
-	p.ReqMethod = utils.GetString("req_body", r)
-	p.RespBody = utils.GetString("resp_body", r)
-	p.ReqPath = utils.GetString("req_path", r)
-	p.ReqMethod = utils.GetString("req_method", r)
-	p.ReqHeaders = utils.GetString("req_headers", r)
+	p.Time = utils.GetStringFromRecord("time_", r)
+	p.Type = utils.GetStringFromRecord("type", r)
+	p.TraceState = utils.GetStringFromRecord("tracestate", r)
+	p.TraceId = utils.GetStringFromRecord("trace_id", r)
+	p.SpanId = utils.GetStringFromRecord("span_id", r)
+	p.OtelFlag = utils.GetStringFromRecord("otel_flag", r)
+	p.ReqMethod = utils.GetStringFromRecord("req_body", r)
+	p.RespBody = utils.GetStringFromRecord("resp_body", r)
+	p.ReqPath = utils.GetStringFromRecord("req_path", r)
+	p.ReqMethod = utils.GetStringFromRecord("req_method", r)
+	p.ReqHeaders = utils.GetStringFromRecord("req_headers", r)
 
 	s := Source{}
 	d := Destination{}
 
-	sStr := utils.GetString("source", r)
-	dStr := utils.GetString("source", r)
+	sStr := utils.GetStringFromRecord("source", r)
+	dStr := utils.GetStringFromRecord("source", r)
 
 	json.Unmarshal([]byte(sStr), &s)
 	json.Unmarshal([]byte(dStr), &d)

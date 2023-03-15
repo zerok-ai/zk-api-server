@@ -1,7 +1,7 @@
-package models
+package handlerimplementation
 
 import (
-	"main/app/cluster/utils"
+	"main/app/utils"
 	"px.dev/pxapi/types"
 )
 
@@ -20,13 +20,13 @@ func ConvertPixieDataToServiceStat(r *types.Record) ServiceStat {
 	s := ServiceStat{}
 
 	s.Time = r.GetDatum("time_").String()
-	s.LatencyP50, _ = utils.GetInteger("latency_p50", r)
-	s.LatencyP90, _ = utils.GetInteger("latency_p90", r)
-	s.LatencyP99, _ = utils.GetInteger("latency_p99", r)
-	s.RequestThroughput, _ = utils.GetFloat("request_throughput", r, 64)
-	s.ErrorRate, _ = utils.GetFloat("error_rate", r, 64)
-	s.ErrorsPerNs, _ = utils.GetFloat("errors_per_ns", r, 64)
-	s.BytesPerNs, _ = utils.GetFloat("bytes_per_ns", r, 64)
+	s.LatencyP50, _ = utils.GetIntegerFromRecord("latency_p50", r)
+	s.LatencyP90, _ = utils.GetIntegerFromRecord("latency_p90", r)
+	s.LatencyP99, _ = utils.GetIntegerFromRecord("latency_p99", r)
+	s.RequestThroughput, _ = utils.GetFloatFromRecord("request_throughput", r, 64)
+	s.ErrorRate, _ = utils.GetFloatFromRecord("error_rate", r, 64)
+	s.ErrorsPerNs, _ = utils.GetFloatFromRecord("errors_per_ns", r, 64)
+	s.BytesPerNs, _ = utils.GetFloatFromRecord("bytes_per_ns", r, 64)
 
 	return s
 }

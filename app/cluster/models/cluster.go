@@ -1,6 +1,10 @@
 package models
 
-type Cluster struct {
+import (
+	"main/app/tablemux/handlerimplementation"
+)
+
+type ClusterDetails struct {
 	Nickname    string  `json:"nickname,omitempty"`
 	Domain      string  `json:"domain,omitempty"`
 	ApiKey      string  `json:"api_key,omitempty"`
@@ -10,20 +14,8 @@ type Cluster struct {
 	Status      string  `json:"status,omitempty"`
 }
 
-type ClusterDetailsFromResponse struct {
-	Typename             string  `json:"__typename"`
-	ClusterName          string  `json:"clusterName"`
-	Id                   string  `json:"id"`
-	LastHeartbeatMs      float64 `json:"lastHeartbeatMs"`
-	NumInstrumentedNodes int     `json:"numInstrumentedNodes"`
-	NumNodes             int     `json:"numNodes"`
-	PrettyClusterName    string  `json:"prettyClusterName"`
-	Status               string  `json:"status"`
-	VizierVersion        string  `json:"vizierVersion"`
-}
-
-func (r *ClusterDetailsFromResponse) FromResponseToDomainClusterDetails() Cluster {
-	return Cluster{
+func FromResponseToDomainClusterDetails(r handlerimplementation.ClusterDetailsFromResponse) ClusterDetails {
+	return ClusterDetails{
 		Nickname:    r.PrettyClusterName,
 		ClusterId:   r.Id,
 		ClusterName: r.ClusterName,
@@ -31,7 +23,7 @@ func (r *ClusterDetailsFromResponse) FromResponseToDomainClusterDetails() Cluste
 	}
 }
 
-var ClusterMap = map[string]Cluster{}
+var ClusterMap = map[string]ClusterDetails{}
 
 //func init() {
 //

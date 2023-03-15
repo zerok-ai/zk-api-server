@@ -1,9 +1,8 @@
-package tablemux
+package handlerimplementation
 
 import (
 	"context"
 	"io"
-	"main/app/cluster/models"
 	"px.dev/pxapi"
 	"px.dev/pxapi/types"
 )
@@ -13,7 +12,7 @@ type PixieTraceDataListMux struct {
 }
 
 type TablePrinterPixieTraceDataList struct {
-	Values []models.PixieTraceData
+	Values []PixieTraceData
 }
 
 func (t *TablePrinterPixieTraceDataList) HandleInit(ctx context.Context, metadata types.TableMetadata) error {
@@ -21,7 +20,7 @@ func (t *TablePrinterPixieTraceDataList) HandleInit(ctx context.Context, metadat
 }
 
 func (t *TablePrinterPixieTraceDataList) HandleRecord(ctx context.Context, r *types.Record) error {
-	t.Values = append(t.Values, models.ConvertPixieDataToPixieTraceData(r))
+	t.Values = append(t.Values, ConvertPixieDataToPixieTraceData(r))
 	return nil
 }
 

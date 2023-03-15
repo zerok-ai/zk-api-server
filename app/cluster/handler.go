@@ -11,12 +11,12 @@ func ListCluster(ctx iris.Context) {
 }
 
 func UpsertCluster(ctx iris.Context) {
-	var cluster models.Cluster
+	var cluster models.ClusterDetails
 	err := ctx.ReadJSON(&cluster)
 	// Validation: Is cluster model valid, parse cluster obj
 	if err != nil {
-		_ = ctx.StopWithProblem(iris.StatusBadRequest, iris.NewProblem().
-			Title("Failed to parse cluster info").DetailErr(err))
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.SetErr(utils.ErrClusterParsingFailed)
 		return
 	}
 
@@ -25,9 +25,10 @@ func UpsertCluster(ctx iris.Context) {
 
 func DeleteCluster(ctx iris.Context) {
 	clusterId := ctx.Params().Get("clusterId")
+
 	if utils.IsEmpty(clusterId) {
-		_ = ctx.StopWithProblem(iris.StatusBadRequest, iris.NewProblem().
-			Title("clusterId cannot be empty"))
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.SetErr(utils.ErrClusterIdEmpty)
 		return
 	}
 
