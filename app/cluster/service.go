@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
-	"io/ioutil"
+	"io"
 	"main/app/cluster/models"
 	"main/app/tablemux"
 	"main/app/tablemux/handlerimplementation"
@@ -25,7 +25,7 @@ func listCluster(ctx iris.Context) {
 
 	if r.StatusCode == 200 {
 		finalResp := handlerimplementation.ClusterDetailsMetaDataResponse{}
-		responseData, _ := ioutil.ReadAll(r.Body)
+		responseData, _ := io.ReadAll(r.Body)
 		_ = json.Unmarshal(responseData, &finalResp)
 		tablemux.UpdateApiKey(finalResp.Data.ApiKey.Key)
 		clusters := make([]models.ClusterDetails, 0)

@@ -6,7 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/kataras/iris/v12"
-	"io/ioutil"
+	"io"
+	"log"
 	"main/app/tablemux/handlerimplementation"
 	"main/app/utils"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"px.dev/pxapi/errdefs"
 	"strings"
 	"text/template"
+	"time"
 )
 
 var authToken string
@@ -46,14 +48,14 @@ type TableRecordHandler interface {
 func CreateVizierClient(cluster Cluster, tx MethodTemplate) (*pxapi.VizierClient, string, context.Context, error) {
 	path, err := os.Getwd()
 	if err != nil {
-		// TODO: add logs
+		log.Printf("failed to get working dir, %s\n", err.Error())
 		return nil, "", nil, err
 	}
 
 	pxFilePath := "/app/px/my.pxl"
 	dat, err := os.ReadFile(path + pxFilePath)
 	if err != nil {
-		// TODO: add logs
+		log.Printf("failed to open pixel file, path: %s, err: %s\n", pxFilePath, err.Error())
 		return nil, "", nil, err
 	}
 	t2 := template.New("Template")
@@ -62,7 +64,7 @@ func CreateVizierClient(cluster Cluster, tx MethodTemplate) (*pxapi.VizierClient
 	var doc bytes.Buffer
 	err = t2.Execute(&doc, tx)
 	if err != nil {
-		// TODO: add logs
+		log.Printf("failed to get working dir, %s\n", err.Error())
 		return nil, "", nil, err
 	}
 	pxl := doc.String()
@@ -71,13 +73,13 @@ func CreateVizierClient(cluster Cluster, tx MethodTemplate) (*pxapi.VizierClient
 	ctx := context.Background()
 	client, err := pxapi.NewClient(ctx, pxapi.WithAPIKey(cluster.ApiKey), pxapi.WithCloudAddr(cluster.Domain))
 	if err != nil {
-		// TODO: add logs
+		log.Printf("failed to create pixie api client, error: %s\n", err.Error())
 		return nil, "", nil, err
 	}
 
 	vz, err := client.NewVizierClient(ctx, cluster.ClusterId)
 	if err != nil {
-		// TODO: add logs
+		log.Printf("failed to create vizier api client, error: %s\n", err.Error())
 		return nil, "", nil, err
 	}
 
@@ -123,73 +125,50 @@ func GetResource(ctx iris.Context, id string, t TableRecordHandler, tx MethodTem
 
 	vz, pxl, ctxNew, err := CreateVizierClient(cluster, tx)
 	if err != nil {
+		log.Printf("failed to create vizier api client, error: %s\n", err.Error())
 		ctx.StatusCode(500)
 		ctx.SetErr(utils.ErrInternalServerError)
-		// TODO: remove line below
-		// TODO: add logs
-
-		_ = ctx.StopWithProblem(iris.StatusInternalServerError, iris.NewProblem().
-			Title(err.Error()))
-		return nil
 	}
 	resultSet, err := t.ExecutePxlScript(ctxNew, vz, pxl)
 	if err != nil {
+		log.Printf("failed to execute pixie script, error: %s\n", err.Error())
 		ctx.StatusCode(500)
 		ctx.SetErr(utils.ErrInternalServerError)
-		// TODO: remove line below
-		// TODO: add logs
-
-		_ = ctx.StopWithProblem(iris.StatusInternalServerError, iris.NewProblem().
-			Title(err.Error()))
-		return nil
 	}
 	resultSet, err = GetResult(resultSet)
 	if err == utils.ErrAuthenticationFailed {
 		return retry(ctx, cluster, t, tx, retryCount, id)
 	} else if err != nil {
+		log.Printf("failed to get pixie data result, error: %s\n", err.Error())
 		ctx.StatusCode(500)
 		ctx.SetErr(utils.ErrInternalServerError)
-		// TODO: remove line below
-		// TODO: add logs
 
-		_ = ctx.StopWithProblem(iris.StatusInternalServerError, iris.NewProblem().
-			Title(err.Error()))
-		return nil
 	}
 	return resultSet
 }
 
-// todo: check the implementation, retry seems to be having some logical flaw
 func retry(ctx iris.Context, cluster Cluster, t TableRecordHandler, tx MethodTemplate, retryCount int, id string) *pxapi.ScriptResults {
-	if retryCount == 0 {
-		return nil
-	}
-	retryCount -= 1
 
 	if authToken == "" {
-		authToken = GetAuthTokenWith2ReTry(3)
+		authToken = GetAuthTokenWith2ReTry(retryCount)
 		if authToken == "" {
-			return retry(ctx, cluster, t, tx, retryCount, id)
+			return nil
 		}
 	}
-	resp := GetMetaDataWithRetry(3)
+	resp := GetMetaDataWithRetry(retryCount)
 	if resp.StatusCode == 401 {
-		// TODO: add logs
-		resp = GetMetaDataWithRetry(3)
-		if resp.StatusCode != 200 {
-			// TODO: add logs
-			return retry(ctx, cluster, t, tx, retryCount, id)
-		}
+		log.Printf("metadata not retrieved, error: %d\n", resp.StatusCode)
+		return nil
 	} else if resp.StatusCode != 200 {
-		// TODO: add logs
-		return retry(ctx, cluster, t, tx, retryCount, id)
+		log.Printf("metadata not retrieved, error: %d\n", resp.StatusCode)
+		return nil
 	}
 
 	finalResp := handlerimplementation.ClusterDetailsMetaDataResponse{}
-	responseData, _ := ioutil.ReadAll(resp.Body)
+	responseData, _ := io.ReadAll(resp.Body)
 	err := json.Unmarshal(responseData, &finalResp)
 	if err != nil {
-		// TODO: add logs
+		log.Printf("json unmarshall error, error: %s\n", err.Error())
 		return retry(ctx, cluster, t, tx, retryCount, id)
 	}
 
@@ -204,7 +183,7 @@ func retry(ctx iris.Context, cluster Cluster, t TableRecordHandler, tx MethodTem
 func PopulateApiKey() {
 	r := GetMetaDataWithRetry(3)
 	finalResp := handlerimplementation.ClusterDetailsMetaDataResponse{}
-	responseData, _ := ioutil.ReadAll(r.Body)
+	responseData, _ := io.ReadAll(r.Body)
 	_ = json.Unmarshal(responseData, &finalResp)
 
 	apiKey = finalResp.Data.ApiKey.Key
@@ -218,23 +197,21 @@ func GetMetaDataWithRetry(retryCount int) http.Response {
 		if resp.StatusCode == 200 {
 			return resp
 		} else if resp.StatusCode == 401 {
-			// TODO: add logs
-			authToken = GetAuthTokenWith2ReTry(3)
+			log.Printf("metadata not retrieved, error: %d\n", resp.StatusCode)
+			authToken = getAuthToken()
 		}
 	}
 	return resp
 }
 
 func GetMetaData() http.Response {
-	tr := &http.Transport{}
 	client := http.Client{
-		Transport: tr,
+		Timeout: 30 * time.Second,
 	}
 
-	return utils.MakeRawApiCall("GET", nil, client, CLUSTER_METADATA_URL, nil, nil, authToken)
+	return utils.MakeRawApiCall("GET", CLUSTER_METADATA_URL, nil, nil, nil, authToken, nil, client)
 }
 
-// GetAuthTokenWith2ReTry TODO: make it better soon
 func GetAuthTokenWith2ReTry(retryCount int) string {
 	for i := 0; i < retryCount; i++ {
 		authToken = getAuthToken()
@@ -245,7 +222,6 @@ func GetAuthTokenWith2ReTry(retryCount int) string {
 	return authToken
 }
 
-// getAuthToken TODO: replace this soon
 func getAuthToken() string {
 
 	bodyMap := map[string]string{}
@@ -258,17 +234,17 @@ func getAuthToken() string {
 	}
 	s, err := json.Marshal(bodyMap)
 	if err != nil {
-		// TODO: add logs
+		log.Printf("json unmarshall error, error: %s\n", err.Error())
 		return ""
 	}
 	bodyReader := strings.NewReader(string(s[:]))
 
-	resp := utils.MakeRawApiCall("POST", utils.StringToPtr("application/json"), client, LOGIN_URL, nil, bodyReader, "")
+	resp := utils.MakeRawApiCall("POST", LOGIN_URL, nil, bodyReader, map[string]string{"content-type": "application/json"}, "", nil, client)
 	var token string
 	if resp.StatusCode == 200 {
 		token = resp.Header.Get("Token")
 	} else {
-		// TODO: add logs
+		log.Printf("token could not be fetched, error: %d\n", resp.StatusCode)
 		token = ""
 	}
 

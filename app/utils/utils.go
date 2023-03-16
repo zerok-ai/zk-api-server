@@ -2,10 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"net/http"
-	"os"
 	"px.dev/pxapi/types"
 	"regexp"
 	"strconv"
@@ -128,35 +124,4 @@ func IsValidPxlTime(s string) bool {
 	}
 
 	return true
-}
-
-// MakeRawApiCall TODO: the method needs major refactoring or even could be re-written
-func MakeRawApiCall(method string, contentType *string, client http.Client, urlToBeCalled string, cookiesTobeAdded []http.Cookie, requestBody io.Reader, authToken string) http.Response {
-
-	req, err := http.NewRequest(method, urlToBeCalled, requestBody)
-	if err != nil {
-		log.Fatalf("Got error %s", err.Error())
-	}
-
-	if cookiesTobeAdded != nil {
-		for _, element := range cookiesTobeAdded {
-			req.AddCookie(&element)
-		}
-	}
-
-	if contentType != nil {
-		// log.Println("Adding content type ", *contentType)
-		req.Header.Add("Content-Type", *contentType)
-	}
-	if method == "GET" {
-		req.Header.Add("Token", authToken)
-	}
-
-	response, err := client.Do(req)
-	if err != nil {
-		log.Print(err.Error())
-		os.Exit(1)
-	}
-
-	return *response
 }
