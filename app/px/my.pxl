@@ -302,7 +302,7 @@ def get_http_data(start_time: str):
     df = prepare_base_dataframe('http_events', start_time)
 
     # Filter out onlu exception requests.
-    df = df[px.contains(df.destination, "default")]
+    # df = df[px.contains(df.destination, "default")]
     df = df[px.contains(px.pluck(df.source,"script"), "px/pod")]
 
     df = add_http_trace_parent(df)
