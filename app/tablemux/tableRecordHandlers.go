@@ -21,11 +21,12 @@ import (
 
 var authToken string
 var apiKey string
-var domain = "zkcloud01.getanton.com:443"
-var LOGIN_URL = "http://zk-auth-demo.getanton.com:80/v1/auth/login"
+var domain = "zkdev01.getanton.com:443"
+var URL = "http://zkdev01-auth.getanton.com"
+var LOGIN_URL = URL + "/v1/auth/login"
 var EMAIL = "admin@default.com"
 var PASSWORD = "admin"
-var CLUSTER_METADATA_URL = "http://zk-auth-demo.getanton.com/v1/org/cluster/metadata"
+var CLUSTER_METADATA_URL = URL + "/v1/org/cluster/metadata"
 
 type Cluster struct {
 	Domain    string
@@ -121,6 +122,8 @@ func GetResource(ctx iris.Context, id string, t TableRecordHandler, tx MethodTem
 		return nil
 	}
 
+	retryCount -= 1
+
 	cluster := getClusterDetails(id)
 
 	vz, pxl, ctxNew, err := CreateVizierClient(cluster, tx)
@@ -192,6 +195,10 @@ func PopulateApiKey() {
 func GetMetaDataWithRetry(retryCount int) http.Response {
 
 	var resp http.Response
+	if utils.IsEmpty(authToken) {
+		return resp
+	}
+
 	for i := 0; i < retryCount; i++ {
 		resp = GetMetaData()
 		if resp.StatusCode == 200 {

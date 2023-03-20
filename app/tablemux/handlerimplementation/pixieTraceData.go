@@ -60,7 +60,7 @@ func ConvertPixieDataToPixieTraceData(r *types.Record) PixieTraceData {
 	d := Destination{}
 
 	sStr := utils.GetStringFromRecord("source", r)
-	dStr := utils.GetStringFromRecord("source", r)
+	dStr := utils.GetStringFromRecord("destination", r)
 
 	json.Unmarshal([]byte(sStr), &s)
 	json.Unmarshal([]byte(dStr), &d)
