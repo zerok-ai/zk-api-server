@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  cluster.conf: |-
+    {
+        "Domain": "zkcloud01.getanton.com:443",
+        "Url": "http://zk-auth-demo.getanton.com"
+    }
+kind: ConfigMap
+metadata:
+  name: cluster-details-config-file
+  namespace: default

@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  cluster.conf: |-
+    {
+        "Domain": "zkdev01.getanton.com:443",
+        "Url": "http://zkdev01-auth.getanton.com"
+    }
+kind: ConfigMap
+metadata:
+  name: cluster-details-config-file
+  namespace: default

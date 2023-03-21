@@ -19,14 +19,46 @@ import (
 	"time"
 )
 
+type clusterDetails struct {
+	Domain string `json:"Domain"`
+	Url    string `json:"Url"`
+}
+
 var authToken string
 var apiKey string
-var domain = "zkdev01.getanton.com:443"
-var URL = "http://zkdev01-auth.getanton.com"
-var LOGIN_URL = URL + "/v1/auth/login"
-var EMAIL = "admin@default.com"
-var PASSWORD = "admin"
-var CLUSTER_METADATA_URL = URL + "/v1/org/cluster/metadata"
+var details clusterDetails
+
+var LoginEndpoint = "/v1/auth/login"
+var Email = "admin@default.com"
+var Password = "admin"
+var ClusterMetadataEndpoint = "/v1/org/cluster/metadata"
+var LoginUrl string
+var ClusterMetadataUrl string
+
+func init() {
+	//configFilePath := "/Users/vaibhavpaharia/Go/src/zk-api-server/k8s/a.txt"
+	configFilePath := "/opt/cluster.conf"
+
+	jsonFile, err := os.Open(configFilePath)
+
+	if err != nil {
+		log.Println(err)
+		os.Exit(2)
+		return
+	} else {
+		defer jsonFile.Close()
+
+		err = json.NewDecoder(jsonFile).Decode(&details)
+		if err != nil {
+			log.Println(err)
+			os.Exit(2)
+		}
+
+	}
+
+	LoginUrl = details.Url + LoginEndpoint
+	ClusterMetadataUrl = details.Url + ClusterMetadataEndpoint
+}
 
 type Cluster struct {
 	Domain    string
@@ -36,7 +68,7 @@ type Cluster struct {
 
 func getClusterDetails(id string) Cluster {
 	return Cluster{
-		Domain:    domain,
+		Domain:    details.Domain,
 		ApiKey:    apiKey,
 		ClusterId: id,
 	}
@@ -216,7 +248,7 @@ func GetMetaData() http.Response {
 		Timeout: 30 * time.Second,
 	}
 
-	return utils.MakeRawApiCall("GET", CLUSTER_METADATA_URL, nil, nil, nil, authToken, nil, client)
+	return utils.MakeRawApiCall("GET", ClusterMetadataUrl, nil, nil, nil, authToken, nil, client)
 }
 
 func GetAuthTokenWith2ReTry(retryCount int) string {
@@ -232,8 +264,8 @@ func GetAuthTokenWith2ReTry(retryCount int) string {
 func getAuthToken() string {
 
 	bodyMap := map[string]string{}
-	bodyMap["email"] = EMAIL
-	bodyMap["password"] = PASSWORD
+	bodyMap["email"] = Email
+	bodyMap["password"] = Password
 
 	tr := &http.Transport{}
 	client := http.Client{
@@ -246,7 +278,7 @@ func getAuthToken() string {
 	}
 	bodyReader := strings.NewReader(string(s[:]))
 
-	resp := utils.MakeRawApiCall("POST", LOGIN_URL, nil, bodyReader, map[string]string{"content-type": "application/json"}, "", nil, client)
+	resp := utils.MakeRawApiCall("POST", LoginUrl, nil, bodyReader, map[string]string{"content-type": "application/json"}, "", nil, client)
 	var token string
 	if resp.StatusCode == 200 {
 		token = resp.Header.Get("Token")

@@ -1,0 +1,7 @@
+resources:
+  - deployment.yaml
+  - service.yaml
+namespace: default
+nameSuffix: -zk-api-server
+commonLabels:
+  app: api-server
