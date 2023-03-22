@@ -106,10 +106,10 @@ func getNamespaceList(ctx iris.Context, id, st string) (*pxapi.ScriptResults, []
 
 func getServiceDetailsMap(ctx iris.Context, id, st string) (*pxapi.ScriptResults, []handlerimplementation.ServiceMap) {
 	var s = make([]handlerimplementation.ServiceMap, 0)
-	serviceListMux := handlerimplementation.ServiceMapMux{Table: handlerimplementation.TablePrinterServiceMap{Values: s}}
+	serviceMapMux := handlerimplementation.ServiceMapMux{Table: handlerimplementation.TablePrinterServiceMap{Values: s}}
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetServiceMapMethodSignature(st), DataFrameName: "my_first_map"}
-	resultSet := tablemux.GetResource(ctx, id, &serviceListMux, tx, 3)
-	return resultSet, serviceListMux.Table.Values
+	resultSet := tablemux.GetResource(ctx, id, &serviceMapMux, tx, 3)
+	return resultSet, serviceMapMux.Table.Values
 }
 
 func getServiceDetailsList(ctx iris.Context, id, st string) (*pxapi.ScriptResults, []handlerimplementation.Service) {

@@ -73,10 +73,6 @@ func getClusterDetails(id string) Cluster {
 	}
 }
 
-type TableRecordHandlerMuxer interface {
-	ExecutePxlScript(ctx context.Context, vz *pxapi.VizierClient, pxl string) (*pxapi.ScriptResults, error)
-}
-
 func CreateVizierClient(cluster Cluster, tx MethodTemplate) (*pxapi.VizierClient, string, context.Context, error) {
 	path, err := os.Getwd()
 	if err != nil {
@@ -148,7 +144,7 @@ func GetResult(resultSet *pxapi.ScriptResults) (*pxapi.ScriptResults, error) {
 	return resultSet, nil
 }
 
-func GetResource(ctx iris.Context, id string, t TableRecordHandlerMuxer, tx MethodTemplate, retryCount int) *pxapi.ScriptResults {
+func GetResource[C pxapi.TableMuxer](ctx iris.Context, id string, t C, tx MethodTemplate, retryCount int) *pxapi.ScriptResults {
 	if retryCount == 0 {
 		return nil
 	}
@@ -163,12 +159,13 @@ func GetResource(ctx iris.Context, id string, t TableRecordHandlerMuxer, tx Meth
 		ctx.StatusCode(500)
 		ctx.SetErr(utils.ErrInternalServerError)
 	}
-	resultSet, err := t.ExecutePxlScript(ctxNew, vz, pxl)
-	if err != nil {
+	resultSet, err := vz.ExecuteScript(ctxNew, pxl, t)
+	if err != nil && err != io.EOF {
 		log.Printf("failed to execute pixie script, error: %s\n", err.Error())
 		ctx.StatusCode(500)
 		ctx.SetErr(utils.ErrInternalServerError)
 	}
+
 	resultSet, err = GetResult(resultSet)
 	if err == utils.ErrAuthenticationFailed {
 		return retry(ctx, cluster, t, tx, retryCount, id)
@@ -181,7 +178,7 @@ func GetResource(ctx iris.Context, id string, t TableRecordHandlerMuxer, tx Meth
 	return resultSet
 }
 
-func retry(ctx iris.Context, cluster Cluster, t TableRecordHandlerMuxer, tx MethodTemplate, retryCount int, id string) *pxapi.ScriptResults {
+func retry[C pxapi.TableMuxer](ctx iris.Context, cluster Cluster, t C, tx MethodTemplate, retryCount int, id string) *pxapi.ScriptResults {
 
 	if authToken == "" {
 		authToken = GetAuthTokenWith2ReTry(retryCount)
