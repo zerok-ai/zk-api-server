@@ -8,4 +8,4 @@ data:
 kind: ConfigMap
 metadata:
   name: cluster-details-config-file
-  namespace: default
+  namespace: zk-auth

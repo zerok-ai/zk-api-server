@@ -36,7 +36,6 @@ var LoginUrl string
 var ClusterMetadataUrl string
 
 func init() {
-	//configFilePath := "/Users/vaibhavpaharia/Go/src/zk-api-server/k8s/a.txt"
 	configFilePath := "/opt/cluster.conf"
 
 	jsonFile, err := os.Open(configFilePath)
@@ -74,7 +73,7 @@ func getClusterDetails(id string) Cluster {
 	}
 }
 
-type TableRecordHandler interface {
+type TableRecordHandlerMuxer interface {
 	ExecutePxlScript(ctx context.Context, vz *pxapi.VizierClient, pxl string) (*pxapi.ScriptResults, error)
 }
 
@@ -149,7 +148,7 @@ func GetResult(resultSet *pxapi.ScriptResults) (*pxapi.ScriptResults, error) {
 	return resultSet, nil
 }
 
-func GetResource(ctx iris.Context, id string, t TableRecordHandler, tx MethodTemplate, retryCount int) *pxapi.ScriptResults {
+func GetResource(ctx iris.Context, id string, t TableRecordHandlerMuxer, tx MethodTemplate, retryCount int) *pxapi.ScriptResults {
 	if retryCount == 0 {
 		return nil
 	}
@@ -182,7 +181,7 @@ func GetResource(ctx iris.Context, id string, t TableRecordHandler, tx MethodTem
 	return resultSet
 }
 
-func retry(ctx iris.Context, cluster Cluster, t TableRecordHandler, tx MethodTemplate, retryCount int, id string) *pxapi.ScriptResults {
+func retry(ctx iris.Context, cluster Cluster, t TableRecordHandlerMuxer, tx MethodTemplate, retryCount int, id string) *pxapi.ScriptResults {
 
 	if authToken == "" {
 		authToken = GetAuthTokenWith2ReTry(retryCount)
