@@ -70,3 +70,16 @@ func GetServiceDetails(ctx iris.Context) {
 	getServiceDetails(ctx, clusterIdx, serviceName, ns, st)
 
 }
+
+func GetPodDetailsList(ctx iris.Context) {
+	clusterIdx := ctx.Params().Get("clusterIdx")
+	st := ctx.URLParam("st")
+	serviceName := ctx.URLParam("service_name")
+	ns := ctx.URLParam("ns")
+
+	if !ValidateGraphDetailsApi(ctx, serviceName, ns, st) {
+		return
+	}
+
+	getPodDetails(ctx, clusterIdx, serviceName, ns, st)
+}

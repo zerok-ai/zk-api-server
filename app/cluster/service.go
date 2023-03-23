@@ -142,3 +142,26 @@ func getServiceDetails(ctx iris.Context, clusterIdx, name, ns, st string) {
 		"status":  200,
 	})
 }
+
+func getPodDetails(ctx iris.Context, clusterIdx, name, ns, st string) {
+	if !ValidatePxlTime(ctx, st) {
+		return
+	}
+	var resultSet *pxapi.ScriptResults
+	var result interface{}
+
+	var s = make([]handlerimplementation.PodDetails, 0)
+	serviceStatMux := handlerimplementation.PodDetailsListMux{Table: handlerimplementation.TablePrinterPodDetailsList{Values: s}}
+	resultSet = tablemux.GetResource(ctx, clusterIdx, &serviceStatMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsMethodSignature(st, ns, ns+"/"+name), DataFrameName: "my_first_graph"}, 3)
+	result = serviceStatMux.Table.Values
+
+	if result == nil {
+		return
+	}
+
+	_ = ctx.JSON(map[string]interface{}{
+		"results": result,
+		"stats":   resultSet.Stats(),
+		"status":  200,
+	})
+}

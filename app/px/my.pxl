@@ -406,4 +406,21 @@ def add_source_dest_links(df, start_time: str):
 
     return df
 
+def pods(start_time: str, namespace: px.Namespace, service: px.Service):
+
+    df = px.DataFrame(table='process_stats', start_time=start_time)
+    df = df[df.ctx['namespace'] == namespace]
+    df = df[px.has_service_name(df.ctx['service'], service)]
+
+    df.pod = df.ctx['pod_name']
+    df.container = df.ctx['container_name']
+    df.service = df.ctx['service']
+    df.pod_name = df.ctx['pod']
+
+    df = df.groupby(['service', 'pod', 'container']).agg()
+    df = df.groupby(['service', 'pod']).agg(containers=('container', px.count))
+    df.start_time = px.pod_name_to_start_time(df.pod)
+    df.status = px.pod_name_to_status(df.pod)
+    return df[['pod', 'service', 'start_time', 'containers', 'status']]
+
 px.display({{.MethodSignature}}, '{{.DataFrameName}}')

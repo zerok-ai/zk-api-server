@@ -16,6 +16,7 @@ var getServiceMapMethodTemplate = "service_let_graph('%s')"
 var getServiceListMethodTemplate = "my_fun('%s')"
 var getPXDataMethodTemplate = "get_roi_data(\"%s\",%d,'%s')"
 var getServiceDetailsMethodTemplate = "inbound_let_timeseries('%s', '%s')"
+var getPodDetailsMethodTemplate = "pods('%s', '%s', '%s')"
 
 func Contains[T comparable](s []T, e T) bool {
 	for _, v := range s {
@@ -101,6 +102,10 @@ func GetPXDataSignature(head int, st, filter string) string {
 
 func GetServiceDetailsMethodSignature(st, serviceNameWithNs string) string {
 	return fmt.Sprintf(getServiceDetailsMethodTemplate, st, serviceNameWithNs)
+}
+
+func GetPodDetailsMethodSignature(st, ns, serviceNameWithNs string) string {
+	return fmt.Sprintf(getPodDetailsMethodTemplate, st, ns, serviceNameWithNs)
 }
 
 func IsValidPxlTime(s string) bool {

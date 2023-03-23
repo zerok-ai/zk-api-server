@@ -13,5 +13,6 @@ func Initialize(app router.Party) {
 		clusterAPI.Get("/{clusterIdx}/service/list", GetResourceDetailsList)
 		clusterAPI.Get("/{clusterIdx}/service/map", GetResourceDetailsMap)
 		clusterAPI.Get("/{clusterIdx}/service/details", GetServiceDetails)
+		clusterAPI.Get("/{clusterIdx}/pod/list", GetPodDetailsList)
 	}
 }
