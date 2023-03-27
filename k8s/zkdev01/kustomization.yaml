@@ -1,4 +1,4 @@
 kind: Kustomization
 resources:
-  - ../base
   - configmap.yaml
+  - ../base

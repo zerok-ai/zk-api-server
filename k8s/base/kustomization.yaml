@@ -1,6 +1,7 @@
 resources:
+  - namespace.yaml
   - deployment.yaml
   - service.yaml
-namespace: zk-auth
+namespace: zkcloud
 commonLabels:
   app: api-server

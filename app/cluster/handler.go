@@ -6,10 +6,6 @@ import (
 	"main/app/utils"
 )
 
-func ListCluster(ctx iris.Context) {
-	listCluster(ctx)
-}
-
 func UpsertCluster(ctx iris.Context) {
 	var cluster models.ClusterDetails
 	err := ctx.ReadJSON(&cluster)
@@ -37,49 +33,64 @@ func DeleteCluster(ctx iris.Context) {
 
 func GetResourceDetailsList(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
+	apiKey := ctx.GetHeader("ZK_API_KEY")
 	st := ctx.URLParam("st")
 
-	if !ValidateGetResourceDetailsApi(ctx, st) {
+	if !ValidateGetResourceDetailsApi(ctx, st, apiKey) {
 		return
 	}
 
-	getResourceDetails(ctx, clusterIdx, "list", st)
+	getResourceDetails(ctx, clusterIdx, "list", st, apiKey)
 }
 
 func GetResourceDetailsMap(ctx iris.Context) {
+	apiKey := ctx.GetHeader("ZK_API_KEY")
 	clusterIdx := ctx.Params().Get("clusterIdx")
 	st := ctx.URLParam("st")
 
-	if !ValidateGetResourceDetailsApi(ctx, st) {
+	if !ValidateGetResourceDetailsApi(ctx, st, apiKey) {
 		return
 	}
 
-	getResourceDetails(ctx, clusterIdx, "map", st)
+	getResourceDetails(ctx, clusterIdx, "map", st, apiKey)
 }
 
 func GetServiceDetails(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
+	apiKey := ctx.GetHeader("ZK_API_KEY")
 	serviceName := ctx.URLParam("name")
 	ns := ctx.URLParam("ns")
 	st := ctx.URLParam("st")
 
-	if !ValidateGraphDetailsApi(ctx, serviceName, ns, st) {
+	if !ValidateGraphDetailsApi(ctx, serviceName, ns, st, apiKey) {
 		return
 	}
 
-	getServiceDetails(ctx, clusterIdx, serviceName, ns, st)
+	getServiceDetails(ctx, clusterIdx, serviceName, ns, st, apiKey)
 
 }
 
 func GetPodDetailsList(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
+	apiKey := ctx.GetHeader("ZK_API_KEY")
 	st := ctx.URLParam("st")
 	serviceName := ctx.URLParam("service_name")
 	ns := ctx.URLParam("ns")
 
-	if !ValidateGraphDetailsApi(ctx, serviceName, ns, st) {
+	if !ValidateGraphDetailsApi(ctx, serviceName, ns, st, apiKey) {
 		return
 	}
 
-	getPodDetails(ctx, clusterIdx, serviceName, ns, st)
+	getPodDetails(ctx, clusterIdx, serviceName, ns, st, apiKey)
+}
+
+func GetPxData(ctx iris.Context) {
+	apiKey := ctx.GetHeader("ZK_API_KEY")
+	st := ctx.URLParamDefault("st", "-10m")
+	clusterIdx := ctx.URLParam("cluster_id")
+	if !ValidateGetPxlData(ctx, clusterIdx, apiKey) {
+		return
+	}
+
+	getPxlData(ctx, clusterIdx, st, apiKey)
 }

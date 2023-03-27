@@ -1,10 +1,8 @@
 package app
 
 import (
-	"main/app/cluster"
-	"main/app/px"
-
 	"github.com/kataras/iris/v12"
+	"main/app/cluster"
 )
 
 func newApp() *iris.Application {
@@ -36,7 +34,6 @@ func newApp() *iris.Application {
 
 	v1 := app.Party("/v1")
 	cluster.Initialize(v1)
-	px.Initialize(v1)
 
 	return app
 }

@@ -4,44 +4,41 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
-	"io"
+	"log"
 	"main/app/cluster/models"
 	"main/app/tablemux"
 	"main/app/tablemux/handlerimplementation"
 	"main/app/utils"
+	"os"
 	"px.dev/pxapi"
 	"strings"
 )
 
-func init() {
-	tablemux.GetAuthTokenWith2ReTry(3)
-	tablemux.PopulateApiKey()
+type Details struct {
+	Domain string `json:"Domain"`
+	Url    string `json:"Url"`
 }
 
-func listCluster(ctx iris.Context) {
+var details Details
 
-	tablemux.GetAuthTokenWith2ReTry(3)
-	r := tablemux.GetMetaDataWithRetry(3)
+func init() {
+	configFilePath := "/opt/cluster.conf"
 
-	if r.StatusCode == 200 {
-		finalResp := handlerimplementation.ClusterDetailsMetaDataResponse{}
-		responseData, _ := io.ReadAll(r.Body)
-		_ = json.Unmarshal(responseData, &finalResp)
-		tablemux.UpdateApiKey(finalResp.Data.ApiKey.Key)
-		clusters := make([]models.ClusterDetails, 0)
+	jsonFile, err := os.Open(configFilePath)
 
-		for _, r := range finalResp.Data.Clusters {
-			clusters = append(clusters, models.FromResponseToDomainClusterDetails(r))
-		}
+	if err != nil {
+		log.Println(err)
+		os.Exit(2)
+		return
+	} else {
+		defer jsonFile.Close()
 
-		err := ctx.JSON(clusters)
+		err = json.NewDecoder(jsonFile).Decode(&details)
 		if err != nil {
-			return
+			log.Println(err)
+			os.Exit(2)
 		}
 	}
-	ctx.StatusCode(iris.StatusInternalServerError)
-	ctx.SetErr(utils.ErrClusterFetchFailed)
-	return
 }
 
 func updateCluster(ctx iris.Context, cluster models.ClusterDetails) {
@@ -72,7 +69,7 @@ func deleteCluster(ctx iris.Context, clusterId string) {
 	ctx.StatusCode(iris.StatusOK)
 }
 
-func getResourceDetails(ctx iris.Context, clusterIdx, action, st string) {
+func getResourceDetails(ctx iris.Context, clusterIdx, action, st, apiKey string) {
 	if !ValidatePxlTime(ctx, st) {
 		return
 	}
@@ -80,9 +77,9 @@ func getResourceDetails(ctx iris.Context, clusterIdx, action, st string) {
 	var resultSet *pxapi.ScriptResults
 	var result interface{}
 	if strings.EqualFold(action, "list") {
-		resultSet, result = getServiceDetailsList(ctx, clusterIdx, st)
+		resultSet, result = getServiceDetailsList(ctx, clusterIdx, st, apiKey)
 	} else if strings.EqualFold(action, "map") {
-		resultSet, result = getServiceDetailsMap(ctx, clusterIdx, st)
+		resultSet, result = getServiceDetailsMap(ctx, clusterIdx, st, apiKey)
 	}
 
 	if result == nil {
@@ -96,31 +93,31 @@ func getResourceDetails(ctx iris.Context, clusterIdx, action, st string) {
 	})
 }
 
-func getNamespaceList(ctx iris.Context, id, st string) (*pxapi.ScriptResults, []string) {
+func getNamespaceList(ctx iris.Context, id, st, apiKey string) (*pxapi.ScriptResults, []string) {
 	var v = make([]string, 0)
 	stringListMux := handlerimplementation.StringListMux{Table: handlerimplementation.TablePrinterStringList{Values: v}}
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetNamespaceMethodSignature(st), DataFrameName: "my_first_ns"}
-	resultSet := tablemux.GetResource(ctx, id, &stringListMux, tx, 3)
+	resultSet := tablemux.GetResource(ctx, &stringListMux, tx, id, apiKey, details.Domain)
 	return resultSet, stringListMux.Table.Values
 }
 
-func getServiceDetailsMap(ctx iris.Context, id, st string) (*pxapi.ScriptResults, []handlerimplementation.ServiceMap) {
+func getServiceDetailsMap(ctx iris.Context, id, st, apiKey string) (*pxapi.ScriptResults, []handlerimplementation.ServiceMap) {
 	var s = make([]handlerimplementation.ServiceMap, 0)
 	serviceMapMux := handlerimplementation.ServiceMapMux{Table: handlerimplementation.TablePrinterServiceMap{Values: s}}
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetServiceMapMethodSignature(st), DataFrameName: "my_first_map"}
-	resultSet := tablemux.GetResource(ctx, id, &serviceMapMux, tx, 3)
+	resultSet := tablemux.GetResource(ctx, &serviceMapMux, tx, id, apiKey, details.Domain)
 	return resultSet, serviceMapMux.Table.Values
 }
 
-func getServiceDetailsList(ctx iris.Context, id, st string) (*pxapi.ScriptResults, []handlerimplementation.Service) {
+func getServiceDetailsList(ctx iris.Context, id, st, apiKey string) (*pxapi.ScriptResults, []handlerimplementation.Service) {
 	var s = make([]handlerimplementation.Service, 0)
 	serviceListMux := handlerimplementation.ServiceListMux{Table: handlerimplementation.TablePrinterServiceList{Values: s}}
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetServiceListMethodSignature(st), DataFrameName: "my_first_list"}
-	resultSet := tablemux.GetResource(ctx, id, &serviceListMux, tx, 3)
+	resultSet := tablemux.GetResource(ctx, &serviceListMux, tx, id, apiKey, details.Domain)
 	return resultSet, serviceListMux.Table.Values
 }
 
-func getServiceDetails(ctx iris.Context, clusterIdx, name, ns, st string) {
+func getServiceDetails(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) {
 	if !ValidatePxlTime(ctx, st) {
 		return
 	}
@@ -129,7 +126,7 @@ func getServiceDetails(ctx iris.Context, clusterIdx, name, ns, st string) {
 
 	var s = make([]handlerimplementation.ServiceStat, 0)
 	serviceStatMux := handlerimplementation.ServiceStatMux{Table: handlerimplementation.TablePrinterServiceStat{Values: s}}
-	resultSet = tablemux.GetResource(ctx, clusterIdx, &serviceStatMux, tablemux.MethodTemplate{MethodSignature: utils.GetServiceDetailsMethodSignature(st, ns+"/"+name), DataFrameName: "my_first_graph"}, 3)
+	resultSet = tablemux.GetResource(ctx, &serviceStatMux, tablemux.MethodTemplate{MethodSignature: utils.GetServiceDetailsMethodSignature(st, ns+"/"+name), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
 	result = serviceStatMux.Table.Values
 
 	if result == nil {
@@ -143,7 +140,7 @@ func getServiceDetails(ctx iris.Context, clusterIdx, name, ns, st string) {
 	})
 }
 
-func getPodDetails(ctx iris.Context, clusterIdx, name, ns, st string) {
+func getPodDetails(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) {
 	if !ValidatePxlTime(ctx, st) {
 		return
 	}
@@ -152,13 +149,34 @@ func getPodDetails(ctx iris.Context, clusterIdx, name, ns, st string) {
 
 	var s = make([]handlerimplementation.PodDetails, 0)
 	serviceStatMux := handlerimplementation.PodDetailsListMux{Table: handlerimplementation.TablePrinterPodDetailsList{Values: s}}
-	resultSet = tablemux.GetResource(ctx, clusterIdx, &serviceStatMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsMethodSignature(st, ns, ns+"/"+name), DataFrameName: "my_first_graph"}, 3)
+	resultSet = tablemux.GetResource(ctx, &serviceStatMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsMethodSignature(st, ns, ns+"/"+name), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
 	result = serviceStatMux.Table.Values
 
 	if result == nil {
 		return
 	}
 
+	_ = ctx.JSON(map[string]interface{}{
+		"results": result,
+		"stats":   resultSet.Stats(),
+		"status":  200,
+	})
+}
+
+func getPxlData(ctx iris.Context, clusterIdx, st, apiKey string) {
+
+	var s = make([]handlerimplementation.PixieTraceData, 0)
+	pixieTraceDataMux := handlerimplementation.PixieTraceDataListMux{Table: handlerimplementation.TablePrinterPixieTraceDataList{Values: s}}
+
+	tx := tablemux.MethodTemplate{MethodSignature: utils.GetPXDataSignature(100, st, "{}"), DataFrameName: "my_first_list"}
+	resultSet := tablemux.GetResource(ctx, &pixieTraceDataMux, tx, clusterIdx, apiKey, details.Domain)
+	result := pixieTraceDataMux.Table.Values
+
+	if result == nil {
+		return
+	}
+
+	ctx.StatusCode(iris.StatusOK)
 	_ = ctx.JSON(map[string]interface{}{
 		"results": result,
 		"stats":   resultSet.Stats(),
