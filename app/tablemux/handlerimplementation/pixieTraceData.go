@@ -2,6 +2,7 @@ package handlerimplementation
 
 import (
 	"encoding/json"
+	"fmt"
 	"main/app/utils"
 	"px.dev/pxapi/types"
 )
@@ -68,6 +69,17 @@ func ConvertPixieDataToPixieTraceData(r *types.Record) PixieTraceData {
 
 	p.Source = s
 	p.Destination = d
+
+	if !utils.IsEmpty(p.ReqBody) && !utils.IsEmpty(p.ReqHeaders) {
+		sec := map[string]string{}
+		if err := json.Unmarshal([]byte(p.ReqHeaders), &sec); err != nil {
+			fmt.Println("cannot covert req_headers to map, ", p.ReqHeaders)
+		} else {
+			if sec["Content-Encoding"] == "gzip" {
+				p.ReqBody = utils.DecodeGzip(p.ReqBody)
+			}
+		}
+	}
 
 	return p
 }

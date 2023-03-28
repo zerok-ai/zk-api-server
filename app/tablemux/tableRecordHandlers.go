@@ -28,10 +28,10 @@ var authToken string
 var apiKey string
 var details clusterDetails
 
-var LoginEndpoint = "/v1/auth/login"
+var LoginEndpoint = "/v1/p/auth/login"
 var Email = "admin@default.com"
 var Password = "admin"
-var ClusterMetadataEndpoint = "/v1/org/cluster/metadata"
+var ClusterMetadataEndpoint = "/v1/u/org/cluster/metadata"
 var LoginUrl string
 var ClusterMetadataUrl string
 

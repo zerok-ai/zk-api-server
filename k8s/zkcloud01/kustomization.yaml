@@ -1,4 +1,5 @@
 kind: Kustomization
+namespace: zkcloud
 resources:
-  - ../base
   - configmap.yaml
+  - ../base
