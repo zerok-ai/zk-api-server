@@ -1,7 +1,11 @@
 package utils
 
 import (
+	"bytes"
+	"compress/gzip"
 	"fmt"
+	"io"
+	"log"
 	"px.dev/pxapi/types"
 	"regexp"
 	"strconv"
@@ -129,4 +133,29 @@ func IsValidPxlTime(s string) bool {
 	}
 
 	return true
+}
+
+func DecodeGzip(s string) string {
+	b := []byte(s)
+	reader := bytes.NewReader(b)
+	r, err := gzip.NewReader(reader)
+	defer func(r *gzip.Reader) {
+		err := r.Close()
+		if err != nil {
+
+		}
+	}(r)
+
+	if err != nil {
+		log.Printf("Error while decoding gzip string %s\n", s)
+		log.Printf(err.Error())
+	}
+	
+	output, err := io.ReadAll(r)
+	if err != nil {
+		log.Printf("Error while reading gzip string %s\n", s)
+		log.Printf(err.Error())
+	}
+
+	return string(output)
 }

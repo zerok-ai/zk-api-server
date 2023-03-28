@@ -3,9 +3,8 @@ data:
   cluster.conf: |-
     {
         "Domain": "zkcloud01.getanton.com:443",
-        "Url": "http://zk-auth.zk-auth.svc.cluster.local"
+        "Url": "http://zk-auth.zkcloud.svc.cluster.local"
     }
 kind: ConfigMap
 metadata:
   name: cluster-details-config-file
-  namespace: zkcloud

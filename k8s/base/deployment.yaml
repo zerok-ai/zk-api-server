@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api-server
-  namespace: zkcloud
+  namespace: zk-auth
   labels:
     app: api-server
 spec:
@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: api-server
-          image: us-west1-docker.pkg.dev/zerok-dev/api-server/zk-api-server:latest
+          image: us-west1-docker.pkg.dev/zerok-dev/api-server/zk-api-server:dev
           ports:
             - containerPort: 80
           volumeMounts:
