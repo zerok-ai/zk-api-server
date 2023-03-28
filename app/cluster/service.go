@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
 	"log"
@@ -22,6 +23,9 @@ type Details struct {
 var details Details
 
 func init() {
+	fmt.Println("inside")
+	fmt.Println("inside2")
+	fmt.Println("inside3")
 	configFilePath := "/opt/cluster.conf"
 
 	jsonFile, err := os.Open(configFilePath)
