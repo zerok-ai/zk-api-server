@@ -45,12 +45,13 @@ func ConvertPixieDataToPixieTraceData(r *types.Record) PixieTraceData {
 	var p = PixieTraceData{}
 
 	p.Time = utils.GetStringFromRecord("time_", r)
+	p.Latency, _ = utils.GetIntegerFromRecord("latency", r)
 	p.Type = utils.GetStringFromRecord("type", r)
 	p.TraceState = utils.GetStringFromRecord("tracestate", r)
 	p.TraceId = utils.GetStringFromRecord("trace_id", r)
 	p.SpanId = utils.GetStringFromRecord("span_id", r)
 	p.OtelFlag = utils.GetStringFromRecord("otel_flag", r)
-	p.ReqMethod = utils.GetStringFromRecord("req_body", r)
+	p.ReqBody = utils.GetStringFromRecord("req_body", r)
 	p.RespBody = utils.GetStringFromRecord("resp_body", r)
 	p.ReqPath = utils.GetStringFromRecord("req_path", r)
 	p.ReqMethod = utils.GetStringFromRecord("req_method", r)
