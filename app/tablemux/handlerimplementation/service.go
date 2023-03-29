@@ -30,7 +30,7 @@ func ConvertPixieDataToService(r *types.Record) Service {
 	service := Service{}
 
 	service.ServiceName = utils.GetStringFromRecord("service", r)
-	service.InboundConns = utils.GetFloat64PtrFromRecord("http_req_throughput_in", r)
+	service.HttpRequestThroughputIn = utils.GetStringPtrFromRecord("http_req_throughput_in", r)
 	service.HttpLatencyIn = GetLatenciesPtr("http_latency_in", r)
 	service.PodCount = utils.GetIntegerPtrFromRecord("pod_count", r)
 	service.InboundConns = utils.GetFloat64PtrFromRecord("inbound_conns", r)

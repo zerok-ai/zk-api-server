@@ -144,6 +144,40 @@ func getServiceDetails(ctx iris.Context, clusterIdx, name, ns, st, apiKey string
 	})
 }
 
+func getPodDetailsTimeSeries(ctx iris.Context, clusterIdx, podName, ns, st, apiKey string) {
+	if !ValidatePxlTime(ctx, st) {
+		return
+	}
+
+	// for HTTP Requests and HTTP Errors
+	var s1 = make([]handlerimplementation.PodDetailsErrAndReq, 0)
+	reqAndErrMux := handlerimplementation.PodDetailsReqAndErrMux{Table: handlerimplementation.TablePrinterPodDetailsReqAndErr{Values: s1}}
+	resultSetErrAndReq := tablemux.GetResource(ctx, &reqAndErrMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsForHTTPDataAndErrMethodSignature(st, ns+"/"+podName), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
+	resultErrAndReq := reqAndErrMux.Table.Values
+
+	// for HTTP Latency
+	var s2 = make([]handlerimplementation.PodDetailsLatency, 0)
+	latencyMux := handlerimplementation.PodDetailsLatencyMux{Table: handlerimplementation.TablePrinterPodDetailsLatency{Values: s2}}
+	resultSetLatency := tablemux.GetResource(ctx, &latencyMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsForHTTPLatencyMethodSignature(st, ns+"/"+podName), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
+	resultLatency := latencyMux.Table.Values
+
+	// for CPU Usage
+	var s3 = make([]handlerimplementation.PodDetailsCpuUsage, 0)
+	cpuUsageMux := handlerimplementation.PodDetailsCpuUsageMux{Table: handlerimplementation.TablePrinterPodDetailsCpuUsage{Values: s3}}
+	resultSetCpuUsage := tablemux.GetResource(ctx, &cpuUsageMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsForCpuUsageMethodSignature(st, ns+"/"+podName), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
+	resultCpuUsage := cpuUsageMux.Table.Values
+
+	reqAndErrResp := getResp(resultSetErrAndReq, resultErrAndReq)
+	latencyResp := getResp(resultSetLatency, resultLatency)
+	cpuUsageResp := getResp(resultSetCpuUsage, resultCpuUsage)
+
+	_ = ctx.JSON(map[string]map[string]interface{}{
+		"errAndReq": reqAndErrResp,
+		"latency":   latencyResp,
+		"cpuUsage":  cpuUsageResp,
+	})
+}
+
 func getPodDetails(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) {
 	if !ValidatePxlTime(ctx, st) {
 		return
@@ -186,4 +220,22 @@ func getPxlData(ctx iris.Context, clusterIdx, st, apiKey string) {
 		"stats":   resultSet.Stats(),
 		"status":  200,
 	})
+}
+
+func getResp(resultSet *pxapi.ScriptResults, result interface{}) map[string]interface{} {
+	var x map[string]interface{}
+	if result == nil {
+		x = map[string]interface{}{
+			"results": nil,
+			"stats":   nil,
+			"status":  500,
+		}
+	} else {
+		x = map[string]interface{}{
+			"results": result,
+			"stats":   resultSet.Stats(),
+			"status":  200,
+		}
+	}
+	return x
 }

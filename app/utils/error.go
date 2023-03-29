@@ -10,5 +10,6 @@ var (
 	ErrZkApiKeyEmpty        = errors.New("ZK_API_KEY header cannot be empty")
 	ErrNamespaceEmpty       = errors.New("namespace ns cannot be empty")
 	ErrServiceNameEmpty     = errors.New("service name cannot be empty")
+	ErrPodNameEmpty         = errors.New("pod name cannot be empty")
 	ErrInternalServerError  = errors.New("something went wrong, please try again later")
 )

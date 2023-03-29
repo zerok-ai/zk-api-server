@@ -63,6 +63,30 @@ func ValidateGraphDetailsApi(ctx iris.Context, serviceName, ns, st, apiKey strin
 	return true
 }
 
+func ValidatePodDetailsApi(ctx iris.Context, podName, ns, st, apiKey string) bool {
+	if utils.IsEmpty(podName) {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.SetErr(utils.ErrPodNameEmpty)
+		return false
+	}
+	if utils.IsEmpty(ns) {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.SetErr(utils.ErrNamespaceEmpty)
+		return false
+	}
+	if utils.IsEmpty(st) {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.SetErr(utils.ErrPxlStartTimeEmpty)
+		return false
+	}
+	if utils.IsEmpty(apiKey) {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.SetErr(utils.ErrZkApiKeyEmpty)
+		return false
+	}
+	return true
+}
+
 func ValidateGetResourceDetailsApi(ctx iris.Context, st string, apiKey string) bool {
 	if utils.IsEmpty(st) {
 		ctx.StatusCode(iris.StatusBadRequest)

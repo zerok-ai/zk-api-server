@@ -84,6 +84,20 @@ func GetPodDetailsList(ctx iris.Context) {
 	getPodDetails(ctx, clusterIdx, serviceName, ns, st, apiKey)
 }
 
+func GetPodDetails(ctx iris.Context) {
+	clusterIdx := ctx.Params().Get("clusterIdx")
+	apiKey := ctx.GetHeader("ZK_API_KEY")
+	st := ctx.URLParam("st")
+	podName := ctx.URLParam("pod_name")
+	ns := ctx.URLParam("ns")
+
+	if !ValidatePodDetailsApi(ctx, podName, ns, st, apiKey) {
+		return
+	}
+
+	getPodDetailsTimeSeries(ctx, clusterIdx, podName, ns, st, apiKey)
+}
+
 func GetPxData(ctx iris.Context) {
 	apiKey := ctx.GetHeader("ZK_API_KEY")
 	st := ctx.URLParamDefault("st", "-10m")

@@ -21,6 +21,9 @@ var getServiceListMethodTemplate = "my_fun('%s')"
 var getPXDataMethodTemplate = "get_roi_data(\"%s\",%d,'%s')"
 var getServiceDetailsMethodTemplate = "inbound_let_timeseries('%s', '%s')"
 var getPodDetailsMethodTemplate = "pods('%s', '%s', '%s')"
+var getPodDetailsForHTTPDataAndErrTemplate = "pod_details_inbound_request_timeseries_by_container('%s', '%s')"
+var getPodDetailsForHTTPLatencyTemplate = "pod_details_inbound_latency_timeseries('%s', '%s')"
+var getPodDetailsForCpuUsageTemplate = "pod_details_resource_timeseries('%s', '%s')"
 
 func Contains[T comparable](s []T, e T) bool {
 	for _, v := range s {
@@ -112,6 +115,18 @@ func GetPodDetailsMethodSignature(st, ns, serviceNameWithNs string) string {
 	return fmt.Sprintf(getPodDetailsMethodTemplate, st, ns, serviceNameWithNs)
 }
 
+func GetPodDetailsForHTTPDataAndErrMethodSignature(st, podNameWithNs string) string {
+	return fmt.Sprintf(getPodDetailsForHTTPDataAndErrTemplate, st, podNameWithNs)
+}
+
+func GetPodDetailsForHTTPLatencyMethodSignature(st, podNameWithNs string) string {
+	return fmt.Sprintf(getPodDetailsForHTTPLatencyTemplate, st, podNameWithNs)
+}
+
+func GetPodDetailsForCpuUsageMethodSignature(st, podNameWithNs string) string {
+	return fmt.Sprintf(getPodDetailsForCpuUsageTemplate, st, podNameWithNs)
+}
+
 func IsValidPxlTime(s string) bool {
 	re := regexp.MustCompile("[0-9]+")
 	d := re.FindAllString(s, -1)
@@ -150,7 +165,7 @@ func DecodeGzip(s string) string {
 		log.Printf("Error while decoding gzip string %s\n", s)
 		log.Printf(err.Error())
 	}
-	
+
 	output, err := io.ReadAll(r)
 	if err != nil {
 		log.Printf("Error while reading gzip string %s\n", s)
