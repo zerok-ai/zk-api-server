@@ -3,6 +3,7 @@ package handlerimplementation
 import (
 	"context"
 	"io"
+	"main/app/utils"
 	"px.dev/pxapi"
 	"px.dev/pxapi/types"
 )
@@ -20,7 +21,11 @@ func (t *TablePrinterPixieTraceDataList) HandleInit(ctx context.Context, metadat
 }
 
 func (t *TablePrinterPixieTraceDataList) HandleRecord(ctx context.Context, r *types.Record) error {
-	t.Values = append(t.Values, ConvertPixieDataToPixieTraceData(r))
+	d := ConvertPixieDataToPixieTraceData(r)
+	if utils.IsEmpty(d.TraceId) || utils.IsEmpty(d.SpanId) {
+		return nil
+	}
+	t.Values = append(t.Values, d)
 	return nil
 }
 
