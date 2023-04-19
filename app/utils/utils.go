@@ -25,6 +25,12 @@ var getPodDetailsForHTTPDataAndErrTemplate = "pod_details_inbound_request_timese
 var getPodDetailsForHTTPLatencyTemplate = "pod_details_inbound_latency_timeseries('%s', '%s')"
 var getPodDetailsForCpuUsageTemplate = "pod_details_resource_timeseries('%s', '%s')"
 
+var HTTP_DEBUG = false
+
+func Init(httpDebug bool) {
+	HTTP_DEBUG = httpDebug
+
+}
 func Contains[T comparable](s []T, e T) bool {
 	for _, v := range s {
 		if v == e {
@@ -42,22 +48,27 @@ func StringToPtr(v string) *string {
 	return &v
 }
 
+// write testcase
 func GetStringFromRecord(key string, r *types.Record) string {
 	return r.GetDatum(key).String()
 }
 
+// write testcase
 func GetFloatFromRecord(key string, r *types.Record, bitSize int) (float64, error) {
 	return GetFloatFromString(GetStringFromRecord(key, r), bitSize)
 }
 
+// write testcase
 func GetIntegerFromRecord(key string, r *types.Record) (int, error) {
 	return GetIntegerFromString(GetStringFromRecord(key, r))
 }
 
+// write testcase
 func GetStringPtrFromRecord(key string, r *types.Record) *string {
 	return StringToPtr(GetStringFromRecord(key, r))
 }
 
+// write testcase
 func GetFloat64PtrFromRecord(key string, r *types.Record) *float64 {
 	v, err := GetFloatFromRecord(key, r, 64)
 	if err != nil {
@@ -67,6 +78,7 @@ func GetFloat64PtrFromRecord(key string, r *types.Record) *float64 {
 	}
 }
 
+// write testcase
 func GetIntegerPtrFromRecord(key string, r *types.Record) *int {
 	v, err := GetIntegerFromRecord(key, r)
 	if err != nil {
@@ -95,6 +107,7 @@ func FloatToPtr(v float64) *float64 {
 func GetNamespaceMethodSignature(st string) string {
 	return fmt.Sprintf(getNamespaceMethodTemplate, st)
 }
+
 func GetServiceMapMethodSignature(st string) string {
 	return fmt.Sprintf(getServiceMapMethodTemplate, st)
 }
@@ -135,12 +148,18 @@ func IsValidPxlTime(s string) bool {
 	}
 
 	t := strings.Split(s, d[0])
-	if len(t) == 3 {
-		if !Contains(TimeUnitPxl, t[2]) && t[0] != "-" {
+	var params = make([]string, 0)
+	for _, v := range t {
+		if !IsEmpty(v) {
+			params = append(params, v)
+		}
+	}
+	if len(params) == 2 {
+		if !Contains(TimeUnitPxl, params[1]) || params[0] != "-" {
 			return false
 		}
-	} else if len(t) == 2 {
-		if !Contains(TimeUnitPxl, t[1]) {
+	} else if len(params) == 1 {
+		if !Contains(TimeUnitPxl, params[0]) {
 			return false
 		}
 	} else {

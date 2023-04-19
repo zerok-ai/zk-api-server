@@ -1,12 +1,13 @@
 package utils
 
 import (
+	"errors"
 	"io"
 	"log"
 	"net/http"
 )
 
-func MakeRawApiCall(method string, urlToBeCalled string, queryParams map[string]string, requestBody io.Reader, headers map[string]string, authToken string, cookiesTobeAdded []http.Cookie, client http.Client) http.Response {
+func MakeRawApiCall(method string, urlToBeCalled string, queryParams map[string]string, requestBody io.Reader, headers map[string]string, authToken string, cookiesTobeAdded []http.Cookie, client http.Client) (http.Response, error) {
 	var req *http.Request
 	var err error
 
@@ -16,10 +17,11 @@ func MakeRawApiCall(method string, urlToBeCalled string, queryParams map[string]
 		req, err = makePostRequest(urlToBeCalled, requestBody)
 	} else {
 		log.Printf("Invalid method type, %s", method)
+		return http.Response{}, errors.New("invalid method type")
 	}
 
 	if err != nil {
-		return http.Response{}
+		return http.Response{}, err
 	}
 
 	addHeaders(headers, req)
@@ -29,10 +31,10 @@ func MakeRawApiCall(method string, urlToBeCalled string, queryParams map[string]
 	response, err := client.Do(req)
 	if err != nil {
 		log.Printf("Got error %s\n", err.Error())
-		return http.Response{}
+		return http.Response{}, err
 	}
 
-	return *response
+	return *response, nil
 }
 
 func makePostRequest(url string, body io.Reader) (*http.Request, error) {

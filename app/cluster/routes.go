@@ -2,18 +2,21 @@ package cluster
 
 import (
 	"github.com/kataras/iris/v12/core/router"
+	"main/app/cluster/handler"
 )
 
 func Initialize(app router.Party) {
+
+	ch := handler.NewClusterHandler()
 	clusterAPI := app.Party("/u/cluster")
 	{
-		clusterAPI.Post("/", UpsertCluster)
-		clusterAPI.Delete("/{clusterId}", DeleteCluster)
-		clusterAPI.Get("/{clusterIdx}/service/list", GetResourceDetailsList)
-		clusterAPI.Get("/{clusterIdx}/service/map", GetResourceDetailsMap)
-		clusterAPI.Get("/{clusterIdx}/service/details", GetServiceDetails)
-		clusterAPI.Get("/{clusterIdx}/pod/list", GetPodDetailsList)
-		clusterAPI.Get("/{clusterIdx}/pod/details", GetPodDetails)
-		clusterAPI.Get("/traces", GetPxData)
+		clusterAPI.Post("/", ch.UpsertCluster)
+		clusterAPI.Delete("/{clusterId}", ch.DeleteCluster)
+		clusterAPI.Get("/{clusterIdx}/service/list", ch.GetResourceDetailsList)
+		clusterAPI.Get("/{clusterIdx}/service/map", ch.GetResourceDetailsMap)
+		clusterAPI.Get("/{clusterIdx}/service/details", ch.GetServiceDetails)
+		clusterAPI.Get("/{clusterIdx}/pod/list", ch.GetPodList)
+		clusterAPI.Get("/{clusterIdx}/pod/details", ch.GetPodDetails)
+		clusterAPI.Get("/traces", ch.GetPxData)
 	}
 }
