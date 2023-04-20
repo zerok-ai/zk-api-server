@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
+	"github.com/kataras/iris/v12/x/errors"
 	"io"
 	"log"
 	"px.dev/pxapi/types"
@@ -48,44 +49,30 @@ func StringToPtr(v string) *string {
 	return &v
 }
 
-// write testcase
-func GetStringFromRecord(key string, r *types.Record) string {
-	return r.GetDatum(key).String()
-}
-
-// write testcase
-func GetFloatFromRecord(key string, r *types.Record, bitSize int) (float64, error) {
-	return GetFloatFromString(GetStringFromRecord(key, r), bitSize)
-}
-
-// write testcase
-func GetIntegerFromRecord(key string, r *types.Record) (int, error) {
-	return GetIntegerFromString(GetStringFromRecord(key, r))
-}
-
-// write testcase
-func GetStringPtrFromRecord(key string, r *types.Record) *string {
-	return StringToPtr(GetStringFromRecord(key, r))
-}
-
-// write testcase
-func GetFloat64PtrFromRecord(key string, r *types.Record) *float64 {
-	v, err := GetFloatFromRecord(key, r, 64)
-	if err != nil {
-		return nil
-	} else {
-		return &v
+func GetStringFromRecord(key string, r *types.Record) (*string, error) {
+	v := r.GetDatum(key)
+	if v == nil {
+		return nil, errors.New(fmt.Sprintf("key %s not found", key))
 	}
+	return StringToPtr(v.String()), nil
 }
 
-// write testcase
-func GetIntegerPtrFromRecord(key string, r *types.Record) *int {
-	v, err := GetIntegerFromRecord(key, r)
-	if err != nil {
-		return nil
-	} else {
-		return &v
+func GetFloatFromRecord(key string, r *types.Record, bitSize int) (*float64, error) {
+	s, e := GetStringFromRecord(key, r)
+	if s == nil {
+		return nil, e
 	}
+	f, e := GetFloatFromString(*s, bitSize)
+	return FloatToPtr(f), e
+}
+
+func GetIntegerFromRecord(key string, r *types.Record) (*int, error) {
+	s, e := GetStringFromRecord(key, r)
+	if s == nil {
+		return nil, e
+	}
+	i, e := GetIntegerFromString(*s)
+	return IntToPtr(i), e
 }
 
 func GetIntegerFromString(k string) (int, error) {

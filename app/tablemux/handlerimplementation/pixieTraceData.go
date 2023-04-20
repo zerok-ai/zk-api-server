@@ -28,55 +28,56 @@ type PixieTraceData struct {
 	Destination Destination `json:"destination"`
 	Source      Source      `json:"source"`
 
-	Latency    int    `json:"latency"`
-	OtelFlag   string `json:"otel_flag"`
-	ReqBody    string `json:"req_body"`
-	ReqHeaders string `json:"req_headers"`
-	ReqMethod  string `json:"req_method"`
-	ReqPath    string `json:"req_path"`
-	RespBody   string `json:"resp_body"`
-	SpanId     string `json:"span_id"`
-	Time       string `json:"time_"`
-	TraceId    string `json:"trace_id"`
-	TraceState string `json:"tracestate"`
-	Type       string `json:"type"`
+	Latency    *int    `json:"latency"`
+	OtelFlag   *string `json:"otel_flag"`
+	ReqBody    *string `json:"req_body"`
+	ReqHeaders *string `json:"req_headers"`
+	ReqMethod  *string `json:"req_method"`
+	ReqPath    *string `json:"req_path"`
+	RespBody   *string `json:"resp_body"`
+	SpanId     *string `json:"span_id"`
+	Time       *string `json:"time_"`
+	TraceId    *string `json:"trace_id"`
+	TraceState *string `json:"tracestate"`
+	Type       *string `json:"type"`
 }
 
 func ConvertPixieDataToPixieTraceData(r *types.Record) PixieTraceData {
 	var p = PixieTraceData{}
 
-	p.Time = utils.GetStringFromRecord("time_", r)
+	p.Time, _ = utils.GetStringFromRecord("time_", r)
 	p.Latency, _ = utils.GetIntegerFromRecord("latency", r)
-	p.Type = utils.GetStringFromRecord("type", r)
-	p.TraceState = utils.GetStringFromRecord("tracestate", r)
-	p.TraceId = utils.GetStringFromRecord("trace_id", r)
-	p.SpanId = utils.GetStringFromRecord("span_id", r)
-	p.OtelFlag = utils.GetStringFromRecord("otel_flag", r)
-	p.ReqBody = utils.GetStringFromRecord("req_body", r)
-	p.RespBody = utils.GetStringFromRecord("resp_body", r)
-	p.ReqPath = utils.GetStringFromRecord("req_path", r)
-	p.ReqMethod = utils.GetStringFromRecord("req_method", r)
-	p.ReqHeaders = utils.GetStringFromRecord("req_headers", r)
+	p.Type, _ = utils.GetStringFromRecord("type", r)
+	p.TraceState, _ = utils.GetStringFromRecord("tracestate", r)
+	p.TraceId, _ = utils.GetStringFromRecord("trace_id", r)
+	p.SpanId, _ = utils.GetStringFromRecord("span_id", r)
+	p.OtelFlag, _ = utils.GetStringFromRecord("otel_flag", r)
+	p.ReqBody, _ = utils.GetStringFromRecord("req_body", r)
+	p.RespBody, _ = utils.GetStringFromRecord("resp_body", r)
+	p.ReqPath, _ = utils.GetStringFromRecord("req_path", r)
+	p.ReqMethod, _ = utils.GetStringFromRecord("req_method", r)
+	p.ReqHeaders, _ = utils.GetStringFromRecord("req_headers", r)
 
 	s := Source{}
 	d := Destination{}
 
-	sStr := utils.GetStringFromRecord("source", r)
-	dStr := utils.GetStringFromRecord("destination", r)
+	sStr, _ := utils.GetStringFromRecord("source", r)
+	dStr, _ := utils.GetStringFromRecord("destination", r)
 
-	json.Unmarshal([]byte(sStr), &s)
-	json.Unmarshal([]byte(dStr), &d)
+	json.Unmarshal([]byte(*sStr), &s)
+	json.Unmarshal([]byte(*dStr), &d)
 
 	p.Source = s
 	p.Destination = d
 
-	if !utils.IsEmpty(p.ReqBody) && !utils.IsEmpty(p.ReqHeaders) {
+	if !utils.IsEmpty(*p.ReqBody) && !utils.IsEmpty(*p.ReqHeaders) {
 		sec := map[string]string{}
-		if err := json.Unmarshal([]byte(p.ReqHeaders), &sec); err != nil {
+		if err := json.Unmarshal([]byte(*p.ReqHeaders), &sec); err != nil {
 			fmt.Println("cannot covert req_headers to map, ", p.ReqHeaders)
 		} else {
 			if sec["Content-Encoding"] == "gzip" {
-				p.ReqBody = utils.DecodeGzip(p.ReqBody)
+				v := utils.DecodeGzip(*p.ReqBody)
+				p.ReqBody = &v
 			}
 		}
 	}

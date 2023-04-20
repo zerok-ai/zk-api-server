@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"github.com/stretchr/testify/assert"
+	"px.dev/pxapi/types"
 	"strconv"
 	"testing"
 )
@@ -223,6 +224,117 @@ func TestIsValidPxlTime(t *testing.T) {
 		result := IsValidPxlTime(tc.input)
 		assert.Equal(t, tc.expected, result)
 	}
+}
+
+func TestGetStringFromRecord(t *testing.T) {
+	cs1 := types.ColSchema{
+		Name:         "responder_pod",
+		Type:         5,
+		SemanticType: 400,
+	}
+	s1 := types.NewStringValue(&cs1)
+	s1.ScanString("the_value_at_column_1")
+
+	cs2 := types.ColSchema{
+		Name:         "requester_pod",
+		Type:         5,
+		SemanticType: 400,
+	}
+	s2 := types.NewStringValue(&cs2)
+	s2.ScanString("the_value_at_column_2")
+
+	d := []types.Datum{s1, s2}
+
+	table := types.TableMetadata{
+		Name:    "table_name",
+		ColInfo: nil,
+		ColIdxByName: map[string]int64{
+			"requester_pod": 1,
+			"responder_pod": 0,
+		},
+	}
+
+	mockRecord := &types.Record{Data: d, TableMetadata: &table}
+
+	expectedOutput1 := "the_value_at_column_1"
+	actualOutput1, _ := GetStringFromRecord("responder_pod", mockRecord)
+	assert.Equal(t, expectedOutput1, *actualOutput1)
+
+	expectedOutput2 := "the_value_at_column_2"
+	actualOutput2, _ := GetStringFromRecord("requester_pod", mockRecord)
+	assert.Equal(t, expectedOutput2, *actualOutput2)
+
+	actualOutput3, _ := GetStringFromRecord("unknown_col", mockRecord)
+	assert.Nil(t, actualOutput3)
+}
+func TestGetIntegerFromRecord(t *testing.T) {
+	cs1 := types.ColSchema{
+		Name:         "node_count",
+		Type:         2,
+		SemanticType: 1,
+	}
+	s1 := types.NewInt64Value(&cs1)
+	s1.ScanInt64(1)
+
+	d := []types.Datum{s1}
+
+	table := types.TableMetadata{
+		Name:    "table_name",
+		ColInfo: nil,
+		ColIdxByName: map[string]int64{
+			"node_count": 0,
+		},
+	}
+
+	mockRecord := &types.Record{Data: d, TableMetadata: &table}
+
+	expectedOutput1 := 1
+	actualOutput1, _ := GetIntegerFromRecord("node_count", mockRecord)
+	assert.Equal(t, expectedOutput1, *actualOutput1)
+
+	actualOutput3, _ := GetIntegerFromRecord("unknown_col", mockRecord)
+	assert.Nil(t, actualOutput3)
+}
+func TestGetFloatFromRecord(t *testing.T) {
+	cs1 := types.ColSchema{
+		Name:         "latency_p50",
+		Type:         4,
+		SemanticType: 901,
+	}
+	s1 := types.NewFloat64Value(&cs1)
+	s1.ScanFloat64(3.14)
+
+	cs2 := types.ColSchema{
+		Name:         "inbound_throughput",
+		Type:         4,
+		SemanticType: 903,
+	}
+	s2 := types.NewFloat64Value(&cs2)
+	s2.ScanFloat64(0.34)
+
+	d := []types.Datum{s1, s2}
+
+	table := types.TableMetadata{
+		Name:    "table_name",
+		ColInfo: nil,
+		ColIdxByName: map[string]int64{
+			"latency_p50":        0,
+			"inbound_throughput": 1,
+		},
+	}
+
+	mockRecord := &types.Record{Data: d, TableMetadata: &table}
+
+	expectedOutput1 := 3.14
+	actualOutput1, _ := GetFloatFromRecord("latency_p50", mockRecord, 34)
+	assert.Equal(t, expectedOutput1, *actualOutput1)
+
+	expectedOutput2 := 0.34
+	actualOutput2, _ := GetFloatFromRecord("inbound_throughput", mockRecord, 34)
+	assert.Equal(t, expectedOutput2, *actualOutput2)
+
+	actualOutput3, _ := GetFloatFromRecord("unknown_col", mockRecord, 34)
+	assert.Nil(t, actualOutput3)
 }
 
 //func TestDecodeGzip(t *testing.T) {

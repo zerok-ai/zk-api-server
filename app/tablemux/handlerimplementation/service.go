@@ -7,7 +7,7 @@ import (
 )
 
 type Service struct {
-	ServiceName             string     `json:"service"`
+	ServiceName             *string    `json:"service"`
 	PodCount                *int       `json:"pod_count"`
 	HttpLatencyIn           *Latencies `json:"http_latency_in"`
 	HttpRequestThroughputIn *string    `json:"http_req_throughput_in"`
@@ -29,22 +29,22 @@ type Latencies struct {
 func ConvertPixieDataToService(r *types.Record) Service {
 	service := Service{}
 
-	service.ServiceName = utils.GetStringFromRecord("service", r)
-	service.HttpRequestThroughputIn = utils.GetStringPtrFromRecord("http_req_throughput_in", r)
+	service.ServiceName, _ = utils.GetStringFromRecord("service", r)
+	service.HttpRequestThroughputIn, _ = utils.GetStringFromRecord("http_req_throughput_in", r)
 	service.HttpLatencyIn = GetLatenciesPtr("http_latency_in", r)
-	service.PodCount = utils.GetIntegerPtrFromRecord("pod_count", r)
-	service.InboundConns = utils.GetFloat64PtrFromRecord("inbound_conns", r)
-	service.OutboundConns = utils.GetFloat64PtrFromRecord("outbound_conns", r)
-	service.HttpErrorRateIn = utils.GetFloat64PtrFromRecord("http_error_rate_in", r)
+	service.PodCount, _ = utils.GetIntegerFromRecord("pod_count", r)
+	service.InboundConns, _ = utils.GetFloatFromRecord("inbound_conns", r, 64)
+	service.OutboundConns, _ = utils.GetFloatFromRecord("outbound_conns", r, 64)
+	service.HttpErrorRateIn, _ = utils.GetFloatFromRecord("http_error_rate_in", r, 64)
 
 	return service
 }
 
 func GetLatencies(key string, r *types.Record) (Latencies, error) {
-	v := utils.GetStringFromRecord(key, r)
-	if v != "" {
+	v, _ := utils.GetStringFromRecord(key, r)
+	if v != nil {
 		data := Latencies{}
-		err := json.Unmarshal([]byte(v), &data)
+		err := json.Unmarshal([]byte(*v), &data)
 		if err != nil {
 			return Latencies{}, err
 		}

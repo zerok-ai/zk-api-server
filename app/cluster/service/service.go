@@ -25,6 +25,7 @@ type ClusterService interface {
 	UpdateCluster(ctx iris.Context, cluster models.ClusterDetails) (int, *zkerrors.ZkError)
 	DeleteCluster(ctx iris.Context, clusterId string) (int, *zkerrors.ZkError)
 	GetResourceDetails(ctx iris.Context, clusterIdx, action, st, apiKey string) models.PixieResponse
+	GetNamespaceList(ctx iris.Context, id, st, apiKey string) models.PixieResponse
 	GetServiceDetails(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) models.PixieResponse
 	GetPodDetailsTimeSeries(ctx iris.Context, clusterIdx, podName, ns, st, apiKey string) map[string]models.PixieResponse
 	GetPodList(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) models.PixieResponse
@@ -111,8 +112,15 @@ func (cs *clusterService) GetResourceDetails(ctx iris.Context, clusterIdx, actio
 	return pxResp
 }
 
-func (cs *clusterService) getNamespaceList(ctx iris.Context, id, st, apiKey string) models.PixieResponse {
+func (cs *clusterService) GetNamespaceList(ctx iris.Context, id, st, apiKey string) models.PixieResponse {
 	var pxResp models.PixieResponse
+	if !validation.ValidatePxlTime(st) {
+		e := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
+		pxResp.Result = nil
+		pxResp.ResultsStats = nil
+		pxResp.Error = &e
+		return pxResp
+	}
 	var v = make([]string, 0)
 	stringListMux := handlerimplementation.StringListMux{Table: handlerimplementation.TablePrinterStringList{Values: v}}
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetNamespaceMethodSignature(st), DataFrameName: "my_first_ns"}
@@ -290,6 +298,13 @@ func (cs *clusterService) GetPodList(ctx iris.Context, clusterIdx, name, ns, st,
 
 func (cs *clusterService) GetPxlData(ctx iris.Context, clusterIdx, st, apiKey string) models.PixieResponse {
 	var pxResp models.PixieResponse
+	if !validation.ValidatePxlTime(st) {
+		err := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
+		pxResp.Result = nil
+		pxResp.ResultsStats = nil
+		pxResp.Error = &err
+		return pxResp
+	}
 	var s = make([]handlerimplementation.PixieTraceData, 0)
 	pixieTraceDataMux := handlerimplementation.PixieTraceDataListMux{Table: handlerimplementation.TablePrinterPixieTraceDataList{Values: s}}
 

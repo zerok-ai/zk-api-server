@@ -8,11 +8,28 @@ import (
 	"io"
 	"log"
 	"main/app/utils"
+	"main/app/utils/zkerrors"
 	"os"
 	"px.dev/pxapi"
 	"px.dev/pxapi/errdefs"
 	"text/template"
 )
+
+type PixieRepository interface {
+	GetPixieData(ctx iris.Context, t pxapi.TableMuxer, tx MethodTemplate, clusterId string, apiKey string, domain string) (*pxapi.ScriptResults, *zkerrors.ZkError)
+}
+
+type pixie struct {
+}
+
+func NewPixieRepository() PixieRepository {
+	return &pixie{}
+}
+
+var path string
+
+func init() {
+}
 
 func CreateVizierClient(tx MethodTemplate, clusterId string, apiKey string, domain string) (*pxapi.VizierClient, string, context.Context, error) {
 	path, err := os.Getwd()
@@ -24,8 +41,12 @@ func CreateVizierClient(tx MethodTemplate, clusterId string, apiKey string, doma
 	pxFilePath := "/app/px/my.pxl"
 	dat, err := os.ReadFile(path + pxFilePath)
 	if err != nil {
-		log.Printf("failed to open pixel file, path: %s, err: %s\n", pxFilePath, err.Error())
-		return nil, "", nil, err
+		path = "/Users/vaibhavpaharia/Go/src/zk-api-server"
+		dat, err = os.ReadFile(path + pxFilePath)
+		if err != nil {
+			log.Printf("failed to open pixel file, path: %s, err: %s\n", pxFilePath, err.Error())
+			return nil, "", nil, err
+		}
 	}
 	t2 := template.New("Template")
 	t2, _ = t2.Parse(string(dat))
@@ -37,7 +58,6 @@ func CreateVizierClient(tx MethodTemplate, clusterId string, apiKey string, doma
 		return nil, "", nil, err
 	}
 	pxl := doc.String()
-	fmt.Print(pxl)
 
 	ctx := context.Background()
 	client, err := pxapi.NewClient(ctx, pxapi.WithAPIKey(apiKey), pxapi.WithCloudAddr(domain))
@@ -85,26 +105,28 @@ func GetResult(resultSet *pxapi.ScriptResults) (*pxapi.ScriptResults, error) {
 	return resultSet, nil
 }
 
-func GetResource[C pxapi.TableMuxer](ctx iris.Context, t C, tx MethodTemplate, clusterId string, apiKey string, domain string) *pxapi.ScriptResults {
+func (p *pixie) GetPixieData(ctx iris.Context, t pxapi.TableMuxer, tx MethodTemplate, clusterId string, apiKey string, domain string) (*pxapi.ScriptResults, *zkerrors.ZkError) {
 	vz, pxl, ctxNew, err := CreateVizierClient(tx, clusterId, apiKey, domain)
+	var zkErr zkerrors.ZkError
 	if err != nil {
 		log.Printf("failed to create vizier api client, error: %s\n", err.Error())
-		ctx.StatusCode(500)
-		ctx.SetErr(utils.ErrInternalServerError)
+		zkErr = zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil)
+		return nil, &zkErr
 	}
+
 	resultSet, err := vz.ExecuteScript(ctxNew, pxl, t)
 	if err != nil && err != io.EOF {
 		log.Printf("failed to execute pixie script, error: %s\n", err.Error())
-		ctx.StatusCode(500)
-		ctx.SetErr(utils.ErrInternalServerError)
+		zkErr = zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil)
+		return nil, &zkErr
 	}
 
 	resultSet, err = GetResult(resultSet)
 	if err != nil {
 		log.Printf("failed to get pixie data result, error: %s\n", err.Error())
-		ctx.StatusCode(500)
-		ctx.SetErr(utils.ErrInternalServerError)
-
+		zkErr = zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil)
+		return nil, &zkErr
 	}
-	return resultSet
+
+	return resultSet, nil
 }

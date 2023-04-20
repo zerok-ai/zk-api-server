@@ -22,7 +22,7 @@ func (t *TablePrinterPixieTraceDataList) HandleInit(ctx context.Context, metadat
 
 func (t *TablePrinterPixieTraceDataList) HandleRecord(ctx context.Context, r *types.Record) error {
 	d := ConvertPixieDataToPixieTraceData(r)
-	if utils.IsEmpty(d.TraceId) || utils.IsEmpty(d.SpanId) {
+	if utils.IsEmpty(*d.TraceId) || utils.IsEmpty(*d.SpanId) {
 		return nil
 	}
 	t.Values = append(t.Values, d)

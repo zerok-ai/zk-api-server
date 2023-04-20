@@ -42,6 +42,20 @@ func (_m *ClusterService) DeleteCluster(ctx *context.Context, clusterId string) 
 	return r0, r1
 }
 
+// GetNamespaceList provides a mock function with given fields: ctx, id, st, apiKey
+func (_m *ClusterService) GetNamespaceList(ctx *context.Context, id string, st string, apiKey string) models.PixieResponse {
+	ret := _m.Called(ctx, id, st, apiKey)
+
+	var r0 models.PixieResponse
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string) models.PixieResponse); ok {
+		r0 = rf(ctx, id, st, apiKey)
+	} else {
+		r0 = ret.Get(0).(models.PixieResponse)
+	}
+
+	return r0
+}
+
 // GetPodDetailsTimeSeries provides a mock function with given fields: ctx, clusterIdx, podName, ns, st, apiKey
 func (_m *ClusterService) GetPodDetailsTimeSeries(ctx *context.Context, clusterIdx string, podName string, ns string, st string, apiKey string) map[string]models.PixieResponse {
 	ret := _m.Called(ctx, clusterIdx, podName, ns, st, apiKey)
