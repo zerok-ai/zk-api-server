@@ -3,11 +3,13 @@ package cluster
 import (
 	"github.com/kataras/iris/v12/core/router"
 	"main/app/cluster/handler"
+	"main/app/utils"
 )
 
 func Initialize(app router.Party) {
 
 	ch := handler.NewClusterHandler()
+	app.Use(utils.ValidateApiKeyMiddleware)
 	clusterAPI := app.Party("/u/cluster")
 	{
 		clusterAPI.Post("/", ch.UpsertCluster)

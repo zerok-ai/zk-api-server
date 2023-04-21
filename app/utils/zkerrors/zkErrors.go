@@ -32,23 +32,12 @@ var (
 	ZK_ERROR_BAD_REQUEST                    = ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Encountered an issue while processing your request. Please check and try again!"}
 	ZK_ERROR_INTERNAL_SERVER_SERVER         = ZkErrorType{Status: iris.StatusInternalServerError, Type: "INTERNAL_SERVER_ERROR", Message: "Encountered an issue while sending email, contact support"}
 	ZK_ERROR_BAD_REQUEST_SERVICE_NAME_EMPTY = ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Service name cannot be empty"}
+	ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY   = ZkErrorType{Status: iris.StatusUnauthorized, Type: "BAD_REQUEST", Message: "API Key cannot be empty"}
 	ZK_ERROR_BAD_REQUEST_SERVICE_POD_EMPTY  = ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Pod name cannot be empty"}
 	ZK_ERROR_BAD_REQUEST_NAMESPACE_EMPTY    = ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Namespace cannot be empty"}
 	ZK_ERROR_BAD_REQUEST_TIME_EMPTY         = ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Time cannot be empty"}
 	ZK_ERROR_BAD_REQUEST_API_KEY_EMPTY      = ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Api Key cannot be empty"}
 	ZK_ERROR_BAD_REQUEST_CLUSTER_ID_EMPTY   = ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "ClusterId cannot be empty"}
-
-	//ZK_ERROR_AUTHENTICATION_FAILED = ZkErrorType{Status: iris.StatusInternalServerError, Type: "INTERNAL_SERVER_ERROR", Message: "Encountered an issue while sending email, contact support"}
-	//
-	//AErrAuthenticationFailed = errors.New("rpc error: code = Internal desc = Auth middleware failed: failed to fetch token - unauthenticated")
-	//AErrClusterParsingFailed = errors.New("failed to parse cluster info")
-	//AErrClusterIdEmpty       = errors.New("clusterId cannot be empty")
-	//AErrPxlStartTimeEmpty    = errors.New("start Time st cannot be empty")
-	//AErrZkApiKeyEmpty        = errors.New("ZK_API_KEY header cannot be empty")
-	//AErrNamespaceEmpty       = errors.New("namespace ns cannot be empty")
-	//AErrServiceNameEmpty     = errors.New("service name cannot be empty")
-	//AErrPodNameEmpty         = errors.New("pod name cannot be empty")
-	//AErrInternalServerError  = errors.New("something went wrong, please try again later")
 )
 
 func (zkError ZkError) SetMetadata(metadata any) {

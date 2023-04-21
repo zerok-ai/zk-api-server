@@ -48,11 +48,11 @@ func CreateVizierClient(tx MethodTemplate, clusterId string, apiKey string, doma
 			return nil, "", nil, err
 		}
 	}
-	t2 := template.New("Template")
-	t2, _ = t2.Parse(string(dat))
+	t := template.New("Template")
+	t, _ = t.Parse(string(dat))
 
 	var doc bytes.Buffer
-	err = t2.Execute(&doc, tx)
+	err = t.Execute(&doc, tx)
 	if err != nil {
 		log.Printf("failed to get working dir, %s\n", err.Error())
 		return nil, "", nil, err
@@ -73,7 +73,6 @@ func CreateVizierClient(tx MethodTemplate, clusterId string, apiKey string, doma
 	}
 
 	return vz, pxl, ctx, nil
-
 }
 
 func GetResult(resultSet *pxapi.ScriptResults) (*pxapi.ScriptResults, error) {

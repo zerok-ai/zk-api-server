@@ -8,14 +8,12 @@ import (
 func ValidateApiKeyMiddleware(ctx iris.Context) {
 	var zkHttpResponse ZkHttpResponse
 	request := ctx.Request()
-	apiKey := request.Header["ZK_API_KEY"]
+	apiKey := request.Header["Zk_api_key"]
 
-	if apiKey == nil {
-		zkHttpResponse = ZkHttpResponseBuilder{}.WithZkErrorType(zkerrors.ZK_ERROR_SESSION_EXPIRED).
+	if apiKey == nil || apiKey[0] == "" {
+		zkHttpResponse = ZkHttpResponseBuilder{}.WithZkErrorType(zkerrors.ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY).
 			Build()
 		ctx.StopWithJSON(zkHttpResponse.Status, zkHttpResponse)
-		//ctx.StatusCode(iris.StatusBadRequest)
-		//ctx.SetErr(ErrZkApiKeyEmpty)
 		return
 	}
 
