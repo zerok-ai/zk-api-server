@@ -45,8 +45,12 @@ func IsEmpty(v string) bool {
 	return len(v) == 0
 }
 
-func StringToPtr(v string) *string {
-	return &v
+//func StringToPtr(v string) *string {
+//	return &v
+//}
+
+func ToPtr[T any](arg T) *T {
+	return &arg
 }
 
 func GetStringFromRecord(key string, r *types.Record) (*string, error) {
@@ -54,7 +58,7 @@ func GetStringFromRecord(key string, r *types.Record) (*string, error) {
 	if v == nil {
 		return nil, errors.New(fmt.Sprintf("key %s not found", key))
 	}
-	return StringToPtr(v.String()), nil
+	return ToPtr[string](v.String()), nil
 }
 
 func GetFloatFromRecord(key string, r *types.Record, bitSize int) (*float64, error) {
@@ -63,7 +67,7 @@ func GetFloatFromRecord(key string, r *types.Record, bitSize int) (*float64, err
 		return nil, e
 	}
 	f, e := GetFloatFromString(*s, bitSize)
-	return FloatToPtr(f), e
+	return ToPtr[float64](f), nil
 }
 
 func GetIntegerFromRecord(key string, r *types.Record) (*int, error) {
@@ -72,7 +76,7 @@ func GetIntegerFromRecord(key string, r *types.Record) (*int, error) {
 		return nil, e
 	}
 	i, e := GetIntegerFromString(*s)
-	return IntToPtr(i), e
+	return ToPtr[int](i), nil
 }
 
 func GetIntegerFromString(k string) (int, error) {
@@ -83,13 +87,13 @@ func GetFloatFromString(k string, b int) (float64, error) {
 	return strconv.ParseFloat(k, b)
 }
 
-func IntToPtr(v int) *int {
-	return &v
-}
-
-func FloatToPtr(v float64) *float64 {
-	return &v
-}
+//func IntToPtr(v int) *int {
+//	return &v
+//}
+//
+//func FloatToPtr(v float64) *float64 {
+//	return &v
+//}
 
 func GetNamespaceMethodSignature(st string) string {
 	return fmt.Sprintf(getNamespaceMethodTemplate, st)

@@ -7,10 +7,10 @@ import (
 )
 
 type Status struct {
-	Phase   string `json:"phase"`
-	Message string `json:"message"`
-	Reason  string `json:"reason"`
-	Ready   bool   `json:"ready"`
+	Phase   *string `json:"phase"`
+	Message *string `json:"message"`
+	Reason  *string `json:"reason"`
+	Ready   *bool   `json:"ready"`
 }
 
 type PodDetails struct {

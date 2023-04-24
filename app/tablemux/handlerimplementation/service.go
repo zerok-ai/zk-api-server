@@ -17,13 +17,13 @@ type Service struct {
 }
 
 type Latencies struct {
-	P01 float64 `json:"p01"`
-	P10 float64 `json:"p10"`
-	P25 float64 `json:"p25"`
-	P50 float64 `json:"p50"`
-	P75 float64 `json:"p75"`
-	P90 float64 `json:"p90"`
-	P99 float64 `json:"p99"`
+	P01 *float64 `json:"p01"`
+	P10 *float64 `json:"p10"`
+	P25 *float64 `json:"p25"`
+	P50 *float64 `json:"p50"`
+	P75 *float64 `json:"p75"`
+	P90 *float64 `json:"p90"`
+	P99 *float64 `json:"p99"`
 }
 
 func ConvertPixieDataToService(r *types.Record) Service {

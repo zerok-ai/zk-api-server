@@ -65,47 +65,47 @@ func TestGetFloatFromString(t *testing.T) {
 	assert.Zero(t, actual, "Expected result to be 0 for invalid input string")
 }
 
-func TestStringToPtr(t *testing.T) {
-	str := "test string"
-	ptr := StringToPtr(str)
-	assert.NotNil(t, ptr)
-	assert.Equal(t, str, *ptr)
-}
+//func TestStringToPtr(t *testing.T) {
+//	str := "test string"
+//	ptr := StringToPtr(str)
+//	assert.NotNil(t, ptr)
+//	assert.Equal(t, str, *ptr)
+//}
 
-func TestIntToPtr(t *testing.T) {
-	input := 1234
-	expected := &input
-	actual := IntToPtr(input)
-	assert.Equal(t, *expected, *actual)
+//func TestIntToPtr(t *testing.T) {
+//	input := 1234
+//	expected := &input
+//	actual := IntToPtr(input)
+//	assert.Equal(t, *expected, *actual)
+//
+//	input = -5678
+//	expected = &input
+//	actual = IntToPtr(input)
+//	assert.Equal(t, *expected, *actual)
+//
+//	input = 0
+//	expected = &input
+//	actual = IntToPtr(input)
+//	assert.Equal(t, *expected, *actual)
+//}
 
-	input = -5678
-	expected = &input
-	actual = IntToPtr(input)
-	assert.Equal(t, *expected, *actual)
-
-	input = 0
-	expected = &input
-	actual = IntToPtr(input)
-	assert.Equal(t, *expected, *actual)
-}
-
-func TestFloatToPtr(t *testing.T) {
-	input := 1.2345
-	expected := &input
-	actual := FloatToPtr(input)
-
-	assert.Equal(t, *expected, *actual)
-
-	input = -3.1415
-	expected = &input
-	actual = FloatToPtr(input)
-	assert.Equal(t, *expected, *actual)
-
-	input = 0.0
-	expected = &input
-	actual = FloatToPtr(input)
-	assert.Equal(t, *expected, *actual)
-}
+//	func TestFloatToPtr(t *testing.T) {
+//		input := 1.2345
+//		expected := &input
+//		actual := FloatToPtr(input)
+//
+//		assert.Equal(t, *expected, *actual)
+//
+//		input = -3.1415
+//		expected = &input
+//		actual = FloatToPtr(input)
+//		assert.Equal(t, *expected, *actual)
+//
+//		input = 0.0
+//		expected = &input
+//		actual = FloatToPtr(input)
+//		assert.Equal(t, *expected, *actual)
+//	}
 func TestGetNamespaceMethodSignature(t *testing.T) {
 	st := "-10min"
 	expectedResult := "get_namespace_data('-10min')"

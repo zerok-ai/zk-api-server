@@ -7,26 +7,20 @@ import (
 	"px.dev/pxapi/types"
 )
 
-type Source struct {
-	Args   Args   `json:"args"`
-	Label  string `json:"label"`
-	Script string `json:"script"`
-}
-
 type Destination struct {
-	Args   Args   `json:"args"`
-	Label  string `json:"label"`
-	Script string `json:"script"`
+	Args   Args    `json:"args"`
+	Label  *string `json:"label"`
+	Script *string `json:"script"`
 }
 
 type Args struct {
-	Pod       string `json:"pod"`
-	StartTime string `json:"start_time"`
+	Pod       *string `json:"pod"`
+	StartTime string  `json:"start_time"`
 }
 
 type PixieTraceData struct {
 	Destination Destination `json:"destination"`
-	Source      Source      `json:"source"`
+	Source      Destination `json:"source"`
 
 	Latency    *int    `json:"latency"`
 	OtelFlag   *string `json:"otel_flag"`
@@ -58,7 +52,7 @@ func ConvertPixieDataToPixieTraceData(r *types.Record) PixieTraceData {
 	p.ReqMethod, _ = utils.GetStringFromRecord("req_method", r)
 	p.ReqHeaders, _ = utils.GetStringFromRecord("req_headers", r)
 
-	s := Source{}
+	s := Destination{}
 	d := Destination{}
 
 	sStr, _ := utils.GetStringFromRecord("source", r)

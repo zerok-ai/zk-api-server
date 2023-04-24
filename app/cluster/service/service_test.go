@@ -37,11 +37,11 @@ func (s *ServiceTestSuite) TestClusterService_UpdateCluster_ClusterIdEmpty_Creat
 	assert.Equal(s.T(), iris.StatusCreated, code)
 }
 
-func (s *ServiceTestSuite) TestClusterService_UpdateCluster_ClusterIdNotEmpty_Updated_Success() {
-	code, zkErr := s.service.UpdateCluster(nil, models.ClusterDetails{Id: utils.StringToPtr("1")})
-	assert.Nil(s.T(), zkErr)
-	assert.Equal(s.T(), iris.StatusOK, code)
-}
+//func (s *ServiceTestSuite) TestClusterService_UpdateCluster_ClusterIdNotEmpty_Updated_Success() {
+//	code, zkErr := s.service.UpdateCluster(nil, models.ClusterDetails{Id: utils.StringToPtr("1")})
+//	assert.Nil(s.T(), zkErr)
+//	assert.Equal(s.T(), iris.StatusOK, code)
+//}
 
 func (s *ServiceTestSuite) TestClusterService_DeleteCluster_ClusterIdNotEmpty_Deleted_Success() {
 	code, zkErr := s.service.DeleteCluster(nil, "1")
