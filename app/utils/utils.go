@@ -7,10 +7,11 @@ import (
 	"github.com/kataras/iris/v12/x/errors"
 	"io"
 	"log"
-	"px.dev/pxapi/types"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"px.dev/pxapi/types"
 )
 
 var ResourceList = []string{"pod", "service", "workload", "namespace"}
@@ -32,6 +33,19 @@ func Init(httpDebug bool) {
 	HTTP_DEBUG = httpDebug
 
 }
+func GetData(tag string, datatypeName string, r *types.Record) interface{} {
+	var retVal any = nil
+	switch datatypeName {
+	case "STRING", "DATA_TYPE_UNKNOWN", "BOOLEAN", "TIME64NS":
+		retVal, _ = GetStringFromRecord(tag, r)
+	case "INT64", "UINT128":
+		retVal, _ = GetIntegerFromRecord(tag, r)
+	case "FLOAT64":
+		retVal, _ = GetFloatFromRecord(tag, r, 64)
+	}
+	return retVal
+}
+
 func Contains[T comparable](s []T, e T) bool {
 	for _, v := range s {
 		if v == e {

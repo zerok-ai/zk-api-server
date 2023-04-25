@@ -45,7 +45,7 @@ func NewClusterService(pixie tablemux.PixieRepository) ClusterService {
 var details Details
 
 func init() {
-	configFilePath := "/opt/cluster.conf"
+	configFilePath := "cluster.conf"
 
 	jsonFile, err := os.Open(configFilePath)
 
@@ -121,10 +121,9 @@ func (cs *clusterService) GetNamespaceList(ctx iris.Context, id, st, apiKey stri
 		pxResp.Error = &e
 		return pxResp
 	}
-	var v = make([]string, 0)
-	stringListMux := handlerimplementation.StringListMux{Table: handlerimplementation.TablePrinterStringList{Values: v}}
+	stringListMux := handlerimplementation.New[string]()
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetNamespaceMethodSignature(st), DataFrameName: "my_first_ns"}
-	resultSet, err := cs.pixie.GetPixieData(ctx, &stringListMux, tx, id, apiKey, details.Domain)
+	resultSet, err := cs.pixie.GetPixieData(ctx, stringListMux, tx, id, apiKey, details.Domain)
 
 	if resultSet == nil || err != nil {
 		pxResp.Result = nil
@@ -141,10 +140,9 @@ func (cs *clusterService) GetNamespaceList(ctx iris.Context, id, st, apiKey stri
 
 func (cs *clusterService) getServiceDetailsMap(ctx iris.Context, id, st, apiKey string) models.PixieResponse {
 	var pxResp models.PixieResponse
-	var sm = make([]handlerimplementation.ServiceMap, 0)
-	serviceMapMux := handlerimplementation.ServiceMapMux{Table: handlerimplementation.TablePrinterServiceMap{Values: sm}}
+	serviceMapMux := handlerimplementation.New[handlerimplementation.ServiceMap]()
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetServiceMapMethodSignature(st), DataFrameName: "my_first_map"}
-	resultSet, err := cs.pixie.GetPixieData(ctx, &serviceMapMux, tx, id, apiKey, details.Domain)
+	resultSet, err := cs.pixie.GetPixieData(ctx, serviceMapMux, tx, id, apiKey, details.Domain)
 
 	if resultSet == nil || err != nil {
 		pxResp.Result = nil
@@ -161,10 +159,9 @@ func (cs *clusterService) getServiceDetailsMap(ctx iris.Context, id, st, apiKey 
 
 func (cs *clusterService) getServiceDetailsList(ctx iris.Context, id, st, apiKey string) models.PixieResponse {
 	var pxResp models.PixieResponse
-	var services = make([]handlerimplementation.Service, 0)
-	serviceListMux := handlerimplementation.ServiceListMux{Table: handlerimplementation.TablePrinterServiceList{Values: services}}
+	serviceListMux := handlerimplementation.New[handlerimplementation.Service]()
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetServiceListMethodSignature(st), DataFrameName: "my_first_list"}
-	resultSet, err := cs.pixie.GetPixieData(ctx, &serviceListMux, tx, id, apiKey, details.Domain)
+	resultSet, err := cs.pixie.GetPixieData(ctx, serviceListMux, tx, id, apiKey, details.Domain)
 	if resultSet == nil || err != nil {
 		pxResp.Result = nil
 		pxResp.ResultsStats = nil
@@ -189,9 +186,8 @@ func (cs *clusterService) GetServiceDetails(ctx iris.Context, clusterIdx, name, 
 	}
 
 	var resultSet *pxapi.ScriptResults
-	var stats = make([]handlerimplementation.ServiceStat, 0)
-	serviceStatMux := handlerimplementation.ServiceStatMux{Table: handlerimplementation.TablePrinterServiceStat{Values: stats}}
-	resultSet, err := cs.pixie.GetPixieData(ctx, &serviceStatMux, tablemux.MethodTemplate{MethodSignature: utils.GetServiceDetailsMethodSignature(st, ns+"/"+name), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
+	serviceStatMux := handlerimplementation.New[handlerimplementation.ServiceStat]()
+	resultSet, err := cs.pixie.GetPixieData(ctx, serviceStatMux, tablemux.MethodTemplate{MethodSignature: utils.GetServiceDetailsMethodSignature(st, ns+"/"+name), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
 
 	if resultSet == nil || err != nil {
 		pxResp.Result = nil
@@ -217,27 +213,24 @@ func (cs *clusterService) GetPodDetailsTimeSeries(ctx iris.Context, clusterIdx, 
 	}
 
 	// for HTTP Requests and HTTP Errors
-	var s1 = make([]handlerimplementation.PodDetailsErrAndReq, 0)
-	reqAndErrMux := handlerimplementation.PodDetailsReqAndErrMux{Table: handlerimplementation.TablePrinterPodDetailsReqAndErr{Values: s1}}
-	resultSetErrAndReq, errReqAndErr := cs.pixie.GetPixieData(ctx, &reqAndErrMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsForHTTPDataAndErrMethodSignature(st, ns+"/"+podName), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
+	reqAndErrMux := handlerimplementation.New[handlerimplementation.PodDetailsErrAndReq]()
+	resultSetErrAndReq, errReqAndErr := cs.pixie.GetPixieData(ctx, reqAndErrMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsForHTTPDataAndErrMethodSignature(st, ns+"/"+podName), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
 	if errReqAndErr != nil {
 		log.Println("pod details err and req, error, ", errReqAndErr.Error)
 	}
 	resultErrAndReq := reqAndErrMux.Table.Values
 
 	// for HTTP Latency
-	var s2 = make([]handlerimplementation.PodDetailsLatency, 0)
-	latencyMux := handlerimplementation.PodDetailsLatencyMux{Table: handlerimplementation.TablePrinterPodDetailsLatency{Values: s2}}
-	resultSetLatency, errLatency := cs.pixie.GetPixieData(ctx, &latencyMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsForHTTPLatencyMethodSignature(st, ns+"/"+podName), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
+	latencyMux := handlerimplementation.New[handlerimplementation.PodDetailsLatency]()
+	resultSetLatency, errLatency := cs.pixie.GetPixieData(ctx, latencyMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsForHTTPLatencyMethodSignature(st, ns+"/"+podName), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
 	if errLatency != nil {
 		log.Println("pod details latency, error, ", errLatency.Error)
 	}
 	resultLatency := latencyMux.Table.Values
 
 	// for CPU Usage
-	var s3 = make([]handlerimplementation.PodDetailsCpuUsage, 0)
-	cpuUsageMux := handlerimplementation.PodDetailsCpuUsageMux{Table: handlerimplementation.TablePrinterPodDetailsCpuUsage{Values: s3}}
-	resultSetCpuUsage, errCpuUsage := cs.pixie.GetPixieData(ctx, &cpuUsageMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsForCpuUsageMethodSignature(st, ns+"/"+podName), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
+	cpuUsageMux := handlerimplementation.New[handlerimplementation.PodDetailsCpuUsage]()
+	resultSetCpuUsage, errCpuUsage := cs.pixie.GetPixieData(ctx, cpuUsageMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsForCpuUsageMethodSignature(st, ns+"/"+podName), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
 	if errCpuUsage != nil {
 		log.Println("pod details cpu usage, error, ", errCpuUsage.Error)
 	}
@@ -274,9 +267,8 @@ func (cs *clusterService) GetPodList(ctx iris.Context, clusterIdx, name, ns, st,
 	}
 	var resultSet *pxapi.ScriptResults
 
-	var s = make([]handlerimplementation.PodDetails, 0)
-	serviceStatMux := handlerimplementation.PodDetailsListMux{Table: handlerimplementation.TablePrinterPodDetailsList{Values: s}}
-	resultSet, err := cs.pixie.GetPixieData(ctx, &serviceStatMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsMethodSignature(st, ns, ns+"/"+name), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
+	serviceStatMux := handlerimplementation.New[handlerimplementation.PodDetails]()
+	resultSet, err := cs.pixie.GetPixieData(ctx, serviceStatMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsMethodSignature(st, ns, ns+"/"+name), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
 
 	if resultSet == nil || err != nil {
 		pxResp.Result = nil
@@ -305,11 +297,10 @@ func (cs *clusterService) GetPxlData(ctx iris.Context, clusterIdx, st, apiKey st
 		pxResp.Error = &err
 		return pxResp
 	}
-	var s = make([]handlerimplementation.PixieTraceData, 0)
-	pixieTraceDataMux := handlerimplementation.PixieTraceDataListMux{Table: handlerimplementation.TablePrinterPixieTraceDataList{Values: s}}
+	pixieTraceDataMux := handlerimplementation.New[handlerimplementation.PixieTraceData]()
 
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetPXDataSignature(100, st, "{}"), DataFrameName: "my_first_list"}
-	resultSet, err := cs.pixie.GetPixieData(ctx, &pixieTraceDataMux, tx, clusterIdx, apiKey, details.Domain)
+	resultSet, err := cs.pixie.GetPixieData(ctx, pixieTraceDataMux, tx, clusterIdx, apiKey, details.Domain)
 
 	if resultSet == nil || err != nil {
 		pxResp.Result = nil
