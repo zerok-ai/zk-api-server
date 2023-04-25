@@ -13,7 +13,7 @@ func ValidatePxlTime(s string) bool {
 	return true
 }
 
-func ValidateGraphDetailsApi(ctx iris.Context, serviceName, ns, st, apiKey string) *zkerrors.ZkError {
+func ValidateGraphDetailsApi(serviceName, ns, st, apiKey string) *zkerrors.ZkError {
 	if utils.IsEmpty(serviceName) {
 		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_SERVICE_NAME_EMPTY, nil)
 		return &zkErr
@@ -27,7 +27,7 @@ func ValidateGraphDetailsApi(ctx iris.Context, serviceName, ns, st, apiKey strin
 		return &zkErr
 	}
 	if utils.IsEmpty(apiKey) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_API_KEY_EMPTY, nil)
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY, nil)
 		return &zkErr
 	}
 	return nil
@@ -47,31 +47,31 @@ func ValidatePodDetailsApi(ctx iris.Context, podName, ns, st, apiKey string) *zk
 		return &zkErr
 	}
 	if utils.IsEmpty(apiKey) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_API_KEY_EMPTY, nil)
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY, nil)
 		return &zkErr
 	}
 	return nil
 }
 
-func ValidateGetResourceDetailsApi(ctx iris.Context, st string, apiKey string) *zkerrors.ZkError {
+func ValidateGetResourceDetailsApi(st string, apiKey string) *zkerrors.ZkError {
 	if utils.IsEmpty(st) {
 		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_EMPTY, nil)
 		return &zkErr
 	}
 	if utils.IsEmpty(apiKey) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_API_KEY_EMPTY, nil)
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY, nil)
 		return &zkErr
 	}
 	return nil
 }
 
-func ValidateGetPxlData(ctx iris.Context, s string, apiKey string) *zkerrors.ZkError {
+func ValidateGetPxlData(s string, apiKey string) *zkerrors.ZkError {
 	if utils.IsEmpty(s) {
 		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_CLUSTER_ID_EMPTY, nil)
 		return &zkErr
 	}
 	if utils.IsEmpty(apiKey) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_API_KEY_EMPTY, nil)
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY, nil)
 		return &zkErr
 	}
 	return nil

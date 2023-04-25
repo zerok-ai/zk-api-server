@@ -79,7 +79,7 @@ func (h *clusterHandler) GetResourceDetailsList(ctx iris.Context) {
 	apiKey := ctx.GetHeader("ZK_API_KEY")
 	st := ctx.URLParam("st")
 
-	if err := validation.ValidateGetResourceDetailsApi(ctx, st, apiKey); err != nil {
+	if err := validation.ValidateGetResourceDetailsApi(st, apiKey); err != nil {
 		zkHttpResponse := utils.CreateErrorResponseWithStatusCode(err.Error)
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
@@ -96,7 +96,7 @@ func (h *clusterHandler) GetResourceDetailsMap(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
 	st := ctx.URLParam("st")
 
-	if err := validation.ValidateGetResourceDetailsApi(ctx, st, apiKey); err != nil {
+	if err := validation.ValidateGetResourceDetailsApi(st, apiKey); err != nil {
 		zkHttpResponse := utils.CreateErrorResponseWithStatusCode(err.Error)
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
@@ -115,7 +115,7 @@ func (h *clusterHandler) GetServiceDetails(ctx iris.Context) {
 	ns := ctx.URLParam("ns")
 	st := ctx.URLParam("st")
 
-	if err := validation.ValidateGraphDetailsApi(ctx, serviceName, ns, st, apiKey); err != nil {
+	if err := validation.ValidateGraphDetailsApi(serviceName, ns, st, apiKey); err != nil {
 		zkHttpResponse := utils.CreateErrorResponseWithStatusCode(err.Error)
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
@@ -134,7 +134,7 @@ func (h *clusterHandler) GetPodList(ctx iris.Context) {
 	serviceName := ctx.URLParam("service_name")
 	ns := ctx.URLParam("ns")
 
-	if err := validation.ValidateGraphDetailsApi(ctx, serviceName, ns, st, apiKey); err != nil {
+	if err := validation.ValidateGraphDetailsApi(serviceName, ns, st, apiKey); err != nil {
 		zkHttpResponse := utils.CreateErrorResponseWithStatusCode(err.Error)
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
@@ -178,7 +178,7 @@ func (h *clusterHandler) GetPxData(ctx iris.Context) {
 	st := ctx.URLParamDefault("st", "-10m")
 	clusterIdx := ctx.URLParam("cluster_id")
 
-	if err := validation.ValidateGetPxlData(ctx, clusterIdx, apiKey); err != nil {
+	if err := validation.ValidateGetPxlData(clusterIdx, apiKey); err != nil {
 		zkHttpResponse := utils.CreateErrorResponseWithStatusCode(err.Error)
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
