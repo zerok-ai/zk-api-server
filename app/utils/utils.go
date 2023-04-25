@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"px.dev/pxapi/types"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"px.dev/pxapi/types"
 )
 
 var ResourceList = []string{"pod", "service", "workload", "namespace"}
@@ -24,6 +25,19 @@ var getPodDetailsMethodTemplate = "pods('%s', '%s', '%s')"
 var getPodDetailsForHTTPDataAndErrTemplate = "pod_details_inbound_request_timeseries_by_container('%s', '%s')"
 var getPodDetailsForHTTPLatencyTemplate = "pod_details_inbound_latency_timeseries('%s', '%s')"
 var getPodDetailsForCpuUsageTemplate = "pod_details_resource_timeseries('%s', '%s')"
+
+func GetData(tag string, datatypeName string, r *types.Record) interface{} {
+	var retVal any = nil
+	switch datatypeName {
+	case "STRING", "DATA_TYPE_UNKNOWN", "BOOLEAN", "TIME64NS":
+		retVal = GetStringFromRecord(tag, r)
+	case "INT64", "UINT128":
+		retVal, _ = GetIntegerFromRecord(tag, r)
+	case "FLOAT64":
+		retVal, _ = GetFloatFromRecord(tag, r, 64)
+	}
+	return retVal
+}
 
 func Contains[T comparable](s []T, e T) bool {
 	for _, v := range s {

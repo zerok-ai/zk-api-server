@@ -1,12 +1,5 @@
 package handlerimplementation
 
-import (
-	"encoding/json"
-	"fmt"
-	"main/app/utils"
-	"px.dev/pxapi/types"
-)
-
 type Source struct {
 	Args   Args   `json:"args"`
 	Label  string `json:"label"`
@@ -40,46 +33,4 @@ type PixieTraceData struct {
 	TraceId    string `json:"trace_id"`
 	TraceState string `json:"tracestate"`
 	Type       string `json:"type"`
-}
-
-func ConvertPixieDataToPixieTraceData(r *types.Record) PixieTraceData {
-	var p = PixieTraceData{}
-
-	p.Time = utils.GetStringFromRecord("time_", r)
-	p.Latency, _ = utils.GetIntegerFromRecord("latency", r)
-	p.Type = utils.GetStringFromRecord("type", r)
-	p.TraceState = utils.GetStringFromRecord("tracestate", r)
-	p.TraceId = utils.GetStringFromRecord("trace_id", r)
-	p.SpanId = utils.GetStringFromRecord("span_id", r)
-	p.OtelFlag = utils.GetStringFromRecord("otel_flag", r)
-	p.ReqBody = utils.GetStringFromRecord("req_body", r)
-	p.RespBody = utils.GetStringFromRecord("resp_body", r)
-	p.ReqPath = utils.GetStringFromRecord("req_path", r)
-	p.ReqMethod = utils.GetStringFromRecord("req_method", r)
-	p.ReqHeaders = utils.GetStringFromRecord("req_headers", r)
-
-	s := Source{}
-	d := Destination{}
-
-	sStr := utils.GetStringFromRecord("source", r)
-	dStr := utils.GetStringFromRecord("destination", r)
-
-	json.Unmarshal([]byte(sStr), &s)
-	json.Unmarshal([]byte(dStr), &d)
-
-	p.Source = s
-	p.Destination = d
-
-	if !utils.IsEmpty(p.ReqBody) && !utils.IsEmpty(p.ReqHeaders) {
-		sec := map[string]string{}
-		if err := json.Unmarshal([]byte(p.ReqHeaders), &sec); err != nil {
-			fmt.Println("cannot covert req_headers to map, ", p.ReqHeaders)
-		} else {
-			if sec["Content-Encoding"] == "gzip" {
-				p.ReqBody = utils.DecodeGzip(p.ReqBody)
-			}
-		}
-	}
-
-	return p
 }
