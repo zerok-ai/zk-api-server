@@ -8,6 +8,7 @@ import (
 	"github.com/kataras/iris/v12/x/errors"
 	"io"
 	"log"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -97,8 +98,13 @@ func GetStringFromRecord(key string, r *types.Record) (*string, error) {
 
 func GetFloatFromRecord(idx int, r *types.Record, bitSize int) (*float64, error) {
 	dCasted, _ := r.Data[idx].(*types.Float64Value)
-	var floatVal float64 = dCasted.Value()
+	var floatVal float64 = Round(dCasted.Value(), 10)
 	return &floatVal, nil
+}
+
+// Rounds to nearest like 12.3456 -> 12.35
+func Round(val float64, precision int) float64 {
+	return math.Round(val*(math.Pow10(precision))) / math.Pow10(precision)
 }
 
 func GetIntegerFromRecord(key string, r *types.Record) (*int, error) {
