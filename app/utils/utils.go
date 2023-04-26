@@ -96,10 +96,9 @@ func GetStringFromRecord(key string, r *types.Record) (*string, error) {
 }
 
 func GetFloatFromRecord(idx int, r *types.Record, bitSize int) (*float64, error) {
-	var floatVal *types.Float64Value
-	floatVal = types.NewFloat64Value(&r.TableMetadata.ColInfo[idx])
-	var float64Val float64 = floatVal.Value()
-	return &float64Val, nil
+	dCasted, _ := r.Data[idx].(*types.Float64Value)
+	var floatVal float64 = dCasted.Value()
+	return &floatVal, nil
 }
 
 func GetIntegerFromRecord(key string, r *types.Record) (*int, error) {
