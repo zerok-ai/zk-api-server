@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"github.com/kataras/iris/v12/x/errors"
 	"io"
@@ -33,17 +34,36 @@ func Init(httpDebug bool) {
 	HTTP_DEBUG = httpDebug
 
 }
-func GetData(tag string, datatypeName string, r *types.Record) interface{} {
+
+func GetDataByIdx(idx int, datatypeName string, r *types.Record) interface{} {
+	tag := r.TableMetadata.ColInfo[idx].Name
 	var retVal any = nil
+	var strRetVal, _ = GetStringFromRecord(tag, r)
 	switch datatypeName {
-	case "STRING", "DATA_TYPE_UNKNOWN", "BOOLEAN", "TIME64NS":
+	case "STRING":
 		retVal, _ = GetStringFromRecord(tag, r)
+	case "TIME64NS":
+		retVal, _ = GetTimestampFromRecord(tag, r)
+	case "BOOLEAN":
+		retVal, _ = GetBooleanFromRecord(tag, r)
 	case "INT64", "UINT128":
 		retVal, _ = GetIntegerFromRecord(tag, r)
 	case "FLOAT64":
-		retVal, _ = GetFloatFromRecord(tag, r, 64)
+		retVal, _ = GetFloatFromRecord(idx, r, 64)
+	case "DATA_TYPE_UNKNOWN":
+		retVal, _ = GetStringFromRecord(tag, r)
 	}
-	return retVal
+
+	jsonRetVal := map[string]interface{}{}
+
+	err := json.Unmarshal([]byte(*strRetVal), &jsonRetVal)
+	if err != nil {
+		println(err)
+		return retVal
+	}
+
+	return jsonRetVal
+
 }
 
 func Contains[T comparable](s []T, e T) bool {
@@ -75,13 +95,11 @@ func GetStringFromRecord(key string, r *types.Record) (*string, error) {
 	return ToPtr[string](v.String()), nil
 }
 
-func GetFloatFromRecord(key string, r *types.Record, bitSize int) (*float64, error) {
-	s, e := GetStringFromRecord(key, r)
-	if s == nil {
-		return nil, e
-	}
-	f, e := GetFloatFromString(*s, bitSize)
-	return ToPtr[float64](f), nil
+func GetFloatFromRecord(idx int, r *types.Record, bitSize int) (*float64, error) {
+	var floatVal *types.Float64Value
+	floatVal = types.NewFloat64Value(&r.TableMetadata.ColInfo[idx])
+	var float64Val float64 = floatVal.Value()
+	return &float64Val, nil
 }
 
 func GetIntegerFromRecord(key string, r *types.Record) (*int, error) {
@@ -91,6 +109,24 @@ func GetIntegerFromRecord(key string, r *types.Record) (*int, error) {
 	}
 	i, e := GetIntegerFromString(*s)
 	return ToPtr[int](i), nil
+}
+
+func GetBooleanFromRecord(key string, r *types.Record) (*bool, error) {
+	s, e := GetStringFromRecord(key, r)
+	if s == nil || e != nil {
+		return nil, e
+	}
+	boolValue, e := strconv.ParseBool(*s)
+	return ToPtr[bool](boolValue), e
+}
+
+func GetTimestampFromRecord(key string, r *types.Record) (*string, error) {
+	t, e := GetStringFromRecord(key, r)
+	if t == nil || e != nil {
+		return nil, e
+	}
+	strValue := string(*t)
+	return ToPtr[string](strValue), nil
 }
 
 func GetIntegerFromString(k string) (int, error) {

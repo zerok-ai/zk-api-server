@@ -10,7 +10,7 @@ type Status struct {
 type PodDetails struct {
 	Pod        *string `json:"pod"`
 	Service    *string `json:"service"`
-	StartTime  *string `json:"startTime"`
+	StartTime  *string `json:"start_time"`
 	Containers *int    `json:"containers"`
 	Status     Status  `json:"status"`
 }

@@ -4,7 +4,7 @@ type Service struct {
 	ServiceName             *string    `json:"service"`
 	PodCount                *int       `json:"pod_count"`
 	HttpLatencyIn           *Latencies `json:"http_latency_in"`
-	HttpRequestThroughputIn *string    `json:"http_req_throughput_in"`
+	HttpRequestThroughputIn *float64   `json:"http_req_throughput_in"`
 	HttpErrorRateIn         *float64   `json:"http_error_rate_in"`
 	InboundConns            *float64   `json:"inbound_conns"`
 	OutboundConns           *float64   `json:"outbound_conns"`

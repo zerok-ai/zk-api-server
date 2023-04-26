@@ -13,7 +13,7 @@ func ConvertPixieDataToItemStore[itemType ItemType](r *types.Record) itemType {
 	for i := 0; i < len(r.Data); i++ {
 		tag := r.TableMetadata.ColInfo[i].Name
 		datatypeName := vizierpb.DataType_name[int32(r.TableMetadata.ColInfo[i].Type)]
-		value := utils.GetData(tag, datatypeName, r)
+		value := utils.GetDataByIdx(i, datatypeName, r)
 		mapObject[tag] = value
 	}
 	jsonStr, err := json.Marshal(mapObject)
