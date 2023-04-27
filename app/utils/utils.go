@@ -33,11 +33,9 @@ var HTTP_DEBUG = false
 
 func Init(httpDebug bool) {
 	HTTP_DEBUG = httpDebug
-
 }
 
-func GetDataByIdx(idx int, datatypeName string, r *types.Record) interface{} {
-	tag := r.TableMetadata.ColInfo[idx].Name
+func GetDataByIdx(tag string, datatypeName string, r *types.Record) interface{} {
 	var retVal any = nil
 	var strRetVal, _ = GetStringFromRecord(tag, r)
 	switch datatypeName {
@@ -50,7 +48,7 @@ func GetDataByIdx(idx int, datatypeName string, r *types.Record) interface{} {
 	case "INT64", "UINT128":
 		retVal, _ = GetIntegerFromRecord(tag, r)
 	case "FLOAT64":
-		retVal, _ = GetFloatFromRecord(idx, r, 64)
+		retVal, _ = GetFloatFromRecord(tag, r, 64)
 	case "DATA_TYPE_UNKNOWN":
 		retVal, _ = GetStringFromRecord(tag, r)
 	}
@@ -96,9 +94,9 @@ func GetStringFromRecord(key string, r *types.Record) (*string, error) {
 	return ToPtr[string](v.String()), nil
 }
 
-func GetFloatFromRecord(idx int, r *types.Record, bitSize int) (*float64, error) {
-	dCasted, _ := r.Data[idx].(*types.Float64Value)
-	var floatVal float64 = Round(dCasted.Value(), 10)
+func GetFloatFromRecord(key string, r *types.Record, bitSize int) (*float64, error) {
+	var dCasted = r.GetDatum(key).(*types.Float64Value)
+	var floatVal float64 = Round(dCasted.Value(), 12)
 	return &floatVal, nil
 }
 
