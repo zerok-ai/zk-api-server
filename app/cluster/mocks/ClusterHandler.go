@@ -13,11 +13,6 @@ type ClusterHandler struct {
 	mock.Mock
 }
 
-// DeleteCluster provides a mock function with given fields: ctx
-func (_m *ClusterHandler) DeleteCluster(ctx *context.Context) {
-	_m.Called(ctx)
-}
-
 // GetPodDetails provides a mock function with given fields: ctx
 func (_m *ClusterHandler) GetPodDetails(ctx *context.Context) {
 	_m.Called(ctx)
@@ -45,11 +40,6 @@ func (_m *ClusterHandler) GetResourceDetailsMap(ctx *context.Context) {
 
 // GetServiceDetails provides a mock function with given fields: ctx
 func (_m *ClusterHandler) GetServiceDetails(ctx *context.Context) {
-	_m.Called(ctx)
-}
-
-// UpsertCluster provides a mock function with given fields: ctx
-func (_m *ClusterHandler) UpsertCluster(ctx *context.Context) {
 	_m.Called(ctx)
 }
 

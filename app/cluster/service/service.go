@@ -2,10 +2,8 @@ package service
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
 	"log"
-	"main/app/cluster/models"
 	"main/app/cluster/transformer"
 	"main/app/cluster/validation"
 	"main/app/tablemux"
@@ -22,8 +20,6 @@ type Details struct {
 }
 
 type ClusterService interface {
-	UpdateCluster(ctx iris.Context, cluster models.ClusterDetails) (int, *zkerrors.ZkError)
-	DeleteCluster(ctx iris.Context, clusterId string) (int, *zkerrors.ZkError)
 	GetServiceDetailsMap(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceMap], *zkerrors.ZkError)
 	GetServiceDetailsList(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.Service], *zkerrors.ZkError)
 	GetNamespaceList(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[string], *zkerrors.ZkError)
@@ -63,31 +59,6 @@ func init() {
 			os.Exit(2)
 		}
 	}
-}
-
-func (cs *clusterService) UpdateCluster(ctx iris.Context, cluster models.ClusterDetails) (int, *zkerrors.ZkError) {
-
-	var statusCode int
-	if cluster.Id != nil {
-		// Validation: Check if provided cluster ID is valid?
-		//if !ValidateCluster(*cluster.Id, ctx) {
-		//	return
-		//}
-		// Action: Update(replace) entire cluster info
-		models.ClusterMap[*cluster.Id] = cluster
-		statusCode = iris.StatusOK
-	} else {
-		// Action: Generate a UUID clusterID and add cluster info.
-		clusterId := uuid.New()
-		models.ClusterMap[clusterId.String()] = cluster
-		statusCode = iris.StatusCreated
-	}
-	return statusCode, nil
-}
-
-func (cs *clusterService) DeleteCluster(ctx iris.Context, clusterId string) (int, *zkerrors.ZkError) {
-	delete(models.ClusterMap, clusterId)
-	return iris.StatusOK, nil
 }
 
 func (cs *clusterService) GetNamespaceList(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[string], *zkerrors.ZkError) {

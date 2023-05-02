@@ -5,7 +5,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"main/app/cluster/models"
 	"main/app/tablemux"
 	"main/app/tablemux/mocks"
 	"main/app/utils"
@@ -28,24 +27,6 @@ func (s *ServiceTestSuite) SetupSuite() {
 	p := mocks.NewPixieRepository()
 	s.pixieRepoMock = p
 	s.service = NewClusterService(p)
-}
-
-func (s *ServiceTestSuite) TestClusterService_UpdateCluster_ClusterIdEmpty_Created_Success() {
-	code, zkErr := s.service.UpdateCluster(nil, models.ClusterDetails{Id: nil})
-	assert.Nil(s.T(), zkErr)
-	assert.Equal(s.T(), iris.StatusCreated, code)
-}
-
-//func (s *ServiceTestSuite) TestClusterService_UpdateCluster_ClusterIdNotEmpty_Updated_Success() {
-//	code, zkErr := s.service.UpdateCluster(nil, models.ClusterDetails{Id: utils.StringToPtr("1")})
-//	assert.Nil(s.T(), zkErr)
-//	assert.Equal(s.T(), iris.StatusOK, code)
-//}
-
-func (s *ServiceTestSuite) TestClusterService_DeleteCluster_ClusterIdNotEmpty_Deleted_Success() {
-	code, zkErr := s.service.DeleteCluster(nil, "1")
-	assert.Nil(s.T(), zkErr)
-	assert.Equal(s.T(), iris.StatusOK, code)
 }
 
 func (s *ServiceTestSuite) TestClusterService_List_ResourceDetails_InternalServerError_Fail() {

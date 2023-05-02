@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/kataras/iris/v12"
-	"main/app/cluster/models"
 	"main/app/cluster/service"
 	"main/app/cluster/transformer"
 	"main/app/cluster/validation"
@@ -12,8 +11,6 @@ import (
 )
 
 type ClusterHandler interface {
-	UpsertCluster(ctx iris.Context)
-	DeleteCluster(ctx iris.Context)
 	GetResourceDetailsList(ctx iris.Context)
 	GetResourceDetailsMap(ctx iris.Context)
 	GetServiceDetails(ctx iris.Context)
@@ -30,48 +27,6 @@ func NewClusterHandler() ClusterHandler {
 }
 
 var s = service.NewClusterService(tablemux.NewPixieRepository())
-
-func (h *clusterHandler) UpsertCluster(ctx iris.Context) {
-	var cluster models.ClusterDetails
-	err := ctx.ReadJSON(&cluster)
-	// Validation: Is cluster model valid, parse cluster obj
-	if err != nil {
-		ctx.StatusCode(iris.StatusBadRequest)
-		ctx.SetErr(utils.ErrClusterParsingFailed)
-		return
-	}
-
-	statusCode, zkError := s.UpdateCluster(ctx, cluster)
-	var zkHttpResponse utils.ZkHttpResponse[any]
-	if zkError != nil {
-		zkHttpResponse = utils.ZkHttpResponseBuilder[any]{}.WithZkErrorType(zkError.Error).
-			Build()
-	} else {
-		zkHttpResponse = utils.ZkHttpResponseBuilder[any]{}.WithStatus(statusCode).Build()
-	}
-	ctx.StatusCode(zkHttpResponse.Status)
-	ctx.JSON(zkHttpResponse)
-}
-
-func (h *clusterHandler) DeleteCluster(ctx iris.Context) {
-	clusterId := ctx.Params().Get("clusterId")
-
-	if utils.IsEmpty(clusterId) {
-		ctx.StatusCode(iris.StatusBadRequest)
-		ctx.SetErr(utils.ErrClusterIdEmpty)
-		return
-	}
-
-	statusCode, zkError := s.DeleteCluster(ctx, clusterId)
-	var zkHttpResponse utils.ZkHttpResponse[any]
-	if zkError != nil {
-		zkHttpResponse = utils.ZkHttpResponseBuilder[any]{}.WithZkErrorType(zkError.Error).Build()
-	} else {
-		zkHttpResponse = utils.ZkHttpResponseBuilder[any]{}.WithStatus(statusCode).Build()
-	}
-	ctx.StatusCode(zkHttpResponse.Status)
-	ctx.JSON(zkHttpResponse)
-}
 
 func (h *clusterHandler) GetResourceDetailsList(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
