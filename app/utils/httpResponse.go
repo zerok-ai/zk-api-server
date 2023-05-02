@@ -1,12 +1,9 @@
 package utils
 
 import (
-	"github.com/kataras/iris/v12"
-	"main/app/cluster/models"
 	"main/app/utils/zkerrors"
 )
 
-// TODO: Move to zkhttp
 type ZkHttpError struct {
 	Kind    string          `json:"kind,omitempty"`
 	Message string          `json:"message,omitempty"`
@@ -15,57 +12,57 @@ type ZkHttpError struct {
 	Info    *map[string]any `json:"info,omitempty"`
 }
 
-type ZkHttpResponse struct {
+type ZkHttpResponse[T any] struct {
 	Metadata *map[string]any    `json:"-"`
 	Headers  *map[string]string `json:"-"`
 	Status   int                `json:"-"`
 	Error    *ZkHttpError       `json:"error,omitempty"`
 	Message  *string            `json:"message,omitempty"`
 	Debug    *map[string]any    `json:"debug,omitempty"`
-	Data     any                `json:"payload,omitempty"`
+	Data     T                  `json:"payload,omitempty"`
 }
 
 // Zk Http Response Builder
-type ZkHttpResponseBuilder struct {
-	_ZkHttpResponseBuilder _zkHttpResponseBuilder
+type ZkHttpResponseBuilder[T any] struct {
+	_ZkHttpResponseBuilder _zkHttpResponseBuilder[T]
 }
 
-func (zkHttpResponseBuilder ZkHttpResponseBuilder) WithStatus(status int) _zkHttpResponseBuilder {
-	zkHttpResponseBuilder._ZkHttpResponseBuilder = _zkHttpResponseBuilder{}
+func (zkHttpResponseBuilder ZkHttpResponseBuilder[T]) WithStatus(status int) _zkHttpResponseBuilder[T] {
+	zkHttpResponseBuilder._ZkHttpResponseBuilder = _zkHttpResponseBuilder[T]{}
 	return zkHttpResponseBuilder._ZkHttpResponseBuilder.withStatus(status)
 }
 
-func (zkHttpResponseBuilder ZkHttpResponseBuilder) WithZkErrorType(zkErrorType zkerrors.ZkErrorType) _zkHttpResponseBuilder {
-	zkHttpResponseBuilder._ZkHttpResponseBuilder = _zkHttpResponseBuilder{}
+func (zkHttpResponseBuilder ZkHttpResponseBuilder[T]) WithZkErrorType(zkErrorType zkerrors.ZkErrorType) _zkHttpResponseBuilder[T] {
+	zkHttpResponseBuilder._ZkHttpResponseBuilder = _zkHttpResponseBuilder[T]{}
 	zkHttpError := ZkHttpError{}
 	zkHttpError.Build(zkErrorType, nil, nil)
 	return zkHttpResponseBuilder._ZkHttpResponseBuilder.withStatus(zkErrorType.Status).Error(zkHttpError)
 }
 
 // Zk Http Response Builder Internal
-type _zkHttpResponseBuilder struct {
-	ZkHttpResponse ZkHttpResponse
+type _zkHttpResponseBuilder[T any] struct {
+	ZkHttpResponse ZkHttpResponse[T]
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder) withStatus(status int) _zkHttpResponseBuilder {
+func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) withStatus(status int) _zkHttpResponseBuilder[T] {
 	zkHttpResponseBuilder.ZkHttpResponse.Status = status
 	return zkHttpResponseBuilder
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder) Message(message *string) _zkHttpResponseBuilder {
+func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Message(message *string) _zkHttpResponseBuilder[T] {
 	zkHttpResponseBuilder.ZkHttpResponse.Message = message
 	return zkHttpResponseBuilder
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder) Data(data any) _zkHttpResponseBuilder {
+func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Data(data *T) _zkHttpResponseBuilder[T] {
 	if data != nil {
-		zkHttpResponseBuilder.ZkHttpResponse.Data = data
+		zkHttpResponseBuilder.ZkHttpResponse.Data = *data
 	}
 	return zkHttpResponseBuilder
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder) Debug(key string, value any) _zkHttpResponseBuilder {
-	if !HTTP_DEBUG {
+func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Debug(key string, value any) _zkHttpResponseBuilder[T] {
+	if !HTTP_DEBUG || value == nil {
 		return zkHttpResponseBuilder
 	}
 	if zkHttpResponseBuilder.ZkHttpResponse.Debug == nil {
@@ -86,7 +83,7 @@ func (zkHttpResponseBuilder _zkHttpResponseBuilder) Debug(key string, value any)
 // 	return zkHttpResponseBuilder;
 // }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder) Header(key string, value string) _zkHttpResponseBuilder {
+func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Header(key string, value string) _zkHttpResponseBuilder[T] {
 	if zkHttpResponseBuilder.ZkHttpResponse.Headers == nil {
 		zkHttpResponseBuilder.ZkHttpResponse.Headers = &map[string]string{}
 	}
@@ -94,7 +91,7 @@ func (zkHttpResponseBuilder _zkHttpResponseBuilder) Header(key string, value str
 	return zkHttpResponseBuilder
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder) Metadata(key string, value any) _zkHttpResponseBuilder {
+func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Metadata(key string, value any) _zkHttpResponseBuilder[T] {
 	if zkHttpResponseBuilder.ZkHttpResponse.Metadata == nil {
 		zkHttpResponseBuilder.ZkHttpResponse.Metadata = &map[string]any{}
 	}
@@ -102,14 +99,14 @@ func (zkHttpResponseBuilder _zkHttpResponseBuilder) Metadata(key string, value a
 	return zkHttpResponseBuilder
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder) Error(zkHttpError ZkHttpError) _zkHttpResponseBuilder {
+func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Error(zkHttpError ZkHttpError) _zkHttpResponseBuilder[T] {
 	if zkHttpResponseBuilder.ZkHttpResponse.Error == nil {
 		zkHttpResponseBuilder.ZkHttpResponse.Error = &zkHttpError
 	}
 	return zkHttpResponseBuilder
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder) ErrorInfo(key string, value any) _zkHttpResponseBuilder {
+func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) ErrorInfo(key string, value any) _zkHttpResponseBuilder[T] {
 	if zkHttpResponseBuilder.ZkHttpResponse.Error == nil {
 		zkHttpResponseBuilder.ZkHttpResponse.Error = &ZkHttpError{}
 	}
@@ -120,7 +117,7 @@ func (zkHttpResponseBuilder _zkHttpResponseBuilder) ErrorInfo(key string, value 
 	return zkHttpResponseBuilder
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder) Build() ZkHttpResponse {
+func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Build() ZkHttpResponse[T] {
 	return zkHttpResponseBuilder.ZkHttpResponse
 }
 
@@ -135,43 +132,16 @@ func (zkHttpError *ZkHttpError) Build(zkErrorType zkerrors.ZkErrorType, param *s
 	}
 }
 
-func (zkHttpResponse ZkHttpResponse) Header(key string, value string) {
+func (zkHttpResponse ZkHttpResponse[T]) Header(key string, value string) {
 	if zkHttpResponse.Headers == nil {
 		zkHttpResponse.Headers = &map[string]string{}
 	}
 	(*zkHttpResponse.Headers)[key] = value
 }
 
-func (zkHttpResponse ZkHttpResponse) IsOk() bool {
+func (zkHttpResponse ZkHttpResponse[T]) IsOk() bool {
 	if zkHttpResponse.Status > 199 && zkHttpResponse.Status < 300 {
 		return true
 	}
 	return false
-}
-func GenerateResponseAndReturn(ctx iris.Context, pxResp models.PixieResponse) {
-
-	var zkHttpResponse ZkHttpResponse
-	if pxResp.Error != nil {
-		zkHttpResponse = CreateErrorResponseWithStatusCode(pxResp.Error.Error)
-	} else {
-		zkHttpResponse = CreateSuccessResponseWithStatusCode(pxResp, 200)
-	}
-	ctx.StatusCode(zkHttpResponse.Status)
-	ctx.JSON(zkHttpResponse)
-}
-func CreateSuccessResponseWithStatusCode(resp interface{}, statusCode int) ZkHttpResponse {
-	zkHttpResponseBuilder := ZkHttpResponseBuilder{}
-	var zkHttpResponse ZkHttpResponse
-	zkHttpResponse = zkHttpResponseBuilder.WithStatus(statusCode).
-		Message(nil).
-		Data(resp).
-		Build()
-	return zkHttpResponse
-}
-
-func CreateErrorResponseWithStatusCode(zkErrorType zkerrors.ZkErrorType) ZkHttpResponse {
-	var zkHttpResponse ZkHttpResponse
-	zkHttpResponse = ZkHttpResponseBuilder{}.WithZkErrorType(zkErrorType).
-		Build()
-	return zkHttpResponse
 }

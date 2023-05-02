@@ -5,9 +5,11 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/x/errors"
 	"io"
 	"log"
+	"main/app/utils/zkerrors"
 	"math"
 	"regexp"
 	"strconv"
@@ -236,4 +238,16 @@ func DecodeGzip(s string) string {
 	}
 
 	return string(output)
+}
+
+func SetResponseInCtxAndReturn[T any](ctx iris.Context, resp *T, zkError *zkerrors.ZkError) {
+	if zkError != nil {
+		ZkHttpResponseBuilder[any]{}.WithZkErrorType(zkError.Error).Build()
+		ctx.StatusCode(zkError.Error.Status)
+		return
+	}
+	zkHttpResponse := ZkHttpResponseBuilder[T]{}.WithStatus(iris.StatusOK).Data(resp).Build()
+	ctx.StatusCode(zkHttpResponse.Status)
+	ctx.JSON(zkHttpResponse)
+	return
 }

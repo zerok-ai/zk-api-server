@@ -96,11 +96,6 @@ func GetResult(resultSet *pxapi.ScriptResults) (*pxapi.ScriptResults, error) {
 		return nil, err
 	}
 
-	// Get the execution stats for the script execution.
-	stats := resultSet.Stats()
-	fmt.Printf("Execution Time: %v\n", stats.ExecutionTime)
-	fmt.Printf("Bytes received: %v\n", stats.TotalBytes)
-
 	return resultSet, nil
 }
 

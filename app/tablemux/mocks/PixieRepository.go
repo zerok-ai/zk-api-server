@@ -54,5 +54,7 @@ type mockConstructorTestingTNewPixieRepository interface {
 // NewPixieRepository creates a new instance of PixieRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 func NewPixieRepository() *PixieRepository {
 	mock := &PixieRepository{}
+
+
 	return mock
 }

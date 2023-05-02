@@ -10,7 +10,6 @@ import (
 	"main/app/tablemux/mocks"
 	"main/app/utils"
 	"main/app/utils/zkerrors"
-	"px.dev/pxapi"
 	"testing"
 )
 
@@ -52,49 +51,35 @@ func (s *ServiceTestSuite) TestClusterService_DeleteCluster_ClusterIdNotEmpty_De
 func (s *ServiceTestSuite) TestClusterService_List_ResourceDetails_InternalServerError_Fail() {
 	var zkErr zkerrors.ZkError
 	zkErr = zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil)
-	clusterIdx, action, st, apiKey := "1", "list", "-9m", "apiKey"
+	clusterIdx, st, apiKey := "1", "-9m", "apiKey"
 	temp := tablemux.MethodTemplate{MethodSignature: utils.GetServiceListMethodSignature(st), DataFrameName: "my_first_list"}
 
 	s.pixieRepoMock.On("GetPixieData", mock.Anything, mock.Anything, temp, clusterIdx, apiKey, mock.Anything).Return(nil, &zkErr)
 
-	pxResp := s.service.GetResourceDetails(nil, clusterIdx, action, st, apiKey)
-	assert.Nil(s.T(), pxResp.Result)
-	assert.Nil(s.T(), pxResp.ResultsStats)
-	assert.Equal(s.T(), pxResp.Error, &zkErr)
+	resp, err := s.service.GetServiceDetailsList(nil, clusterIdx, st, apiKey)
+	assert.Nil(s.T(), resp)
+	assert.Equal(s.T(), &zkErr, err)
 }
 
 func (s *ServiceTestSuite) TestClusterService_Map_ResourceDetails_InternalServerError_Fail() {
 	var zkErr zkerrors.ZkError
 	zkErr = zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil)
-	clusterIdx, action, st, apiKey := "1", "map", "-9m", "apiKey"
+	clusterIdx, st, apiKey := "1", "-9m", "apiKey"
 	temp := tablemux.MethodTemplate{MethodSignature: utils.GetServiceMapMethodSignature(st), DataFrameName: "my_first_map"}
 
 	s.pixieRepoMock.On("GetPixieData", mock.Anything, mock.Anything, temp, clusterIdx, apiKey, mock.Anything).Return(nil, &zkErr)
 
-	pxResp := s.service.GetResourceDetails(nil, clusterIdx, action, st, apiKey)
-	assert.Nil(s.T(), pxResp.Result)
-	assert.Nil(s.T(), pxResp.ResultsStats)
-	assert.Equal(s.T(), pxResp.Error, &zkErr)
-}
-
-func (s *ServiceTestSuite) TestClusterService_INVALID_ResourceDetails_InternalServerError_Fail() {
-	action := "INVALID"
-	zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST, "unsupported action: "+action)
-	clusterIdx, st, apiKey := "1", "-9m", "apiKey"
-
-	pxResp := s.service.GetResourceDetails(nil, clusterIdx, action, st, apiKey)
-	assert.Nil(s.T(), pxResp.Result)
-	assert.Nil(s.T(), pxResp.ResultsStats)
-	assert.Equal(s.T(), pxResp.Error, &zkErr)
+	resp, err := s.service.GetServiceDetailsMap(nil, clusterIdx, st, apiKey)
+	assert.Nil(s.T(), resp)
+	assert.Equal(s.T(), &zkErr, err)
 }
 
 func (s *ServiceTestSuite) TestClusterService_NamespaceList_IncorrectTimeFormat_Fail() {
 	var ctx iris.Context
 	zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
-	pxResp := s.service.GetNamespaceList(ctx, "1", "-9MIN", "apiKey")
-	assert.Nil(s.T(), pxResp.Result)
-	assert.Nil(s.T(), pxResp.ResultsStats)
-	assert.Equal(s.T(), &zkErr, pxResp.Error)
+	resp, err := s.service.GetNamespaceList(ctx, "1", "-9MIN", "apiKey")
+	assert.Nil(s.T(), resp)
+	assert.Equal(s.T(), &zkErr, err)
 }
 
 func (s *ServiceTestSuite) TestClusterService_NamespaceList_InternalServerError_Fail() {
@@ -105,19 +90,17 @@ func (s *ServiceTestSuite) TestClusterService_NamespaceList_InternalServerError_
 
 	s.pixieRepoMock.On("GetPixieData", mock.Anything, mock.Anything, temp, clusterIdx, apiKey, mock.Anything).Return(nil, &zkErr)
 
-	pxResp := s.service.GetNamespaceList(nil, clusterIdx, st, apiKey)
-	assert.Nil(s.T(), pxResp.Result)
-	assert.Nil(s.T(), pxResp.ResultsStats)
-	assert.Equal(s.T(), pxResp.Error, &zkErr)
+	resp, err := s.service.GetNamespaceList(nil, clusterIdx, st, apiKey)
+	assert.Nil(s.T(), resp)
+	assert.Equal(s.T(), &zkErr, err)
 }
 
 func (s *ServiceTestSuite) TestClusterService_PodList_IncorrectTimeFormat_Fail() {
 	var ctx iris.Context
 	zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
-	pxResp := s.service.GetPodList(ctx, "1", "name", "ns", "-9MIN", "apiKey")
-	assert.Nil(s.T(), pxResp.Result)
-	assert.Nil(s.T(), pxResp.ResultsStats)
-	assert.Equal(s.T(), &zkErr, pxResp.Error)
+	resp, err := s.service.GetPodList(ctx, "1", "name", "ns", "-9MIN", "apiKey")
+	assert.Nil(s.T(), resp)
+	assert.Equal(s.T(), &zkErr, err)
 }
 
 func (s *ServiceTestSuite) TestClusterService_PodList_InternalServerError_Fail() {
@@ -128,19 +111,17 @@ func (s *ServiceTestSuite) TestClusterService_PodList_InternalServerError_Fail()
 
 	s.pixieRepoMock.On("GetPixieData", mock.Anything, mock.Anything, temp, clusterIdx, apiKey, mock.Anything).Return(nil, &zkErr)
 
-	pxResp := s.service.GetPodList(nil, clusterIdx, name, ns, st, apiKey)
-	assert.Nil(s.T(), pxResp.Result)
-	assert.Nil(s.T(), pxResp.ResultsStats)
-	assert.Equal(s.T(), pxResp.Error, &zkErr)
+	resp, err := s.service.GetPodList(nil, clusterIdx, name, ns, st, apiKey)
+	assert.Nil(s.T(), resp)
+	assert.Equal(s.T(), &zkErr, err)
 }
 
 func (s *ServiceTestSuite) TestClusterService_GetPxlData_IncorrectTimeFormat_Fail() {
 	var ctx iris.Context
 	zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
-	pxResp := s.service.GetPxlData(ctx, "1", "-9MIN", "apiKey")
-	assert.Nil(s.T(), pxResp.Result)
-	assert.Nil(s.T(), pxResp.ResultsStats)
-	assert.Equal(s.T(), &zkErr, pxResp.Error)
+	resp, err := s.service.GetPxlData(ctx, "1", "-9MIN", "apiKey")
+	assert.Nil(s.T(), resp)
+	assert.Equal(s.T(), &zkErr, err)
 }
 
 func (s *ServiceTestSuite) TestClusterService_GetPxlData_InternalServerError_Fail() {
@@ -151,19 +132,17 @@ func (s *ServiceTestSuite) TestClusterService_GetPxlData_InternalServerError_Fai
 
 	s.pixieRepoMock.On("GetPixieData", mock.Anything, mock.Anything, temp, clusterIdx, apiKey, mock.Anything).Return(nil, &zkErr)
 
-	pxResp := s.service.GetPxlData(nil, clusterIdx, st, apiKey)
-	assert.Nil(s.T(), pxResp.Result)
-	assert.Nil(s.T(), pxResp.ResultsStats)
-	assert.Equal(s.T(), pxResp.Error, &zkErr)
+	resp, err := s.service.GetPxlData(nil, clusterIdx, st, apiKey)
+	assert.Nil(s.T(), resp)
+	assert.Equal(s.T(), &zkErr, err)
 }
 
 func (s *ServiceTestSuite) TestClusterService_ResourceDetails_IncorrectTimeFormat_Fail() {
 	var ctx iris.Context
 	zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
-	pxResp := s.service.GetResourceDetails(ctx, "1", "map", "-9MIN", "apiKey")
-	assert.Nil(s.T(), pxResp.Result)
-	assert.Nil(s.T(), pxResp.ResultsStats)
-	assert.Equal(s.T(), &zkErr, pxResp.Error)
+	resp, err := s.service.GetServiceDetailsMap(ctx, "1", "-9MIN", "apiKey")
+	assert.Nil(s.T(), resp)
+	assert.Equal(s.T(), &zkErr, err)
 }
 
 func (s *ServiceTestSuite) TestClusterService_GetServiceDetails_InternalServerError_Fail() {
@@ -174,47 +153,15 @@ func (s *ServiceTestSuite) TestClusterService_GetServiceDetails_InternalServerEr
 
 	s.pixieRepoMock.On("GetPixieData", mock.Anything, mock.Anything, temp, clusterIdx, apiKey, mock.Anything).Return(nil, &zkErr)
 
-	pxResp := s.service.GetServiceDetails(nil, clusterIdx, name, ns, st, apiKey)
-	assert.Nil(s.T(), pxResp.Result)
-	assert.Nil(s.T(), pxResp.ResultsStats)
-	assert.Equal(s.T(), pxResp.Error, &zkErr)
+	resp, err := s.service.GetServiceDetails(nil, clusterIdx, name, ns, st, apiKey)
+	assert.Nil(s.T(), resp)
+	assert.Equal(s.T(), &zkErr, err)
 }
 
 func (s *ServiceTestSuite) TestClusterService_GetServiceDetails_IncorrectTimeFormat_Fail() {
 	var ctx iris.Context
 	zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
-	pxResp := s.service.GetServiceDetails(ctx, "1", "service-name", "namespace", "-9MIN", "apiKey")
-	assert.Nil(s.T(), pxResp.Result)
-	assert.Nil(s.T(), pxResp.ResultsStats)
-	assert.Equal(s.T(), &zkErr, pxResp.Error)
-}
-
-func TestGetResp(t *testing.T) {
-	scriptResults := &pxapi.ScriptResults{}
-
-	resultData := map[string]string{
-		"key1": "value1",
-		"key2": "value2",
-	}
-
-	expectedOutput1 := map[string]interface{}{
-		"results": resultData,
-		"stats":   scriptResults.Stats(),
-		"status":  200,
-	}
-	expectedOutput2 := map[string]interface{}{
-		"results": nil,
-		"stats":   nil,
-		"status":  500,
-	}
-
-	clusterSvc := &clusterService{}
-
-	// Test case 1: result is non-nil
-	actualOutput1 := clusterSvc.getResp(scriptResults, resultData)
-	assert.Equal(t, expectedOutput1, actualOutput1)
-
-	// Test case 2: result is nil
-	actualOutput2 := clusterSvc.getResp(scriptResults, nil)
-	assert.Equal(t, expectedOutput2, actualOutput2)
+	resp, err := s.service.GetServiceDetails(ctx, "1", "service-name", "namespace", "-9MIN", "apiKey")
+	assert.Nil(s.T(), resp)
+	assert.Equal(s.T(), &zkErr, err)
 }

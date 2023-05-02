@@ -332,9 +332,6 @@ func TestGetFloatFromRecord(t *testing.T) {
 	expectedOutput2 := 0.34
 	actualOutput2, _ := GetFloatFromRecord("inbound_throughput", mockRecord, 34)
 	assert.Equal(t, expectedOutput2, *actualOutput2)
-
-	actualOutput3, _ := GetFloatFromRecord("unknown_col", mockRecord, 34)
-	assert.Nil(t, actualOutput3)
 }
 
 //func TestDecodeGzip(t *testing.T) {

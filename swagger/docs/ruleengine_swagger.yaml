@@ -1,0 +1,132 @@
+#definitions:
+#  DataTypes:
+#    type: string
+#  InputTypes:
+#    type: string
+#  OperatorTypes:
+#    type: string
+#  ValueTypes:
+#    type: string
+#  Rule:
+#    type: object
+#    properties:
+#      id:
+#        type: string
+#      field:
+#        type: string
+#      type:
+#        $ref: '#/definitions/DataTypes'
+#      input:
+#        $ref: '#/definitions/InputTypes'
+#      operator:
+#        $ref: '#/definitions/OperatorTypes'
+#      value:
+#        $ref: '#/definitions/ValueTypes'
+#    required:
+#      - id
+#      - field
+#      - type
+#      - input
+#      - operator
+#      - value
+#  FilterType:
+#    allOf:
+#      - $ref: '#/definitions/FilterRule'
+#      - $ref: '#/definitions/Rule'
+#  FilterRule:
+#    type: object
+#    properties:
+#      condition:
+#        type: string
+#      zk_request_type:
+#        $ref: '#/definitions/Rule'
+#      rules:
+#        type: array
+#        items:
+#          $ref: '#/definitions/FilterType'
+
+definitions:
+  DataTypes:
+    type: string
+  InputTypes:
+    type: string
+  OperatorTypes:
+    type: string
+  ValueTypes:
+    type: string
+
+  Rule:
+    type: object
+    properties:
+      id:
+        type: string
+      field:
+        type: string
+      type:
+        $ref: '#/definitions/DataTypes'
+      input:
+        $ref: '#/definitions/InputTypes'
+      operator:
+        $ref: '#/definitions/OperatorTypes'
+      value:
+        $ref: '#/definitions/ValueTypes'
+
+  FilterRule:
+    type: object
+    properties:
+      condition:
+        type: string
+      zk_request_type:
+        $ref: '#/definitions/Rule'
+      rules:
+        type: array
+        items:
+          $ref: '#/definitions/FilterType'
+  FilterType:
+    oneOf:
+      - $ref: '#/definitions/FilterRule'
+      - $ref: '#/definitions/Rule'
+
+
+#  utils.ZkHttpError:
+#    properties:
+#      info:
+#        additionalProperties: {}
+#        type: object
+#      kind:
+#        type: string
+#      message:
+#        type: string
+#      param:
+#        type: string
+#      stack: {}
+#    type: object
+#  utils.ZkHttpResponse-model_FilterRule:
+#    properties:
+#      debug:
+#        additionalProperties: {}
+#        type: object
+#      error:
+#        $ref: '#/definitions/utils.ZkHttpError'
+#      message:
+#        type: string
+#      payload:
+#        $ref: '#/definitions/model.FilterRule'
+#    type: object
+info:
+  contact: {}
+paths:
+  /o/cluster/rules:
+    get:
+      description: Returns all the rules for RuleEngine processing
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ValueTypes'
+      summary: Get all rules
+      tags:
+      - rule engine
+swagger: "2.0"

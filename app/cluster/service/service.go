@@ -6,6 +6,7 @@ import (
 	"github.com/kataras/iris/v12"
 	"log"
 	"main/app/cluster/models"
+	"main/app/cluster/transformer"
 	"main/app/cluster/validation"
 	"main/app/tablemux"
 	"main/app/tablemux/handlerimplementation"
@@ -13,7 +14,6 @@ import (
 	"main/app/utils/zkerrors"
 	"os"
 	"px.dev/pxapi"
-	"strings"
 )
 
 type Details struct {
@@ -24,12 +24,13 @@ type Details struct {
 type ClusterService interface {
 	UpdateCluster(ctx iris.Context, cluster models.ClusterDetails) (int, *zkerrors.ZkError)
 	DeleteCluster(ctx iris.Context, clusterId string) (int, *zkerrors.ZkError)
-	GetResourceDetails(ctx iris.Context, clusterIdx, action, st, apiKey string) models.PixieResponse
-	GetNamespaceList(ctx iris.Context, id, st, apiKey string) models.PixieResponse
-	GetServiceDetails(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) models.PixieResponse
-	GetPodDetailsTimeSeries(ctx iris.Context, clusterIdx, podName, ns, st, apiKey string) map[string]models.PixieResponse
-	GetPodList(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) models.PixieResponse
-	GetPxlData(ctx iris.Context, clusterIdx, st, apiKey string) models.PixieResponse
+	GetServiceDetailsMap(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceMap], *zkerrors.ZkError)
+	GetServiceDetailsList(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.Service], *zkerrors.ZkError)
+	GetNamespaceList(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[string], *zkerrors.ZkError)
+	GetServiceDetails(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceStat], *zkerrors.ZkError)
+	GetPodDetailsTimeSeries(ctx iris.Context, clusterIdx, podName, ns, st, apiKey string) (*transformer.PodDetailsPixieHTTPResponse, *zkerrors.ZkError)
+	GetPxlData(ctx iris.Context, clusterIdx, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.PixieTraceData], *zkerrors.ZkError)
+	GetPodList(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.PodDetails], *zkerrors.ZkError)
 }
 
 type clusterService struct {
@@ -45,7 +46,7 @@ func NewClusterService(pixie tablemux.PixieRepository) ClusterService {
 var details Details
 
 func init() {
-	configFilePath := "cluster.conf"
+	configFilePath := "/Users/vaibhavpaharia/Go/src/zk-api-server/cluster.conf"
 
 	jsonFile, err := os.Open(configFilePath)
 
@@ -89,256 +90,106 @@ func (cs *clusterService) DeleteCluster(ctx iris.Context, clusterId string) (int
 	return iris.StatusOK, nil
 }
 
-func (cs *clusterService) GetResourceDetails(ctx iris.Context, clusterIdx, action, st, apiKey string) models.PixieResponse {
-	var pxResp models.PixieResponse
+func (cs *clusterService) GetNamespaceList(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[string], *zkerrors.ZkError) {
 	if !validation.ValidatePxlTime(st) {
 		e := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
-		pxResp.Result = nil
-		pxResp.ResultsStats = nil
-		pxResp.Error = &e
-		return pxResp
+		return nil, &e
 	}
-
-	if strings.EqualFold(action, "list") {
-		return cs.getServiceDetailsList(ctx, clusterIdx, st, apiKey)
-	} else if strings.EqualFold(action, "map") {
-		return cs.getServiceDetailsMap(ctx, clusterIdx, st, apiKey)
-	}
-
-	e := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST, "unsupported action: "+action)
-	pxResp.Result = nil
-	pxResp.ResultsStats = nil
-	pxResp.Error = &e
-	return pxResp
-}
-
-func (cs *clusterService) GetNamespaceList(ctx iris.Context, id, st, apiKey string) models.PixieResponse {
-	var pxResp models.PixieResponse
-	if !validation.ValidatePxlTime(st) {
-		e := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
-		pxResp.Result = nil
-		pxResp.ResultsStats = nil
-		pxResp.Error = &e
-		return pxResp
-	}
-	stringListMux := handlerimplementation.New[string]()
+	mux := handlerimplementation.New[string]()
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetNamespaceMethodSignature(st), DataFrameName: "my_first_ns"}
-	resultSet, err := cs.pixie.GetPixieData(ctx, stringListMux, tx, id, apiKey, details.Domain)
+	resultSet, err := cs.pixie.GetPixieData(ctx, mux, tx, id, apiKey, details.Domain)
+	return transformer.PixieResponseToHTTPResponse(resultSet, mux, err), err
 
-	if resultSet == nil || err != nil {
-		pxResp.Result = nil
-		pxResp.ResultsStats = nil
-		pxResp.Error = err
-	} else {
-		pxResp.Result = stringListMux.Table.Values
-		pxResp.ResultsStats = resultSet.Stats()
-		pxResp.Error = nil
-	}
-
-	return pxResp
 }
 
-func (cs *clusterService) getServiceDetailsMap(ctx iris.Context, id, st, apiKey string) models.PixieResponse {
-	var pxResp models.PixieResponse
-	serviceMapMux := handlerimplementation.New[handlerimplementation.ServiceMap]()
+func (cs *clusterService) GetServiceDetailsMap(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceMap], *zkerrors.ZkError) {
+	if !validation.ValidatePxlTime(st) {
+		e := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
+		return nil, &e
+	}
+
+	mux := handlerimplementation.New[handlerimplementation.ServiceMap]()
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetServiceMapMethodSignature(st), DataFrameName: "my_first_map"}
-	resultSet, err := cs.pixie.GetPixieData(ctx, serviceMapMux, tx, id, apiKey, details.Domain)
+	resultSet, err := cs.pixie.GetPixieData(ctx, mux, tx, id, apiKey, details.Domain)
+	return transformer.PixieResponseToHTTPResponse(resultSet, mux, err), err
 
-	if resultSet == nil || err != nil {
-		pxResp.Result = nil
-		pxResp.ResultsStats = nil
-		pxResp.Error = err
-	} else {
-		pxResp.Result = serviceMapMux.Table.Values
-		pxResp.ResultsStats = resultSet.Stats()
-		pxResp.Error = nil
-	}
-
-	return pxResp
 }
 
-func (cs *clusterService) getServiceDetailsList(ctx iris.Context, id, st, apiKey string) models.PixieResponse {
-	var pxResp models.PixieResponse
-	serviceListMux := handlerimplementation.New[handlerimplementation.Service]()
+func (cs *clusterService) GetServiceDetailsList(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.Service], *zkerrors.ZkError) {
+	if !validation.ValidatePxlTime(st) {
+		e := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
+		return nil, &e
+	}
+
+	mux := handlerimplementation.New[handlerimplementation.Service]()
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetServiceListMethodSignature(st), DataFrameName: "my_first_list"}
-	resultSet, err := cs.pixie.GetPixieData(ctx, serviceListMux, tx, id, apiKey, details.Domain)
-	if resultSet == nil || err != nil {
-		pxResp.Result = nil
-		pxResp.ResultsStats = nil
-		pxResp.Error = err
-	} else {
-		pxResp.Result = serviceListMux.Table.Values
-		pxResp.ResultsStats = resultSet.Stats()
-		pxResp.Error = nil
-	}
+	resultSet, err := cs.pixie.GetPixieData(ctx, mux, tx, id, apiKey, details.Domain)
+	return transformer.PixieResponseToHTTPResponse(resultSet, mux, err), err
 
-	return pxResp
 }
 
-func (cs *clusterService) GetServiceDetails(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) models.PixieResponse {
-	var pxResp models.PixieResponse
+func (cs *clusterService) GetServiceDetails(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceStat], *zkerrors.ZkError) {
 	if !validation.ValidatePxlTime(st) {
 		err := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
-		pxResp.Result = nil
-		pxResp.ResultsStats = nil
-		pxResp.Error = &err
-		return pxResp
+		return nil, &err
 	}
 
 	var resultSet *pxapi.ScriptResults
-	serviceStatMux := handlerimplementation.New[handlerimplementation.ServiceStat]()
-	resultSet, err := cs.pixie.GetPixieData(ctx, serviceStatMux, tablemux.MethodTemplate{MethodSignature: utils.GetServiceDetailsMethodSignature(st, ns+"/"+name), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
+	mux := handlerimplementation.New[handlerimplementation.ServiceStat]()
+	resultSet, err := cs.pixie.GetPixieData(ctx, mux, tablemux.MethodTemplate{MethodSignature: utils.GetServiceDetailsMethodSignature(st, ns+"/"+name), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
+	return transformer.PixieResponseToHTTPResponse(resultSet, mux, err), err
 
-	if resultSet == nil || err != nil {
-		pxResp.Result = nil
-		pxResp.ResultsStats = nil
-		pxResp.Error = err
-	} else {
-		pxResp.Result = serviceStatMux.Table.Values
-		pxResp.ResultsStats = resultSet.Stats()
-		pxResp.Error = nil
-	}
-	return pxResp
-
-	//_ = ctx.JSON(map[string]interface{}{
-	//	"results": result,
-	//	"stats":   resultSet.Stats(),
-	//	"status":  200,
-	//})
 }
 
-func (cs *clusterService) GetPodDetailsTimeSeries(ctx iris.Context, clusterIdx, podName, ns, st, apiKey string) map[string]models.PixieResponse {
+func (cs *clusterService) GetPodDetailsTimeSeries(ctx iris.Context, clusterIdx, podName, ns, st, apiKey string) (*transformer.PodDetailsPixieHTTPResponse, *zkerrors.ZkError) {
 	if !validation.ValidatePxlTime(st) {
-		return nil
+		err := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
+		return nil, &err
 	}
 
 	// for HTTP Requests and HTTP Errors
 	reqAndErrMux := handlerimplementation.New[handlerimplementation.PodDetailsErrAndReq]()
 	resultSetErrAndReq, errReqAndErr := cs.pixie.GetPixieData(ctx, reqAndErrMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsForHTTPDataAndErrMethodSignature(st, ns+"/"+podName), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
-	if errReqAndErr != nil {
-		log.Println("pod details err and req, error, ", errReqAndErr.Error)
-	}
-	resultErrAndReq := reqAndErrMux.Table.Values
+	reqAndErrHttpResp := transformer.PixieResponseToHTTPResponse(resultSetErrAndReq, reqAndErrMux, errReqAndErr)
 
 	// for HTTP Latency
 	latencyMux := handlerimplementation.New[handlerimplementation.PodDetailsLatency]()
 	resultSetLatency, errLatency := cs.pixie.GetPixieData(ctx, latencyMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsForHTTPLatencyMethodSignature(st, ns+"/"+podName), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
-	if errLatency != nil {
-		log.Println("pod details latency, error, ", errLatency.Error)
-	}
-	resultLatency := latencyMux.Table.Values
+	httpLatencyHttpResp := transformer.PixieResponseToHTTPResponse(resultSetLatency, latencyMux, errLatency)
 
 	// for CPU Usage
 	cpuUsageMux := handlerimplementation.New[handlerimplementation.PodDetailsCpuUsage]()
 	resultSetCpuUsage, errCpuUsage := cs.pixie.GetPixieData(ctx, cpuUsageMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsForCpuUsageMethodSignature(st, ns+"/"+podName), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
-	if errCpuUsage != nil {
-		log.Println("pod details cpu usage, error, ", errCpuUsage.Error)
-	}
-	resultCpuUsage := cpuUsageMux.Table.Values
+	cpuUsageHttpResp := transformer.PixieResponseToHTTPResponse(resultSetCpuUsage, cpuUsageMux, errCpuUsage)
 
-	data := map[string]models.PixieResponse{}
-	data["requestAndError"] = models.PixieResponse{
-		Result:       resultErrAndReq,
-		ResultsStats: resultSetErrAndReq.Stats(),
-		Error:        errReqAndErr,
+	if errReqAndErr != nil && errLatency != nil && errCpuUsage != nil {
+		return nil, utils.ToPtr[zkerrors.ZkError](zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil))
 	}
-	data["latency"] = models.PixieResponse{
-		Result:       resultLatency,
-		ResultsStats: resultSetLatency.Stats(),
-		Error:        errLatency,
-	}
-	data["cpuUsage"] = models.PixieResponse{
-		Result:       resultCpuUsage,
-		ResultsStats: resultSetCpuUsage.Stats(),
-		Error:        errCpuUsage,
-	}
+	return transformer.PixieResponseToPodDetailsHTTPResponse(reqAndErrHttpResp, httpLatencyHttpResp, cpuUsageHttpResp), nil
 
-	return data
 }
 
-func (cs *clusterService) GetPodList(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) models.PixieResponse {
-	var pxResp models.PixieResponse
+func (cs *clusterService) GetPodList(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.PodDetails], *zkerrors.ZkError) {
 	if !validation.ValidatePxlTime(st) {
 		e := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
-		pxResp.Result = nil
-		pxResp.ResultsStats = nil
-		pxResp.Error = &e
-		return pxResp
+		return nil, &e
 	}
 	var resultSet *pxapi.ScriptResults
 
-	serviceStatMux := handlerimplementation.New[handlerimplementation.PodDetails]()
-	resultSet, err := cs.pixie.GetPixieData(ctx, serviceStatMux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsMethodSignature(st, ns, ns+"/"+name), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
-
-	if resultSet == nil || err != nil {
-		pxResp.Result = nil
-		pxResp.ResultsStats = nil
-		pxResp.Error = err
-	} else {
-		pxResp.Result = serviceStatMux.Table.Values
-		pxResp.ResultsStats = resultSet.Stats()
-		pxResp.Error = nil
-	}
-	return pxResp
-	//
-	//_ = ctx.JSON(map[string]interface{}{
-	//	"results": result,
-	//	"stats":   resultSet.Stats(),
-	//	"status":  200,
-	//})
+	mux := handlerimplementation.New[handlerimplementation.PodDetails]()
+	resultSet, err := cs.pixie.GetPixieData(ctx, mux, tablemux.MethodTemplate{MethodSignature: utils.GetPodDetailsMethodSignature(st, ns, ns+"/"+name), DataFrameName: "my_first_graph"}, clusterIdx, apiKey, details.Domain)
+	return transformer.PixieResponseToHTTPResponse(resultSet, mux, err), err
 }
 
-func (cs *clusterService) GetPxlData(ctx iris.Context, clusterIdx, st, apiKey string) models.PixieResponse {
-	var pxResp models.PixieResponse
+func (cs *clusterService) GetPxlData(ctx iris.Context, clusterIdx, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.PixieTraceData], *zkerrors.ZkError) {
 	if !validation.ValidatePxlTime(st) {
 		err := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
-		pxResp.Result = nil
-		pxResp.ResultsStats = nil
-		pxResp.Error = &err
-		return pxResp
+		return nil, &err
 	}
-	pixieTraceDataMux := handlerimplementation.New[handlerimplementation.PixieTraceData]()
+	mux := handlerimplementation.New[handlerimplementation.PixieTraceData]()
 
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetPXDataSignature(100, st, "{}"), DataFrameName: "my_first_list"}
-	resultSet, err := cs.pixie.GetPixieData(ctx, pixieTraceDataMux, tx, clusterIdx, apiKey, details.Domain)
+	resultSet, err := cs.pixie.GetPixieData(ctx, mux, tx, clusterIdx, apiKey, details.Domain)
+	return transformer.PixieResponseToHTTPResponse(resultSet, mux, err), err
 
-	if resultSet == nil || err != nil {
-		pxResp.Result = nil
-		pxResp.ResultsStats = nil
-		pxResp.Error = err
-	} else {
-		pxResp.Result = pixieTraceDataMux.Table.Values
-		pxResp.ResultsStats = resultSet.Stats()
-		pxResp.Error = nil
-	}
-	return pxResp
 }
-
-func (cs *clusterService) getResp(resultSet *pxapi.ScriptResults, result interface{}) map[string]interface{} {
-	var x map[string]interface{}
-	if result == nil {
-		x = map[string]interface{}{
-			"results": nil,
-			"stats":   nil,
-			"status":  500,
-		}
-	} else {
-		x = map[string]interface{}{
-			"results": result,
-			"stats":   resultSet.Stats(),
-			"status":  200,
-		}
-	}
-	return x
-}
-
-//func (o *MyTestObject) SavePersonDetails(firstname, lastname string, age int) (int, error) {
-//	args := o.Called(firstname, lastname, age)
-//	return args.Int(0), args.Error(1)
-//}
-//
-//args.Int(0)
-//args.Bool(1)
-//args.String(2)
-//
-//return args.Get(0).(*MyObject), args.Get(1).(*AnotherObjectOfMine)

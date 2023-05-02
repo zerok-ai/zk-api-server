@@ -3,10 +3,15 @@
 package mocks
 
 import (
+	handlerimplementation "main/app/tablemux/handlerimplementation"
+
 	context "github.com/kataras/iris/v12/context"
+
 	mock "github.com/stretchr/testify/mock"
 
 	models "main/app/cluster/models"
+
+	transformer "main/app/cluster/transformer"
 
 	zkerrors "main/app/utils/zkerrors"
 )
@@ -43,89 +48,199 @@ func (_m *ClusterService) DeleteCluster(ctx *context.Context, clusterId string) 
 }
 
 // GetNamespaceList provides a mock function with given fields: ctx, id, st, apiKey
-func (_m *ClusterService) GetNamespaceList(ctx *context.Context, id string, st string, apiKey string) models.PixieResponse {
+func (_m *ClusterService) GetNamespaceList(ctx *context.Context, id string, st string, apiKey string) (*transformer.PixieHTTPResponse[string], *zkerrors.ZkError) {
 	ret := _m.Called(ctx, id, st, apiKey)
 
-	var r0 models.PixieResponse
-	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string) models.PixieResponse); ok {
+	var r0 *transformer.PixieHTTPResponse[string]
+	var r1 *zkerrors.ZkError
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string) (*transformer.PixieHTTPResponse[string], *zkerrors.ZkError)); ok {
+		return rf(ctx, id, st, apiKey)
+	}
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string) *transformer.PixieHTTPResponse[string]); ok {
 		r0 = rf(ctx, id, st, apiKey)
 	} else {
-		r0 = ret.Get(0).(models.PixieResponse)
-	}
-
-	return r0
-}
-
-// GetPodDetailsTimeSeries provides a mock function with given fields: ctx, clusterIdx, podName, ns, st, apiKey
-func (_m *ClusterService) GetPodDetailsTimeSeries(ctx *context.Context, clusterIdx string, podName string, ns string, st string, apiKey string) map[string]models.PixieResponse {
-	ret := _m.Called(ctx, clusterIdx, podName, ns, st, apiKey)
-
-	var r0 map[string]models.PixieResponse
-	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string, string, string) map[string]models.PixieResponse); ok {
-		r0 = rf(ctx, clusterIdx, podName, ns, st, apiKey)
-	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]models.PixieResponse)
+			r0 = ret.Get(0).(*transformer.PixieHTTPResponse[string])
 		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(*context.Context, string, string, string) *zkerrors.ZkError); ok {
+		r1 = rf(ctx, id, st, apiKey)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*zkerrors.ZkError)
+		}
+	}
+
+	return r0, r1
+}
+
+// GetPodDetailsTimeSeries provides a mock function with given fields: ctx, clusterIdx, podName, ns, st, apiKey
+func (_m *ClusterService) GetPodDetailsTimeSeries(ctx *context.Context, clusterIdx string, podName string, ns string, st string, apiKey string) (*transformer.PodDetailsPixieHTTPResponse, *zkerrors.ZkError) {
+	ret := _m.Called(ctx, clusterIdx, podName, ns, st, apiKey)
+
+	var r0 *transformer.PodDetailsPixieHTTPResponse
+	var r1 *zkerrors.ZkError
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string, string, string) (*transformer.PodDetailsPixieHTTPResponse, *zkerrors.ZkError)); ok {
+		return rf(ctx, clusterIdx, podName, ns, st, apiKey)
+	}
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string, string, string) *transformer.PodDetailsPixieHTTPResponse); ok {
+		r0 = rf(ctx, clusterIdx, podName, ns, st, apiKey)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*transformer.PodDetailsPixieHTTPResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(*context.Context, string, string, string, string, string) *zkerrors.ZkError); ok {
+		r1 = rf(ctx, clusterIdx, podName, ns, st, apiKey)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*zkerrors.ZkError)
+		}
+	}
+
+	return r0, r1
 }
 
 // GetPodList provides a mock function with given fields: ctx, clusterIdx, name, ns, st, apiKey
-func (_m *ClusterService) GetPodList(ctx *context.Context, clusterIdx string, name string, ns string, st string, apiKey string) models.PixieResponse {
+func (_m *ClusterService) GetPodList(ctx *context.Context, clusterIdx string, name string, ns string, st string, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.PodDetails], *zkerrors.ZkError) {
 	ret := _m.Called(ctx, clusterIdx, name, ns, st, apiKey)
 
-	var r0 models.PixieResponse
-	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string, string, string) models.PixieResponse); ok {
+	var r0 *transformer.PixieHTTPResponse[handlerimplementation.PodDetails]
+	var r1 *zkerrors.ZkError
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string, string, string) (*transformer.PixieHTTPResponse[handlerimplementation.PodDetails], *zkerrors.ZkError)); ok {
+		return rf(ctx, clusterIdx, name, ns, st, apiKey)
+	}
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string, string, string) *transformer.PixieHTTPResponse[handlerimplementation.PodDetails]); ok {
 		r0 = rf(ctx, clusterIdx, name, ns, st, apiKey)
 	} else {
-		r0 = ret.Get(0).(models.PixieResponse)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*transformer.PixieHTTPResponse[handlerimplementation.PodDetails])
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(*context.Context, string, string, string, string, string) *zkerrors.ZkError); ok {
+		r1 = rf(ctx, clusterIdx, name, ns, st, apiKey)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*zkerrors.ZkError)
+		}
+	}
+
+	return r0, r1
 }
 
 // GetPxlData provides a mock function with given fields: ctx, clusterIdx, st, apiKey
-func (_m *ClusterService) GetPxlData(ctx *context.Context, clusterIdx string, st string, apiKey string) models.PixieResponse {
+func (_m *ClusterService) GetPxlData(ctx *context.Context, clusterIdx string, st string, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.PixieTraceData], *zkerrors.ZkError) {
 	ret := _m.Called(ctx, clusterIdx, st, apiKey)
 
-	var r0 models.PixieResponse
-	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string) models.PixieResponse); ok {
+	var r0 *transformer.PixieHTTPResponse[handlerimplementation.PixieTraceData]
+	var r1 *zkerrors.ZkError
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string) (*transformer.PixieHTTPResponse[handlerimplementation.PixieTraceData], *zkerrors.ZkError)); ok {
+		return rf(ctx, clusterIdx, st, apiKey)
+	}
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string) *transformer.PixieHTTPResponse[handlerimplementation.PixieTraceData]); ok {
 		r0 = rf(ctx, clusterIdx, st, apiKey)
 	} else {
-		r0 = ret.Get(0).(models.PixieResponse)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*transformer.PixieHTTPResponse[handlerimplementation.PixieTraceData])
+		}
 	}
 
-	return r0
-}
-
-// GetResourceDetails provides a mock function with given fields: ctx, clusterIdx, action, st, apiKey
-func (_m *ClusterService) GetResourceDetails(ctx *context.Context, clusterIdx string, action string, st string, apiKey string) models.PixieResponse {
-	ret := _m.Called(ctx, clusterIdx, action, st, apiKey)
-
-	var r0 models.PixieResponse
-	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string, string) models.PixieResponse); ok {
-		r0 = rf(ctx, clusterIdx, action, st, apiKey)
+	if rf, ok := ret.Get(1).(func(*context.Context, string, string, string) *zkerrors.ZkError); ok {
+		r1 = rf(ctx, clusterIdx, st, apiKey)
 	} else {
-		r0 = ret.Get(0).(models.PixieResponse)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*zkerrors.ZkError)
+		}
 	}
 
-	return r0
+	return r0, r1
 }
 
 // GetServiceDetails provides a mock function with given fields: ctx, clusterIdx, name, ns, st, apiKey
-func (_m *ClusterService) GetServiceDetails(ctx *context.Context, clusterIdx string, name string, ns string, st string, apiKey string) models.PixieResponse {
+func (_m *ClusterService) GetServiceDetails(ctx *context.Context, clusterIdx string, name string, ns string, st string, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceStat], *zkerrors.ZkError) {
 	ret := _m.Called(ctx, clusterIdx, name, ns, st, apiKey)
 
-	var r0 models.PixieResponse
-	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string, string, string) models.PixieResponse); ok {
+	var r0 *transformer.PixieHTTPResponse[handlerimplementation.ServiceStat]
+	var r1 *zkerrors.ZkError
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string, string, string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceStat], *zkerrors.ZkError)); ok {
+		return rf(ctx, clusterIdx, name, ns, st, apiKey)
+	}
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string, string, string) *transformer.PixieHTTPResponse[handlerimplementation.ServiceStat]); ok {
 		r0 = rf(ctx, clusterIdx, name, ns, st, apiKey)
 	} else {
-		r0 = ret.Get(0).(models.PixieResponse)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*transformer.PixieHTTPResponse[handlerimplementation.ServiceStat])
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(*context.Context, string, string, string, string, string) *zkerrors.ZkError); ok {
+		r1 = rf(ctx, clusterIdx, name, ns, st, apiKey)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*zkerrors.ZkError)
+		}
+	}
+
+	return r0, r1
+}
+
+// GetServiceDetailsList provides a mock function with given fields: ctx, id, st, apiKey
+func (_m *ClusterService) GetServiceDetailsList(ctx *context.Context, id string, st string, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.Service], *zkerrors.ZkError) {
+	ret := _m.Called(ctx, id, st, apiKey)
+
+	var r0 *transformer.PixieHTTPResponse[handlerimplementation.Service]
+	var r1 *zkerrors.ZkError
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string) (*transformer.PixieHTTPResponse[handlerimplementation.Service], *zkerrors.ZkError)); ok {
+		return rf(ctx, id, st, apiKey)
+	}
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string) *transformer.PixieHTTPResponse[handlerimplementation.Service]); ok {
+		r0 = rf(ctx, id, st, apiKey)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*transformer.PixieHTTPResponse[handlerimplementation.Service])
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(*context.Context, string, string, string) *zkerrors.ZkError); ok {
+		r1 = rf(ctx, id, st, apiKey)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*zkerrors.ZkError)
+		}
+	}
+
+	return r0, r1
+}
+
+// GetServiceDetailsMap provides a mock function with given fields: ctx, id, st, apiKey
+func (_m *ClusterService) GetServiceDetailsMap(ctx *context.Context, id string, st string, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceMap], *zkerrors.ZkError) {
+	ret := _m.Called(ctx, id, st, apiKey)
+
+	var r0 *transformer.PixieHTTPResponse[handlerimplementation.ServiceMap]
+	var r1 *zkerrors.ZkError
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceMap], *zkerrors.ZkError)); ok {
+		return rf(ctx, id, st, apiKey)
+	}
+	if rf, ok := ret.Get(0).(func(*context.Context, string, string, string) *transformer.PixieHTTPResponse[handlerimplementation.ServiceMap]); ok {
+		r0 = rf(ctx, id, st, apiKey)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*transformer.PixieHTTPResponse[handlerimplementation.ServiceMap])
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(*context.Context, string, string, string) *zkerrors.ZkError); ok {
+		r1 = rf(ctx, id, st, apiKey)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*zkerrors.ZkError)
+		}
+	}
+
+	return r0, r1
 }
 
 // UpdateCluster provides a mock function with given fields: ctx, cluster
