@@ -18,19 +18,19 @@ const docTemplateruleengine = `{
     "paths": {
         "/o/cluster/rules": {
             "get": {
-                "description": "Returns all the rules for RuleEngine processing",
+                "description": "Returns all the Rules",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "rule engine"
+                    "rules"
                 ],
-                "summary": "Get all rules",
+                "summary": "Returns all the Rules",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.ZkHttpResponse-model_FilterRule"
+                            "$ref": "#/definitions/utils.ZkHttpResponse-string"
                         }
                     }
                 }
@@ -38,38 +38,6 @@ const docTemplateruleengine = `{
         }
     },
     "definitions": {
-        "model.FilterRule": {
-            "type": "object",
-            "properties": {
-                "condition": {
-                    "type": "string"
-                },
-                "zk_request_type": {
-                    "$ref": "#/definitions/model.Rule"
-                }
-            }
-        },
-        "model.Rule": {
-            "type": "object",
-            "properties": {
-                "field": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "input": {
-                    "type": "string"
-                },
-                "operator": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "value": {}
-            }
-        },
         "utils.ZkHttpError": {
             "type": "object",
             "properties": {
@@ -89,7 +57,7 @@ const docTemplateruleengine = `{
                 "stack": {}
             }
         },
-        "utils.ZkHttpResponse-model_FilterRule": {
+        "utils.ZkHttpResponse-string": {
             "type": "object",
             "properties": {
                 "debug": {
@@ -103,7 +71,7 @@ const docTemplateruleengine = `{
                     "type": "string"
                 },
                 "payload": {
-                    "$ref": "#/definitions/model.FilterRule"
+                    "type": "string"
                 }
             }
         }
