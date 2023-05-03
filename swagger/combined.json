@@ -1,0 +1,890 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "contact": {},
+    "title": "API Documentation",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/u/cluster/traces": {
+      "get": {
+        "description": "Returns pixie data for a given cluster",
+        "tags": [
+          "cluster data"
+        ],
+        "summary": "Get pixie data",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_PixieTraceData"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/u/cluster/{clusterIdx}/pod/details": {
+      "get": {
+        "description": "Returns time-series data for the given pod for Request And Error, latency and cpu usage",
+        "tags": [
+          "cluster data"
+        ],
+        "summary": "Returns time-series data for the given pod",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/utils.ZkHttpResponse-transformer_PodDetailsPixieHTTPResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/u/cluster/{clusterIdx}/pod/list": {
+      "get": {
+        "description": "Returns a list of all the pods under a cluster and service",
+        "tags": [
+          "cluster data"
+        ],
+        "summary": "Get all pods under a service",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_PodDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/u/cluster/{clusterIdx}/service/details": {
+      "get": {
+        "description": "Returns the data of a service",
+        "tags": [
+          "cluster data"
+        ],
+        "summary": "Get all data from a service",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_ServiceStat"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/u/cluster/{clusterIdx}/service/list": {
+      "get": {
+        "description": "Returns all services in the provided cluster with their details",
+        "tags": [
+          "cluster data"
+        ],
+        "summary": "Get all services' details",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_Service"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/u/cluster/{clusterIdx}/service/map": {
+      "get": {
+        "description": "Returns the data between two services that directly interacts with each other",
+        "tags": [
+          "cluster data"
+        ],
+        "summary": "Get all services' map",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_ServiceMap"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/o/cluster/rules": {
+      "get": {
+        "description": "Returns all the Rules",
+        "tags": [
+          "rules"
+        ],
+        "summary": "Returns all the Rules",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZkHTTPResponse_GetAllRules"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "handlerimplementation.Args": {
+        "type": "object",
+        "properties": {
+          "pod": {
+            "type": "string"
+          },
+          "start_time": {
+            "type": "string"
+          }
+        }
+      },
+      "handlerimplementation.Destination": {
+        "type": "object",
+        "properties": {
+          "args": {
+            "$ref": "#/components/schemas/handlerimplementation.Args"
+          },
+          "label": {
+            "type": "string"
+          },
+          "script": {
+            "type": "string"
+          }
+        }
+      },
+      "handlerimplementation.Latencies": {
+        "type": "object",
+        "properties": {
+          "p01": {
+            "type": "number"
+          },
+          "p10": {
+            "type": "number"
+          },
+          "p25": {
+            "type": "number"
+          },
+          "p50": {
+            "type": "number"
+          },
+          "p75": {
+            "type": "number"
+          },
+          "p90": {
+            "type": "number"
+          },
+          "p99": {
+            "type": "number"
+          }
+        }
+      },
+      "handlerimplementation.PixieTraceData": {
+        "type": "object",
+        "properties": {
+          "destination": {
+            "$ref": "#/components/schemas/handlerimplementation.Destination"
+          },
+          "latency": {
+            "type": "integer"
+          },
+          "otel_flag": {
+            "type": "string"
+          },
+          "req_body": {
+            "type": "string"
+          },
+          "req_headers": {
+            "type": "string"
+          },
+          "req_method": {
+            "type": "string"
+          },
+          "req_path": {
+            "type": "string"
+          },
+          "resp_body": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/handlerimplementation.Destination"
+          },
+          "span_id": {
+            "type": "string"
+          },
+          "time_": {
+            "type": "string"
+          },
+          "trace_id": {
+            "type": "string"
+          },
+          "tracestate": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "handlerimplementation.PodDetails": {
+        "type": "object",
+        "properties": {
+          "containers": {
+            "type": "integer"
+          },
+          "pod": {
+            "type": "string"
+          },
+          "service": {
+            "type": "string"
+          },
+          "start_time": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/handlerimplementation.Status"
+          }
+        }
+      },
+      "handlerimplementation.PodDetailsCpuUsage": {
+        "type": "object",
+        "properties": {
+          "actual_disk_read_throughput": {
+            "type": "number"
+          },
+          "actual_disk_write_throughput": {
+            "type": "number"
+          },
+          "container": {
+            "type": "string"
+          },
+          "cpu_usage": {
+            "type": "number"
+          },
+          "rss": {
+            "type": "number"
+          },
+          "time_": {
+            "type": "string"
+          },
+          "total_disk_read_throughput": {
+            "type": "number"
+          },
+          "total_disk_write_throughput": {
+            "type": "number"
+          },
+          "vsize": {
+            "type": "number"
+          }
+        }
+      },
+      "handlerimplementation.PodDetailsErrAndReq": {
+        "type": "object",
+        "properties": {
+          "container": {
+            "type": "string"
+          },
+          "error_rate": {
+            "type": "number"
+          },
+          "errors_per_ns": {
+            "type": "number"
+          },
+          "request_throughput": {
+            "type": "number"
+          },
+          "time_": {
+            "type": "string"
+          }
+        }
+      },
+      "handlerimplementation.PodDetailsLatency": {
+        "type": "object",
+        "properties": {
+          "latency_p50": {
+            "type": "number"
+          },
+          "latency_p90": {
+            "type": "number"
+          },
+          "latency_p99": {
+            "type": "number"
+          },
+          "time_": {
+            "type": "string"
+          }
+        }
+      },
+      "handlerimplementation.Service": {
+        "type": "object",
+        "properties": {
+          "http_error_rate_in": {
+            "type": "number"
+          },
+          "http_latency_in": {
+            "$ref": "#/components/schemas/handlerimplementation.Latencies"
+          },
+          "http_req_throughput_in": {
+            "type": "number"
+          },
+          "inbound_conns": {
+            "type": "number"
+          },
+          "outbound_conns": {
+            "type": "number"
+          },
+          "pod_count": {
+            "type": "integer"
+          },
+          "service": {
+            "type": "string"
+          }
+        }
+      },
+      "handlerimplementation.ServiceMap": {
+        "type": "object",
+        "properties": {
+          "error_rate": {
+            "type": "number"
+          },
+          "inbound_throughput": {
+            "type": "number"
+          },
+          "latency_p50": {
+            "type": "number"
+          },
+          "latency_p90": {
+            "type": "number"
+          },
+          "latency_p99": {
+            "type": "number"
+          },
+          "outbound_throughput": {
+            "type": "number"
+          },
+          "request_throughput": {
+            "type": "number"
+          },
+          "requester_ip": {
+            "type": "string"
+          },
+          "requester_pod": {
+            "type": "string"
+          },
+          "requester_service": {
+            "type": "string"
+          },
+          "responder_ip": {
+            "type": "string"
+          },
+          "responder_pod": {
+            "type": "string"
+          },
+          "responder_service": {
+            "type": "string"
+          },
+          "throughput_total": {
+            "type": "number"
+          }
+        }
+      },
+      "handlerimplementation.ServiceStat": {
+        "type": "object",
+        "properties": {
+          "bytes_per_ns": {
+            "type": "number"
+          },
+          "error_rate": {
+            "type": "number"
+          },
+          "errors_per_ns": {
+            "type": "number"
+          },
+          "latency_p50": {
+            "type": "number"
+          },
+          "latency_p90": {
+            "type": "number"
+          },
+          "latency_p99": {
+            "type": "number"
+          },
+          "request_throughput": {
+            "type": "number"
+          },
+          "time_": {
+            "type": "string"
+          }
+        }
+      },
+      "handlerimplementation.Status": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "pxapi.ResultsStats": {
+        "type": "object",
+        "properties": {
+          "acceptedBytes": {
+            "type": "integer"
+          },
+          "bytesProcessed": {
+            "type": "integer"
+          },
+          "compilationTime": {
+            "$ref": "#/components/schemas/time.Duration"
+          },
+          "executionTime": {
+            "$ref": "#/components/schemas/time.Duration"
+          },
+          "recordsProcessed": {
+            "type": "integer"
+          },
+          "totalBytes": {
+            "type": "integer"
+          }
+        }
+      },
+      "time.Duration": {
+        "type": "integer",
+        "enum": [
+          -9223372036854776000,
+          9223372036854776000,
+          1,
+          1000,
+          1000000,
+          1000000000,
+          60000000000,
+          3600000000000
+        ],
+        "x-enum-varnames": [
+          "minDuration",
+          "maxDuration",
+          "Nanosecond",
+          "Microsecond",
+          "Millisecond",
+          "Second",
+          "Minute",
+          "Hour"
+        ]
+      },
+      "transformer.PixieHTTPResponse-handlerimplementation_PixieTraceData": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/handlerimplementation.PixieTraceData"
+            }
+          },
+          "stats": {
+            "$ref": "#/components/schemas/pxapi.ResultsStats"
+          }
+        }
+      },
+      "transformer.PixieHTTPResponse-handlerimplementation_PodDetails": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/handlerimplementation.PodDetails"
+            }
+          },
+          "stats": {
+            "$ref": "#/components/schemas/pxapi.ResultsStats"
+          }
+        }
+      },
+      "transformer.PixieHTTPResponse-handlerimplementation_PodDetailsCpuUsage": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/handlerimplementation.PodDetailsCpuUsage"
+            }
+          },
+          "stats": {
+            "$ref": "#/components/schemas/pxapi.ResultsStats"
+          }
+        }
+      },
+      "transformer.PixieHTTPResponse-handlerimplementation_PodDetailsErrAndReq": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/handlerimplementation.PodDetailsErrAndReq"
+            }
+          },
+          "stats": {
+            "$ref": "#/components/schemas/pxapi.ResultsStats"
+          }
+        }
+      },
+      "transformer.PixieHTTPResponse-handlerimplementation_PodDetailsLatency": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/handlerimplementation.PodDetailsLatency"
+            }
+          },
+          "stats": {
+            "$ref": "#/components/schemas/pxapi.ResultsStats"
+          }
+        }
+      },
+      "transformer.PixieHTTPResponse-handlerimplementation_Service": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/handlerimplementation.Service"
+            }
+          },
+          "stats": {
+            "$ref": "#/components/schemas/pxapi.ResultsStats"
+          }
+        }
+      },
+      "transformer.PixieHTTPResponse-handlerimplementation_ServiceMap": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/handlerimplementation.ServiceMap"
+            }
+          },
+          "stats": {
+            "$ref": "#/components/schemas/pxapi.ResultsStats"
+          }
+        }
+      },
+      "transformer.PixieHTTPResponse-handlerimplementation_ServiceStat": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/handlerimplementation.ServiceStat"
+            }
+          },
+          "stats": {
+            "$ref": "#/components/schemas/pxapi.ResultsStats"
+          }
+        }
+      },
+      "transformer.PodDetailsPixieHTTPResponse": {
+        "type": "object",
+        "properties": {
+          "cpuUsage": {
+            "$ref": "#/components/schemas/transformer.PixieHTTPResponse-handlerimplementation_PodDetailsCpuUsage"
+          },
+          "latency": {
+            "$ref": "#/components/schemas/transformer.PixieHTTPResponse-handlerimplementation_PodDetailsLatency"
+          },
+          "requestAndError": {
+            "$ref": "#/components/schemas/transformer.PixieHTTPResponse-handlerimplementation_PodDetailsErrAndReq"
+          }
+        }
+      },
+      "utils.ZkHttpError": {
+        "type": "object",
+        "properties": {
+          "info": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "kind": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "param": {
+            "type": "string"
+          },
+          "stack": {}
+        }
+      },
+      "utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_PixieTraceData": {
+        "type": "object",
+        "properties": {
+          "debug": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "error": {
+            "$ref": "#/components/schemas/utils.ZkHttpError"
+          },
+          "message": {
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/transformer.PixieHTTPResponse-handlerimplementation_PixieTraceData"
+          }
+        }
+      },
+      "utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_PodDetails": {
+        "type": "object",
+        "properties": {
+          "debug": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "error": {
+            "$ref": "#/components/schemas/utils.ZkHttpError"
+          },
+          "message": {
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/transformer.PixieHTTPResponse-handlerimplementation_PodDetails"
+          }
+        }
+      },
+      "utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_Service": {
+        "type": "object",
+        "properties": {
+          "debug": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "error": {
+            "$ref": "#/components/schemas/utils.ZkHttpError"
+          },
+          "message": {
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/transformer.PixieHTTPResponse-handlerimplementation_Service"
+          }
+        }
+      },
+      "utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_ServiceMap": {
+        "type": "object",
+        "properties": {
+          "debug": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "error": {
+            "$ref": "#/components/schemas/utils.ZkHttpError"
+          },
+          "message": {
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/transformer.PixieHTTPResponse-handlerimplementation_ServiceMap"
+          }
+        }
+      },
+      "utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_ServiceStat": {
+        "type": "object",
+        "properties": {
+          "debug": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "error": {
+            "$ref": "#/components/schemas/utils.ZkHttpError"
+          },
+          "message": {
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/transformer.PixieHTTPResponse-handlerimplementation_ServiceStat"
+          }
+        }
+      },
+      "utils.ZkHttpResponse-transformer_PodDetailsPixieHTTPResponse": {
+        "type": "object",
+        "properties": {
+          "debug": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "error": {
+            "$ref": "#/components/schemas/utils.ZkHttpError"
+          },
+          "message": {
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/transformer.PodDetailsPixieHTTPResponse"
+          }
+        }
+      },
+      "Rule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of the rule"
+          },
+          "field": {
+            "type": "string",
+            "description": "Field that the rule is being applied to"
+          },
+          "type": {
+            "type": "string",
+            "description": "Data type of the field"
+          },
+          "input": {
+            "type": "string",
+            "description": "Input type of the rule"
+          },
+          "operator": {
+            "type": "string",
+            "description": "Operator type of the rule"
+          },
+          "key": {
+            "type": "string",
+            "description": "Key associated with the rule"
+          },
+          "value": {
+            "description": "Value associated with the rule",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "object"
+              }
+            ]
+          }
+        }
+      },
+      "FilterRule": {
+        "type": "object",
+        "properties": {
+          "condition": {
+            "type": "string",
+            "description": "The condition that the rule should meet"
+          },
+          "zk_request_type": {
+            "$ref": "#/components/schemas/Rule",
+            "description": "The rule that applies to the ZooKeeper request type"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FilterType"
+            },
+            "description": "Array of filter rules"
+          }
+        }
+      },
+      "FilterType": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/FilterRule"
+          },
+          {
+            "$ref": "#/components/schemas/Rule"
+          }
+        ]
+      },
+      "RulesResponse": {
+        "type": "object",
+        "properties": {
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FilterRule"
+            }
+          }
+        }
+      },
+      "ZkHTTPResponse_GetAllRules": {
+        "type": "object",
+        "properties": {
+          "debug": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "error": {
+            "$ref": "#/components/schemas/ZkHttpError"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/RulesResponse"
+          }
+        }
+      },
+      "ZkHttpError": {
+        "type": "object",
+        "properties": {
+          "info": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "kind": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "param": {
+            "type": "string"
+          },
+          "stack": {}
+        }
+      }
+    }
+  }
+}
