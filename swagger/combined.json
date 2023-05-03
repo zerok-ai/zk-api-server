@@ -240,7 +240,7 @@
           "span_id": {
             "type": "string"
           },
-          "time_": {
+          "time": {
             "type": "string"
           },
           "trace_id": {
@@ -292,7 +292,7 @@
           "rss": {
             "type": "number"
           },
-          "time_": {
+          "time": {
             "type": "string"
           },
           "total_disk_read_throughput": {
@@ -321,7 +321,7 @@
           "request_throughput": {
             "type": "number"
           },
-          "time_": {
+          "time": {
             "type": "string"
           }
         }
@@ -338,7 +338,7 @@
           "latency_p99": {
             "type": "number"
           },
-          "time_": {
+          "time": {
             "type": "string"
           }
         }
@@ -440,7 +440,7 @@
           "request_throughput": {
             "type": "number"
           },
-          "time_": {
+          "time": {
             "type": "string"
           }
         }

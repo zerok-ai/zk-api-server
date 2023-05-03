@@ -1,7 +1,7 @@
 package handlerimplementation
 
 type PodDetailsCpuUsage struct {
-	Time                      *string  `json:"time_"`
+	Time                      *string  `json:"time"`
 	CpuUsage                  *float64 `json:"cpu_usage"`
 	VSize                     *float64 `json:"vsize"`
 	Rss                       *float64 `json:"rss"`

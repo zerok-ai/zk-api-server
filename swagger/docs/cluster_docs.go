@@ -222,7 +222,7 @@ const docTemplatecluster = `{
                 "span_id": {
                     "type": "string"
                 },
-                "time_": {
+                "time": {
                     "type": "string"
                 },
                 "trace_id": {
@@ -274,7 +274,7 @@ const docTemplatecluster = `{
                 "rss": {
                     "type": "number"
                 },
-                "time_": {
+                "time": {
                     "type": "string"
                 },
                 "total_disk_read_throughput": {
@@ -303,7 +303,7 @@ const docTemplatecluster = `{
                 "request_throughput": {
                     "type": "number"
                 },
-                "time_": {
+                "time": {
                     "type": "string"
                 }
             }
@@ -320,7 +320,7 @@ const docTemplatecluster = `{
                 "latency_p99": {
                     "type": "number"
                 },
-                "time_": {
+                "time": {
                     "type": "string"
                 }
             }
@@ -422,7 +422,7 @@ const docTemplatecluster = `{
                 "request_throughput": {
                     "type": "number"
                 },
-                "time_": {
+                "time": {
                     "type": "string"
                 }
             }

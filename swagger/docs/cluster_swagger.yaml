@@ -54,7 +54,7 @@ definitions:
         $ref: '#/definitions/handlerimplementation.Destination'
       span_id:
         type: string
-      time_:
+      time:
         type: string
       trace_id:
         type: string
@@ -88,7 +88,7 @@ definitions:
         type: number
       rss:
         type: number
-      time_:
+      time:
         type: string
       total_disk_read_throughput:
         type: number
@@ -107,7 +107,7 @@ definitions:
         type: number
       request_throughput:
         type: number
-      time_:
+      time:
         type: string
     type: object
   handlerimplementation.PodDetailsLatency:
@@ -118,7 +118,7 @@ definitions:
         type: number
       latency_p99:
         type: number
-      time_:
+      time:
         type: string
     type: object
   handlerimplementation.Service:
@@ -185,7 +185,7 @@ definitions:
         type: number
       request_throughput:
         type: number
-      time_:
+      time:
         type: string
     type: object
   handlerimplementation.Status:

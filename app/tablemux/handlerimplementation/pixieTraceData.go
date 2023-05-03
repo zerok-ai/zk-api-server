@@ -23,7 +23,7 @@ type PixieTraceData struct {
 	ReqPath    *string `json:"req_path"`
 	RespBody   *string `json:"resp_body"`
 	SpanId     *string `json:"span_id"`
-	Time       *string `json:"time_"`
+	Time       *string `json:"time"`
 	TraceId    *string `json:"trace_id"`
 	TraceState *string `json:"tracestate"`
 	Type       *string `json:"type"`

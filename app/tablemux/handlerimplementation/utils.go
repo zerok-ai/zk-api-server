@@ -16,14 +16,17 @@ func ConvertPixieDataToItemStore[itemType ItemType](r *types.Record) itemType {
 		value := utils.GetDataByIdx(tag, datatypeName, r)
 		mapObject[tag] = value
 	}
-	//if mapObject["time_"] != nil {
-	//	mapObject["time"] = mapObject["time_"]
-	//	delete(mapObject, "time_")
-	//}
+
+	if mapObject["time_"] != nil {
+		mapObject["time"] = mapObject["time_"]
+		delete(mapObject, "time_")
+	}
+
 	jsonStr, err := json.Marshal(mapObject)
 	if err != nil {
 		println(err)
 	}
+
 	err = json.Unmarshal(jsonStr, &itemStore)
 	if err != nil {
 		println(err)
