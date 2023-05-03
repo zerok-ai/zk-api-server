@@ -8,7 +8,7 @@ import (
 
 type PixieHTTPResponse[T handlerimplementation.ItemType] struct {
 	ResultStats *pxapi.ResultsStats `json:"stats"`
-	Result      []T                 `json:"result"`
+	Results     []T                 `json:"results"`
 }
 
 type PodDetailsPixieHTTPResponse struct {
@@ -26,7 +26,7 @@ func PixieResponseToHTTPResponse[T handlerimplementation.ItemType](results *pxap
 		resp.ResultStats = results.Stats()
 	}
 	if mux != nil && mux.Table.Values != nil {
-		resp.Result = mux.Table.Values
+		resp.Results = mux.Table.Values
 	}
 	return &resp
 }

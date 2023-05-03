@@ -490,7 +490,7 @@
             "transformer.PixieHTTPResponse-handlerimplementation_PixieTraceData": {
                 "type": "object",
                 "properties": {
-                    "result": {
+                    "results": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/handlerimplementation.PixieTraceData"
@@ -504,7 +504,7 @@
             "transformer.PixieHTTPResponse-handlerimplementation_PodDetails": {
                 "type": "object",
                 "properties": {
-                    "result": {
+                    "results": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/handlerimplementation.PodDetails"
@@ -518,7 +518,7 @@
             "transformer.PixieHTTPResponse-handlerimplementation_PodDetailsCpuUsage": {
                 "type": "object",
                 "properties": {
-                    "result": {
+                    "results": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/handlerimplementation.PodDetailsCpuUsage"
@@ -532,7 +532,7 @@
             "transformer.PixieHTTPResponse-handlerimplementation_PodDetailsErrAndReq": {
                 "type": "object",
                 "properties": {
-                    "result": {
+                    "results": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/handlerimplementation.PodDetailsErrAndReq"
@@ -546,7 +546,7 @@
             "transformer.PixieHTTPResponse-handlerimplementation_PodDetailsLatency": {
                 "type": "object",
                 "properties": {
-                    "result": {
+                    "results": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/handlerimplementation.PodDetailsLatency"
@@ -560,7 +560,7 @@
             "transformer.PixieHTTPResponse-handlerimplementation_Service": {
                 "type": "object",
                 "properties": {
-                    "result": {
+                    "results": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/handlerimplementation.Service"
@@ -574,7 +574,7 @@
             "transformer.PixieHTTPResponse-handlerimplementation_ServiceMap": {
                 "type": "object",
                 "properties": {
-                    "result": {
+                    "results": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/handlerimplementation.ServiceMap"
@@ -588,7 +588,7 @@
             "transformer.PixieHTTPResponse-handlerimplementation_ServiceStat": {
                 "type": "object",
                 "properties": {
-                    "result": {
+                    "results": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/handlerimplementation.ServiceStat"

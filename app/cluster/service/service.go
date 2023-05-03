@@ -42,7 +42,7 @@ func NewClusterService(pixie tablemux.PixieRepository) ClusterService {
 var details Details
 
 func init() {
-	configFilePath := "/Users/vaibhavpaharia/Go/src/zk-api-server/cluster.conf"
+	configFilePath := "/opt/cluster.conf"
 
 	jsonFile, err := os.Open(configFilePath)
 
