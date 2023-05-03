@@ -6,19 +6,19 @@
     "paths": {
         "/o/cluster/rules": {
             "get": {
-                "description": "Returns all the rules for RuleEngine processing",
+                "description": "Returns all the Rules",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "rule engine"
+                    "rules"
                 ],
-                "summary": "Get all rules",
+                "summary": "Returns all the Rules",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/utils.ZkHttpResponse-model_FilterRule"
+                            "$ref": "#/definitions/utils.ZkHttpResponse-string"
                         }
                     }
                 }
@@ -26,74 +26,90 @@
         }
     },
     "definitions": {
-        "model.FilterRule": {
+        "Rule": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Unique identifier of the rule"
+                },
+                "field": {
+                    "type": "string",
+                    "description": "Field that the rule is being applied to"
+                },
+                "type": {
+                    "type": "string",
+                    "description": "Data type of the field"
+                },
+                "input": {
+                    "type": "string",
+                    "description": "Input type of the rule"
+                },
+                "operator": {
+                    "type": "string",
+                    "description": "Operator type of the rule"
+                },
+                "key": {
+                    "type": "string",
+                    "description": "Key associated with the rule"
+                },
+                "value": {
+                    "description": "Value associated with the rule",
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        {
+                            "type": "object"
+                        }
+                    ]
+                }
+            }
+        },
+        "FilterRule": {
             "type": "object",
             "properties": {
                 "condition": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "The condition that the rule should meet"
                 },
                 "zk_request_type": {
-                    "$ref": "#/definitions/model.Rule"
+                    "$ref": "#/definitions/Rule",
+                    "description": "The rule that applies to the ZooKeeper request type"
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/FilterType"
+                    },
+                    "description": "Array of filter rules"
                 }
             }
         },
-        "model.Rule": {
+        "FilterType": {
             "type": "object",
-            "properties": {
-                "field": {
-                    "type": "string"
+            "allOf": [
+                {
+                    "$ref": "#/definitions/FilterRule"
                 },
-                "id": {
-                    "type": "string"
-                },
-                "input": {
-                    "type": "string"
-                },
-                "operator": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "value": {}
-            }
-        },
-        "utils.ZkHttpError": {
-            "type": "object",
-            "properties": {
-                "info": {
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "kind": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "param": {
-                    "type": "string"
-                },
-                "stack": {}
-            }
-        },
-        "utils.ZkHttpResponse-model_FilterRule": {
-            "type": "object",
-            "properties": {
-                "debug": {
-                    "type": "object",
-                    "additionalProperties": {}
-                },
-                "error": {
-                    "$ref": "#/definitions/utils.ZkHttpError"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "payload": {
-                    "$ref": "#/definitions/model.FilterRule"
+                {
+                    "$ref": "#/definitions/Rule"
                 }
-            }
+            ]
         }
-    }
-}
+    }}

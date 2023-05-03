@@ -1,0 +1,486 @@
+definitions:
+  handlerimplementation.Args:
+    properties:
+      pod:
+        type: string
+      start_time:
+        type: string
+    type: object
+  handlerimplementation.Destination:
+    properties:
+      args:
+        $ref: '#/definitions/handlerimplementation.Args'
+      label:
+        type: string
+      script:
+        type: string
+    type: object
+  handlerimplementation.Latencies:
+    properties:
+      p01:
+        type: number
+      p10:
+        type: number
+      p25:
+        type: number
+      p50:
+        type: number
+      p75:
+        type: number
+      p90:
+        type: number
+      p99:
+        type: number
+    type: object
+  handlerimplementation.PixieTraceData:
+    properties:
+      destination:
+        $ref: '#/definitions/handlerimplementation.Destination'
+      latency:
+        type: integer
+      otel_flag:
+        type: string
+      req_body:
+        type: string
+      req_headers:
+        type: string
+      req_method:
+        type: string
+      req_path:
+        type: string
+      resp_body:
+        type: string
+      source:
+        $ref: '#/definitions/handlerimplementation.Destination'
+      span_id:
+        type: string
+      time_:
+        type: string
+      trace_id:
+        type: string
+      tracestate:
+        type: string
+      type:
+        type: string
+    type: object
+  handlerimplementation.PodDetails:
+    properties:
+      containers:
+        type: integer
+      pod:
+        type: string
+      service:
+        type: string
+      start_time:
+        type: string
+      status:
+        $ref: '#/definitions/handlerimplementation.Status'
+    type: object
+  handlerimplementation.PodDetailsCpuUsage:
+    properties:
+      actual_disk_read_throughput:
+        type: number
+      actual_disk_write_throughput:
+        type: number
+      container:
+        type: string
+      cpu_usage:
+        type: number
+      rss:
+        type: number
+      time_:
+        type: string
+      total_disk_read_throughput:
+        type: number
+      total_disk_write_throughput:
+        type: number
+      vsize:
+        type: number
+    type: object
+  handlerimplementation.PodDetailsErrAndReq:
+    properties:
+      container:
+        type: string
+      error_rate:
+        type: number
+      errors_per_ns:
+        type: number
+      request_throughput:
+        type: number
+      time_:
+        type: string
+    type: object
+  handlerimplementation.PodDetailsLatency:
+    properties:
+      latency_p50:
+        type: number
+      latency_p90:
+        type: number
+      latency_p99:
+        type: number
+      time_:
+        type: string
+    type: object
+  handlerimplementation.Service:
+    properties:
+      http_error_rate_in:
+        type: number
+      http_latency_in:
+        $ref: '#/definitions/handlerimplementation.Latencies'
+      http_req_throughput_in:
+        type: number
+      inbound_conns:
+        type: number
+      outbound_conns:
+        type: number
+      pod_count:
+        type: integer
+      service:
+        type: string
+    type: object
+  handlerimplementation.ServiceMap:
+    properties:
+      error_rate:
+        type: number
+      inbound_throughput:
+        type: number
+      latency_p50:
+        type: number
+      latency_p90:
+        type: number
+      latency_p99:
+        type: number
+      outbound_throughput:
+        type: number
+      request_throughput:
+        type: number
+      requester_ip:
+        type: string
+      requester_pod:
+        type: string
+      requester_service:
+        type: string
+      responder_ip:
+        type: string
+      responder_pod:
+        type: string
+      responder_service:
+        type: string
+      throughput_total:
+        type: number
+    type: object
+  handlerimplementation.ServiceStat:
+    properties:
+      bytes_per_ns:
+        type: number
+      error_rate:
+        type: number
+      errors_per_ns:
+        type: number
+      latency_p50:
+        type: number
+      latency_p90:
+        type: number
+      latency_p99:
+        type: number
+      request_throughput:
+        type: number
+      time_:
+        type: string
+    type: object
+  handlerimplementation.Status:
+    properties:
+      message:
+        type: string
+      phase:
+        type: string
+      ready:
+        type: boolean
+      reason:
+        type: string
+    type: object
+  pxapi.ResultsStats:
+    properties:
+      acceptedBytes:
+        type: integer
+      bytesProcessed:
+        type: integer
+      compilationTime:
+        $ref: '#/definitions/time.Duration'
+      executionTime:
+        $ref: '#/definitions/time.Duration'
+      recordsProcessed:
+        type: integer
+      totalBytes:
+        type: integer
+    type: object
+  time.Duration:
+    enum:
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    type: integer
+    x-enum-varnames:
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+  transformer.PixieHTTPResponse-handlerimplementation_PixieTraceData:
+    properties:
+      result:
+        items:
+          $ref: '#/definitions/handlerimplementation.PixieTraceData'
+        type: array
+      stats:
+        $ref: '#/definitions/pxapi.ResultsStats'
+    type: object
+  transformer.PixieHTTPResponse-handlerimplementation_PodDetails:
+    properties:
+      result:
+        items:
+          $ref: '#/definitions/handlerimplementation.PodDetails'
+        type: array
+      stats:
+        $ref: '#/definitions/pxapi.ResultsStats'
+    type: object
+  transformer.PixieHTTPResponse-handlerimplementation_PodDetailsCpuUsage:
+    properties:
+      result:
+        items:
+          $ref: '#/definitions/handlerimplementation.PodDetailsCpuUsage'
+        type: array
+      stats:
+        $ref: '#/definitions/pxapi.ResultsStats'
+    type: object
+  transformer.PixieHTTPResponse-handlerimplementation_PodDetailsErrAndReq:
+    properties:
+      result:
+        items:
+          $ref: '#/definitions/handlerimplementation.PodDetailsErrAndReq'
+        type: array
+      stats:
+        $ref: '#/definitions/pxapi.ResultsStats'
+    type: object
+  transformer.PixieHTTPResponse-handlerimplementation_PodDetailsLatency:
+    properties:
+      result:
+        items:
+          $ref: '#/definitions/handlerimplementation.PodDetailsLatency'
+        type: array
+      stats:
+        $ref: '#/definitions/pxapi.ResultsStats'
+    type: object
+  transformer.PixieHTTPResponse-handlerimplementation_Service:
+    properties:
+      result:
+        items:
+          $ref: '#/definitions/handlerimplementation.Service'
+        type: array
+      stats:
+        $ref: '#/definitions/pxapi.ResultsStats'
+    type: object
+  transformer.PixieHTTPResponse-handlerimplementation_ServiceMap:
+    properties:
+      result:
+        items:
+          $ref: '#/definitions/handlerimplementation.ServiceMap'
+        type: array
+      stats:
+        $ref: '#/definitions/pxapi.ResultsStats'
+    type: object
+  transformer.PixieHTTPResponse-handlerimplementation_ServiceStat:
+    properties:
+      result:
+        items:
+          $ref: '#/definitions/handlerimplementation.ServiceStat'
+        type: array
+      stats:
+        $ref: '#/definitions/pxapi.ResultsStats'
+    type: object
+  transformer.PodDetailsPixieHTTPResponse:
+    properties:
+      cpuUsage:
+        $ref: '#/definitions/transformer.PixieHTTPResponse-handlerimplementation_PodDetailsCpuUsage'
+      latency:
+        $ref: '#/definitions/transformer.PixieHTTPResponse-handlerimplementation_PodDetailsLatency'
+      requestAndError:
+        $ref: '#/definitions/transformer.PixieHTTPResponse-handlerimplementation_PodDetailsErrAndReq'
+    type: object
+  utils.ZkHttpError:
+    properties:
+      info:
+        additionalProperties: {}
+        type: object
+      kind:
+        type: string
+      message:
+        type: string
+      param:
+        type: string
+      stack: {}
+    type: object
+  utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_PixieTraceData:
+    properties:
+      debug:
+        additionalProperties: {}
+        type: object
+      error:
+        $ref: '#/definitions/utils.ZkHttpError'
+      message:
+        type: string
+      payload:
+        $ref: '#/definitions/transformer.PixieHTTPResponse-handlerimplementation_PixieTraceData'
+    type: object
+  utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_PodDetails:
+    properties:
+      debug:
+        additionalProperties: {}
+        type: object
+      error:
+        $ref: '#/definitions/utils.ZkHttpError'
+      message:
+        type: string
+      payload:
+        $ref: '#/definitions/transformer.PixieHTTPResponse-handlerimplementation_PodDetails'
+    type: object
+  utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_Service:
+    properties:
+      debug:
+        additionalProperties: {}
+        type: object
+      error:
+        $ref: '#/definitions/utils.ZkHttpError'
+      message:
+        type: string
+      payload:
+        $ref: '#/definitions/transformer.PixieHTTPResponse-handlerimplementation_Service'
+    type: object
+  utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_ServiceMap:
+    properties:
+      debug:
+        additionalProperties: {}
+        type: object
+      error:
+        $ref: '#/definitions/utils.ZkHttpError'
+      message:
+        type: string
+      payload:
+        $ref: '#/definitions/transformer.PixieHTTPResponse-handlerimplementation_ServiceMap'
+    type: object
+  utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_ServiceStat:
+    properties:
+      debug:
+        additionalProperties: {}
+        type: object
+      error:
+        $ref: '#/definitions/utils.ZkHttpError'
+      message:
+        type: string
+      payload:
+        $ref: '#/definitions/transformer.PixieHTTPResponse-handlerimplementation_ServiceStat'
+    type: object
+  utils.ZkHttpResponse-transformer_PodDetailsPixieHTTPResponse:
+    properties:
+      debug:
+        additionalProperties: {}
+        type: object
+      error:
+        $ref: '#/definitions/utils.ZkHttpError'
+      message:
+        type: string
+      payload:
+        $ref: '#/definitions/transformer.PodDetailsPixieHTTPResponse'
+    type: object
+info:
+  contact: {}
+paths:
+  /u/cluster/{clusterIdx}/pod/details:
+    get:
+      description: Returns time-series data for the given pod for Request And Error,
+        latency and cpu usage
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ZkHttpResponse-transformer_PodDetailsPixieHTTPResponse'
+      summary: Returns time-series data for the given pod
+      tags:
+      - cluster data
+  /u/cluster/{clusterIdx}/pod/list:
+    get:
+      description: Returns a list of all the pods under a cluster and service
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_PodDetails'
+      summary: Get all pods under a service
+      tags:
+      - cluster data
+  /u/cluster/{clusterIdx}/service/details:
+    get:
+      description: Returns the data of a service
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_ServiceStat'
+      summary: Get all data from a service
+      tags:
+      - cluster data
+  /u/cluster/{clusterIdx}/service/list:
+    get:
+      description: Returns all services in the provided cluster with their details
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_Service'
+      summary: Get all services' details
+      tags:
+      - cluster data
+  /u/cluster/{clusterIdx}/service/map:
+    get:
+      description: Returns the data between two services that directly interacts with
+        each other
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_ServiceMap'
+      summary: Get all services' map
+      tags:
+      - cluster data
+  /u/cluster/traces:
+    get:
+      description: Returns pixie data for a given cluster
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ZkHttpResponse-transformer_PixieHTTPResponse-handlerimplementation_PixieTraceData'
+      summary: Get pixie data
+      tags:
+      - cluster data
+swagger: "2.0"

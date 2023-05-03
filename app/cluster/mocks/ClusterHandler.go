@@ -29,12 +29,12 @@ func (_m *ClusterHandler) GetPxData(ctx *context.Context) {
 }
 
 // GetResourceDetailsList provides a mock function with given fields: ctx
-func (_m *ClusterHandler) GetResourceDetailsList(ctx *context.Context) {
+func (_m *ClusterHandler) GetServiceDetailsList(ctx *context.Context) {
 	_m.Called(ctx)
 }
 
 // GetResourceDetailsMap provides a mock function with given fields: ctx
-func (_m *ClusterHandler) GetResourceDetailsMap(ctx *context.Context) {
+func (_m *ClusterHandler) GetServiceDetailsMap(ctx *context.Context) {
 	_m.Called(ctx)
 }
 

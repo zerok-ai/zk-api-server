@@ -11,8 +11,8 @@ import (
 )
 
 type ClusterHandler interface {
-	GetResourceDetailsList(ctx iris.Context)
-	GetResourceDetailsMap(ctx iris.Context)
+	GetServiceDetailsList(ctx iris.Context)
+	GetServiceDetailsMap(ctx iris.Context)
 	GetServiceDetails(ctx iris.Context)
 	GetPodList(ctx iris.Context)
 	GetPodDetails(ctx iris.Context)
@@ -28,7 +28,15 @@ func NewClusterHandler() ClusterHandler {
 
 var s = service.NewClusterService(tablemux.NewPixieRepository())
 
-func (h *clusterHandler) GetResourceDetailsList(ctx iris.Context) {
+// GetServiceDetailsList Returns all services in the provided cluster with their details
+//
+//	@Summary		Get all services' details
+//	@Description	Returns all services in the provided cluster with their details
+//	@Tags			cluster data
+//	@Produce		json
+//	@Success		200 {object} utils.ZkHttpResponse[transformer.PixieHTTPResponse[handlerimplementation.Service]]
+//	@Router			/u/cluster/{clusterIdx}/service/list [get]
+func (h *clusterHandler) GetServiceDetailsList(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
 	apiKey := ctx.GetHeader("ZK_API_KEY")
 	st := ctx.URLParam("st")
@@ -44,7 +52,15 @@ func (h *clusterHandler) GetResourceDetailsList(ctx iris.Context) {
 	utils.SetResponseInCtxAndReturn[transformer.PixieHTTPResponse[handlerimplementation.Service]](ctx, resp, zkError)
 }
 
-func (h *clusterHandler) GetResourceDetailsMap(ctx iris.Context) {
+// GetServiceDetailsMap Returns the data between two services that directly interacts with each other
+//
+//	@Summary		Get all services' map
+//	@Description	Returns the data between two services that directly interacts with each other
+//	@Tags			cluster data
+//	@Produce		json
+//	@Success		200 {object} utils.ZkHttpResponse[transformer.PixieHTTPResponse[handlerimplementation.ServiceMap]]
+//	@Router			/u/cluster/{clusterIdx}/service/map [get]
+func (h *clusterHandler) GetServiceDetailsMap(ctx iris.Context) {
 	apiKey := ctx.GetHeader("ZK_API_KEY")
 	clusterIdx := ctx.Params().Get("clusterIdx")
 	st := ctx.URLParam("st")
@@ -60,6 +76,14 @@ func (h *clusterHandler) GetResourceDetailsMap(ctx iris.Context) {
 	utils.SetResponseInCtxAndReturn[transformer.PixieHTTPResponse[handlerimplementation.ServiceMap]](ctx, resp, zkError)
 }
 
+// GetServiceDetails Returns the data of a service under a cluster
+//
+//	@Summary		Get all data from a service
+//	@Description	Returns the data of a service
+//	@Tags			cluster data
+//	@Produce		json
+//	@Success		200 {object} utils.ZkHttpResponse[transformer.PixieHTTPResponse[handlerimplementation.ServiceStat]]
+//	@Router			/u/cluster/{clusterIdx}/service/details [get]
 func (h *clusterHandler) GetServiceDetails(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
 	apiKey := ctx.GetHeader("ZK_API_KEY")
@@ -78,6 +102,14 @@ func (h *clusterHandler) GetServiceDetails(ctx iris.Context) {
 	utils.SetResponseInCtxAndReturn[transformer.PixieHTTPResponse[handlerimplementation.ServiceStat]](ctx, resp, zkError)
 }
 
+// GetPodList Returns a list of all the pods under a cluster and service
+//
+//	@Summary		Get all pods under a service
+//	@Description	Returns a list of all the pods under a cluster and service
+//	@Tags			cluster data
+//	@Produce		json
+//	@Success		200 {object} utils.ZkHttpResponse[transformer.PixieHTTPResponse[handlerimplementation.PodDetails]]
+//	@Router			/u/cluster/{clusterIdx}/pod/list [get]
 func (h *clusterHandler) GetPodList(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
 	apiKey := ctx.GetHeader("ZK_API_KEY")
@@ -96,6 +128,14 @@ func (h *clusterHandler) GetPodList(ctx iris.Context) {
 	utils.SetResponseInCtxAndReturn[transformer.PixieHTTPResponse[handlerimplementation.PodDetails]](ctx, resp, zkError)
 }
 
+// GetPodDetails Returns time-series data for the given pod
+//
+//	@Summary		Returns time-series data for the given pod
+//	@Description	Returns time-series data for the given pod for Request And Error, latency and cpu usage
+//	@Tags			cluster data
+//	@Produce		json
+//	@Success		200 {object} utils.ZkHttpResponse[transformer.PodDetailsPixieHTTPResponse]
+//	@Router			/u/cluster/{clusterIdx}/pod/details [get]
 func (h *clusterHandler) GetPodDetails(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
 	apiKey := ctx.GetHeader("ZK_API_KEY")
@@ -113,6 +153,14 @@ func (h *clusterHandler) GetPodDetails(ctx iris.Context) {
 	utils.SetResponseInCtxAndReturn[transformer.PodDetailsPixieHTTPResponse](ctx, resp, zkError)
 }
 
+// GetPxData Returns pixie data for a given cluster
+//
+//	@Summary		Get pixie data
+//	@Description	Returns pixie data for a given cluster
+//	@Tags			cluster data
+//	@Produce		json
+//	@Success		200 {object} utils.ZkHttpResponse[transformer.PixieHTTPResponse[handlerimplementation.PixieTraceData]]
+//	@Router			/u/cluster/traces [get]
 func (h *clusterHandler) GetPxData(ctx iris.Context) {
 	apiKey := ctx.GetHeader("ZK_API_KEY")
 	st := ctx.URLParamDefault("st", "-10m")
