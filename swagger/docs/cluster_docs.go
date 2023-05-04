@@ -375,13 +375,13 @@ const docTemplatecluster = `{
                 "request_throughput": {
                     "type": "number"
                 },
-                "requester_ip": {
+                "requestor_ip": {
                     "type": "string"
                 },
-                "requester_pod": {
+                "requestor_pod": {
                     "type": "string"
                 },
-                "requester_service": {
+                "requestor_service": {
                     "type": "string"
                 },
                 "responder_ip": {

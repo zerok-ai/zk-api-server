@@ -50,7 +50,7 @@ func GetDataByIdx(tag string, datatypeName string, r *types.Record) interface{} 
 	case "INT64", "UINT128":
 		retVal, _ = GetIntegerFromRecord(tag, r)
 	case "FLOAT64":
-		retVal, _ = GetFloatFromRecord(tag, r, 64)
+		retVal, _ = GetFloatFromRecord(tag, r)
 	case "DATA_TYPE_UNKNOWN":
 		retVal, _ = GetStringFromRecord(tag, r)
 	}
@@ -80,10 +80,6 @@ func IsEmpty(v string) bool {
 	return len(v) == 0
 }
 
-//func StringToPtr(v string) *string {
-//	return &v
-//}
-
 func ToPtr[T any](arg T) *T {
 	return &arg
 }
@@ -96,9 +92,9 @@ func GetStringFromRecord(key string, r *types.Record) (*string, error) {
 	return ToPtr[string](v.String()), nil
 }
 
-func GetFloatFromRecord(key string, r *types.Record, bitSize int) (*float64, error) {
-	var dCasted = r.GetDatum(key).(*types.Float64Value)
-	var floatVal float64 = Round(dCasted.Value(), 12)
+func GetFloatFromRecord(key string, r *types.Record) (*float64, error) {
+	dCasted := r.GetDatum(key).(*types.Float64Value)
+	floatVal := Round(dCasted.Value(), 12)
 	return &floatVal, nil
 }
 
@@ -141,14 +137,6 @@ func GetIntegerFromString(k string) (int, error) {
 func GetFloatFromString(k string, b int) (float64, error) {
 	return strconv.ParseFloat(k, b)
 }
-
-//func IntToPtr(v int) *int {
-//	return &v
-//}
-//
-//func FloatToPtr(v float64) *float64 {
-//	return &v
-//}
 
 func GetNamespaceMethodSignature(st string) string {
 	return fmt.Sprintf(getNamespaceMethodTemplate, st)

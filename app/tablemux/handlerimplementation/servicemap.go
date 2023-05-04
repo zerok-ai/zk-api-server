@@ -2,11 +2,11 @@ package handlerimplementation
 
 type ServiceMap struct {
 	ResponderPod       *string  `json:"responder_pod"`
-	RequesterPod       *string  `json:"requester_pod"`
+	RequestorPod       *string  `json:"requestor_pod"`
 	ResponderService   *string  `json:"responder_service"`
-	RequesterService   *string  `json:"requester_service"`
+	RequestorService   *string  `json:"requestor_service"`
 	ResponderIP        *string  `json:"responder_ip"`
-	RequesterIP        *string  `json:"requester_ip"`
+	RequestorIP        *string  `json:"requestor_ip"`
 	LatencyP50         *float64 `json:"latency_p50"`
 	LatencyP90         *float64 `json:"latency_p90"`
 	LatencyP99         *float64 `json:"latency_p99"`
