@@ -7,6 +7,8 @@ COPY app/px/* app/px/
 RUN ls -la app/px/
 COPY main .
 
+COPY data.json .
+
 EXPOSE 80
 
 CMD [ "/deploy/main" ]
