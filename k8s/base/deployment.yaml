@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
+  labels:
+    app: api-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-server
+  template:
+    metadata:
+      labels:
+        app: api-server
+    spec:
+      containers:
+        - name: api-server
+          imagePullPolicy: Always
+          image: us-west1-docker.pkg.dev/zerok-dev/api-server/zk-api-server:dev
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: cluster-details
+              mountPath: /opt
+      volumes:
+        - name: cluster-details
+          configMap:
+            name: cluster-details-config-file

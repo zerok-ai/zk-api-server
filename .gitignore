@@ -1,1 +1,6 @@
 .tmp
+.idea/
+vendor/
+main
+coverage.out
+

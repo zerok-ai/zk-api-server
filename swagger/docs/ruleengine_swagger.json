@@ -1,0 +1,159 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "version": "1.0.0",
+        "title": "API Documentation",
+        "contact": {}
+    },
+    "paths": {
+        "/o/cluster/rules": {
+            "get": {
+                "description": "Returns all the Rules",
+                "tags": [
+                    "rules"
+                ],
+                "summary": "Returns all the Rules",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ZkHTTPResponse_GetAllRules"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Rule": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Unique identifier of the rule"
+                    },
+                    "field": {
+                        "type": "string",
+                        "description": "Field that the rule is being applied to"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Data type of the field"
+                    },
+                    "input": {
+                        "type": "string",
+                        "description": "Input type of the rule"
+                    },
+                    "operator": {
+                        "type": "string",
+                        "description": "Operator type of the rule"
+                    },
+                    "key": {
+                        "type": "string",
+                        "description": "Key associated with the rule"
+                    },
+                    "value": {
+                        "description": "Value associated with the rule",
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "object"
+                            }
+                        ]
+                    }
+                }
+            },
+            "FilterRule": {
+                "type": "object",
+                "properties": {
+                    "condition": {
+                        "type": "string",
+                        "description": "The condition that the rule should meet"
+                    },
+                    "zk_request_type": {
+                        "$ref": "#/components/schemas/Rule",
+                        "description": "The rule that applies to the ZooKeeper request type"
+                    },
+                    "rules": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FilterType"
+                        },
+                        "description": "Array of filter rules"
+                    }
+                }
+            },
+            "FilterType": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/FilterRule"
+                    },
+                    {
+                        "$ref": "#/components/schemas/Rule"
+                    }
+                ]
+            },
+            "RulesResponse": {
+                "type": "object",
+                "properties": {
+                    "rules": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FilterRule"
+                        }
+                    }
+                }
+            },
+            "ZkHTTPResponse_GetAllRules": {
+                "type": "object",
+                "properties": {
+                    "debug": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ZkHttpError"
+                    },
+                    "payload": {
+                        "$ref": "#/components/schemas/RulesResponse"
+                    }
+                }
+            },
+            "ZkHttpError": {
+                "type": "object",
+                "properties": {
+                    "info": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "param": {
+                        "type": "string"
+                    },
+                    "stack": {}
+                }
+            }
+        }
+    }
+}
