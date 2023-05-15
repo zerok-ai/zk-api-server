@@ -3,14 +3,27 @@ package utils
 import (
 	"encoding/json"
 	"errors"
+	"github.com/kataras/iris/v12"
 	"github.com/stretchr/testify/assert"
+	"main/app/utils/zkerrors"
 	"math"
+	"net/http/httptest"
 	"px.dev/pxapi/proto/vizierpb"
 	"px.dev/pxapi/types"
 	"strconv"
 	"testing"
 )
 
+func TestInit_False(t *testing.T) {
+	Init(false)
+	assert.False(t, HTTP_DEBUG)
+}
+
+func TestInit_True(t *testing.T) {
+	assert.False(t, HTTP_DEBUG)
+	Init(true)
+	assert.True(t, HTTP_DEBUG)
+}
 func TestContains(t *testing.T) {
 	strSlice := []string{"apple", "banana", "orange"}
 	result := Contains(strSlice, "banana")
@@ -457,7 +470,7 @@ func TestGetFloatFromRecord(t *testing.T) {
 //	expectedOutput := "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras ut risus quis mi rhoncus auctor. Nullam vehicula rutrum felis, quis suscipit odio interdum in. Fusce volutpat, mauris quis tempus malesuada, orci nibh mattis velit, vel aliquet odio enim vel justo. Etiam lacinia, mauris sed faucibus varius, tellus neque fringilla elit, ut placerat ipsum tellus id ante. Maecenas dapibus dignissim massa, eu pharetra eros hendrerit id. Fusce iaculis dui id est blandit luctus. Morbi eget ornare nunc. In hac habitasse platea dictumst.\n"
 //	b := []byte(input)
 //
-//	actualOutput := readGzip(b)
+//	actualOutput := DecodeGzip(string(b))
 //	assert.Equal(t, expectedOutput, actualOutput)
 //
 //	// Test the DecodeGzip function with a non-gzip input
@@ -465,3 +478,29 @@ func TestGetFloatFromRecord(t *testing.T) {
 //	//actualOutput = DecodeGzip(nonGzipInput)
 //	//assert.Equal(t, nonGzipInput, actualOutput)
 //}
+
+func TestSetResponseInCtxAndReturn_Success(t *testing.T) {
+	// Create a new Iris context and response recorder
+	app := iris.New()
+	recorder := httptest.NewRecorder()
+	ctx := app.ContextPool.Acquire(recorder, httptest.NewRequest("GET", "/", nil))
+
+	// Test with a nil error and string response
+	resp := "Hello, world!"
+	zkError := (*zkerrors.ZkError)(nil)
+	SetResponseInCtxAndReturn(ctx, &resp, zkError)
+	assert.Equal(t, 200, recorder.Code)
+	assert.Equal(t, "{\"payload\":\"Hello, world!\"}\n", recorder.Body.String())
+}
+func TestSetResponseInCtxAndReturn_Error(t *testing.T) {
+	// Create a new Iris context and response recorder
+	app := iris.New()
+	recorder := httptest.NewRecorder()
+	ctx := app.ContextPool.Acquire(recorder, httptest.NewRequest("GET", "/", nil))
+
+	// Test with a non-nil error
+	zkError := &zkerrors.ZkError{Error: zkerrors.ZK_ERROR_INTERNAL_SERVER_SERVER}
+	SetResponseInCtxAndReturn(ctx, (*string)(nil), zkError)
+	assert.Equal(t, 500, ctx.GetStatusCode())
+	assert.Equal(t, ``, recorder.Body.String())
+}

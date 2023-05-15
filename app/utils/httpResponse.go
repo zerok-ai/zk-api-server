@@ -27,12 +27,12 @@ type ZkHttpResponseBuilder[T any] struct {
 	_ZkHttpResponseBuilder _zkHttpResponseBuilder[T]
 }
 
-func (zkHttpResponseBuilder ZkHttpResponseBuilder[T]) WithStatus(status int) _zkHttpResponseBuilder[T] {
+func (zkHttpResponseBuilder *ZkHttpResponseBuilder[T]) WithStatus(status int) *_zkHttpResponseBuilder[T] {
 	zkHttpResponseBuilder._ZkHttpResponseBuilder = _zkHttpResponseBuilder[T]{}
 	return zkHttpResponseBuilder._ZkHttpResponseBuilder.withStatus(status)
 }
 
-func (zkHttpResponseBuilder ZkHttpResponseBuilder[T]) WithZkErrorType(zkErrorType zkerrors.ZkErrorType) _zkHttpResponseBuilder[T] {
+func (zkHttpResponseBuilder *ZkHttpResponseBuilder[T]) WithZkErrorType(zkErrorType zkerrors.ZkErrorType) *_zkHttpResponseBuilder[T] {
 	zkHttpResponseBuilder._ZkHttpResponseBuilder = _zkHttpResponseBuilder[T]{}
 	zkHttpError := ZkHttpError{}
 	zkHttpError.Build(zkErrorType, nil, nil)
@@ -44,24 +44,24 @@ type _zkHttpResponseBuilder[T any] struct {
 	ZkHttpResponse ZkHttpResponse[T]
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) withStatus(status int) _zkHttpResponseBuilder[T] {
+func (zkHttpResponseBuilder *_zkHttpResponseBuilder[T]) withStatus(status int) *_zkHttpResponseBuilder[T] {
 	zkHttpResponseBuilder.ZkHttpResponse.Status = status
 	return zkHttpResponseBuilder
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Message(message *string) _zkHttpResponseBuilder[T] {
+func (zkHttpResponseBuilder *_zkHttpResponseBuilder[T]) Message(message *string) *_zkHttpResponseBuilder[T] {
 	zkHttpResponseBuilder.ZkHttpResponse.Message = message
 	return zkHttpResponseBuilder
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Data(data *T) _zkHttpResponseBuilder[T] {
+func (zkHttpResponseBuilder *_zkHttpResponseBuilder[T]) Data(data *T) *_zkHttpResponseBuilder[T] {
 	if data != nil {
 		zkHttpResponseBuilder.ZkHttpResponse.Data = *data
 	}
 	return zkHttpResponseBuilder
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Debug(key string, value any) _zkHttpResponseBuilder[T] {
+func (zkHttpResponseBuilder *_zkHttpResponseBuilder[T]) Debug(key string, value any) *_zkHttpResponseBuilder[T] {
 	if !HTTP_DEBUG || value == nil {
 		return zkHttpResponseBuilder
 	}
@@ -83,7 +83,7 @@ func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Debug(key string, value a
 // 	return zkHttpResponseBuilder;
 // }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Header(key string, value string) _zkHttpResponseBuilder[T] {
+func (zkHttpResponseBuilder *_zkHttpResponseBuilder[T]) Header(key string, value string) *_zkHttpResponseBuilder[T] {
 	if zkHttpResponseBuilder.ZkHttpResponse.Headers == nil {
 		zkHttpResponseBuilder.ZkHttpResponse.Headers = &map[string]string{}
 	}
@@ -91,7 +91,7 @@ func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Header(key string, value 
 	return zkHttpResponseBuilder
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Metadata(key string, value any) _zkHttpResponseBuilder[T] {
+func (zkHttpResponseBuilder *_zkHttpResponseBuilder[T]) Metadata(key string, value any) *_zkHttpResponseBuilder[T] {
 	if zkHttpResponseBuilder.ZkHttpResponse.Metadata == nil {
 		zkHttpResponseBuilder.ZkHttpResponse.Metadata = &map[string]any{}
 	}
@@ -99,14 +99,14 @@ func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Metadata(key string, valu
 	return zkHttpResponseBuilder
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Error(zkHttpError ZkHttpError) _zkHttpResponseBuilder[T] {
+func (zkHttpResponseBuilder *_zkHttpResponseBuilder[T]) Error(zkHttpError ZkHttpError) *_zkHttpResponseBuilder[T] {
 	if zkHttpResponseBuilder.ZkHttpResponse.Error == nil {
 		zkHttpResponseBuilder.ZkHttpResponse.Error = &zkHttpError
 	}
 	return zkHttpResponseBuilder
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) ErrorInfo(key string, value any) _zkHttpResponseBuilder[T] {
+func (zkHttpResponseBuilder *_zkHttpResponseBuilder[T]) ErrorInfo(key string, value any) *_zkHttpResponseBuilder[T] {
 	if zkHttpResponseBuilder.ZkHttpResponse.Error == nil {
 		zkHttpResponseBuilder.ZkHttpResponse.Error = &ZkHttpError{}
 	}
@@ -117,7 +117,7 @@ func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) ErrorInfo(key string, val
 	return zkHttpResponseBuilder
 }
 
-func (zkHttpResponseBuilder _zkHttpResponseBuilder[T]) Build() ZkHttpResponse[T] {
+func (zkHttpResponseBuilder *_zkHttpResponseBuilder[T]) Build() ZkHttpResponse[T] {
 	return zkHttpResponseBuilder.ZkHttpResponse
 }
 
@@ -132,14 +132,14 @@ func (zkHttpError *ZkHttpError) Build(zkErrorType zkerrors.ZkErrorType, param *s
 	}
 }
 
-func (zkHttpResponse ZkHttpResponse[T]) Header(key string, value string) {
+func (zkHttpResponse *ZkHttpResponse[T]) Header(key string, value string) {
 	if zkHttpResponse.Headers == nil {
 		zkHttpResponse.Headers = &map[string]string{}
 	}
 	(*zkHttpResponse.Headers)[key] = value
 }
 
-func (zkHttpResponse ZkHttpResponse[T]) IsOk() bool {
+func (zkHttpResponse *ZkHttpResponse[T]) IsOk() bool {
 	if zkHttpResponse.Status > 199 && zkHttpResponse.Status < 300 {
 		return true
 	}

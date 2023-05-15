@@ -42,7 +42,8 @@ func (h *clusterHandler) GetServiceDetailsList(ctx iris.Context) {
 	st := ctx.URLParam("st")
 
 	if err := validation.ValidateGetResourceDetailsApi(st, apiKey); err != nil {
-		zkHttpResponse := utils.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
+		z := &utils.ZkHttpResponseBuilder[any]{}
+		zkHttpResponse := z.WithZkErrorType(err.Error).Build()
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
 		return
@@ -66,7 +67,8 @@ func (h *clusterHandler) GetServiceDetailsMap(ctx iris.Context) {
 	st := ctx.URLParam("st")
 
 	if err := validation.ValidateGetResourceDetailsApi(st, apiKey); err != nil {
-		zkHttpResponse := utils.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
+		z := utils.ZkHttpResponseBuilder[any]{}
+		zkHttpResponse := z.WithZkErrorType(err.Error).Build()
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
 		return
@@ -92,7 +94,8 @@ func (h *clusterHandler) GetServiceDetails(ctx iris.Context) {
 	st := ctx.URLParam("st")
 
 	if err := validation.ValidateGraphDetailsApi(serviceName, ns, st, apiKey); err != nil {
-		zkHttpResponse := utils.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
+		z := &utils.ZkHttpResponseBuilder[any]{}
+		zkHttpResponse := z.WithZkErrorType(err.Error).Build()
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
 		return
@@ -118,7 +121,8 @@ func (h *clusterHandler) GetPodList(ctx iris.Context) {
 	ns := ctx.URLParam("ns")
 
 	if err := validation.ValidateGraphDetailsApi(serviceName, ns, st, apiKey); err != nil {
-		zkHttpResponse := utils.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
+		z := &utils.ZkHttpResponseBuilder[any]{}
+		zkHttpResponse := z.WithZkErrorType(err.Error).Build()
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
 		return
@@ -144,7 +148,8 @@ func (h *clusterHandler) GetPodDetails(ctx iris.Context) {
 	ns := ctx.URLParam("ns")
 
 	if err := validation.ValidatePodDetailsApi(ctx, podName, ns, st, apiKey); err != nil {
-		zkHttpResponse := utils.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
+		z := &utils.ZkHttpResponseBuilder[any]{}
+		zkHttpResponse := z.WithZkErrorType(err.Error).Build()
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
 		return
@@ -167,7 +172,8 @@ func (h *clusterHandler) GetPxData(ctx iris.Context) {
 	clusterIdx := ctx.URLParam("cluster_id")
 
 	if err := validation.ValidateGetPxlData(clusterIdx, apiKey); err != nil {
-		zkHttpResponse := utils.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
+		z := &utils.ZkHttpResponseBuilder[any]{}
+		zkHttpResponse := z.WithZkErrorType(err.Error).Build()
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
 		return

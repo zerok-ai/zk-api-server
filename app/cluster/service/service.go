@@ -96,7 +96,6 @@ func (cs *clusterService) GetServiceDetailsList(ctx iris.Context, id, st, apiKey
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetServiceListMethodSignature(st), DataFrameName: "my_first_list"}
 	resultSet, err := cs.pixie.GetPixieData(ctx, mux, tx, id, apiKey, details.Domain)
 	return transformer.PixieResponseToHTTPResponse(resultSet, mux, err), err
-
 }
 
 func (cs *clusterService) GetServiceDetails(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceStat], *zkerrors.ZkError) {

@@ -1,14 +1,10 @@
 package utils
 
 import (
-	"bytes"
-	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/x/errors"
-	"io"
-	"log"
 	"main/app/utils/zkerrors"
 	"math"
 	"regexp"
@@ -203,38 +199,40 @@ func IsValidPxlTime(s string) bool {
 	return true
 }
 
-func DecodeGzip(s string) string {
-	b := []byte(s)
-	reader := bytes.NewReader(b)
-	r, err := gzip.NewReader(reader)
-	defer func(r *gzip.Reader) {
-		err := r.Close()
-		if err != nil {
-
-		}
-	}(r)
-
-	if err != nil {
-		log.Printf("Error while decoding gzip string %s\n", s)
-		log.Printf(err.Error())
-	}
-
-	output, err := io.ReadAll(r)
-	if err != nil {
-		log.Printf("Error while reading gzip string %s\n", s)
-		log.Printf(err.Error())
-	}
-
-	return string(output)
-}
+//func DecodeGzip(s string) string {
+//	b := []byte(s)
+//	reader := bytes.NewReader(b)
+//	r, err := gzip.NewReader(reader)
+//	defer func(r *gzip.Reader) {
+//		err := r.Close()
+//		if err != nil {
+//
+//		}
+//	}(r)
+//
+//	if err != nil {
+//		log.Printf("Error while decoding gzip string %s\n", s)
+//		log.Printf(err.Error())
+//	}
+//
+//	output, err := io.ReadAll(r)
+//	if err != nil {
+//		log.Printf("Error while reading gzip string %s\n", s)
+//		log.Printf(err.Error())
+//	}
+//
+//	return string(output)
+//}
 
 func SetResponseInCtxAndReturn[T any](ctx iris.Context, resp *T, zkError *zkerrors.ZkError) {
 	if zkError != nil {
-		ZkHttpResponseBuilder[any]{}.WithZkErrorType(zkError.Error).Build()
+		z := ZkHttpResponseBuilder[any]{}
+		z.WithZkErrorType(zkError.Error).Build()
 		ctx.StatusCode(zkError.Error.Status)
 		return
 	}
-	zkHttpResponse := ZkHttpResponseBuilder[T]{}.WithStatus(iris.StatusOK).Data(resp).Build()
+	z := &ZkHttpResponseBuilder[T]{}
+	zkHttpResponse := z.WithStatus(iris.StatusOK).Data(resp).Build()
 	ctx.StatusCode(zkHttpResponse.Status)
 	ctx.JSON(zkHttpResponse)
 	return

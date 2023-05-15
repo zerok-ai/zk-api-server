@@ -42,6 +42,57 @@ func (s *ServiceTestSuite) TestClusterService_List_ResourceDetails_InternalServe
 	assert.Equal(s.T(), &zkErr, err)
 }
 
+func (s *ServiceTestSuite) TestClusterService_List_GetPodDetailsTimeSeries_InternalServerError_Fail() {
+	var zkErr zkerrors.ZkError
+	zkErr = zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil)
+	clusterIdx, st, apiKey := "1", "-9m", "apiKey"
+
+	s.pixieRepoMock.On("GetPixieData", mock.Anything, mock.Anything, mock.Anything, clusterIdx, apiKey, mock.Anything).Return(nil, &zkErr)
+
+	resp, err := s.service.GetPodDetailsTimeSeries(nil, clusterIdx, "pod_name", "namespace", st, apiKey)
+	assert.Nil(s.T(), resp)
+	assert.Equal(s.T(), &zkErr, err)
+}
+
+//func (s *ServiceTestSuite) TestGetServiceDetailsList() {
+//	mockRepo := s.pixieRepoMock
+//
+//	// Create a new clusterService instance with the mock repository
+//	cs := &clusterService{pixie: mockRepo}
+//
+//	// Set up a mock response for the GetPixieData method
+//	mockResults := &pxapi.ScriptResults{}
+//	mockError := (*zkerrors.ZkError)(nil)
+//	mockRepo.On("GetPixieData", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockResults, mockError)
+//
+//	// Create a new Iris context
+//	app := iris.New()
+//	recorder := httptest.NewRecorder()
+//	ctx := app.ContextPool.Acquire(recorder, httptest.NewRequest("GET", "/", nil))
+//
+//	// Call the GetServiceDetailsList method
+//	id := "cluster_id"
+//	st := "2022-01-01T00:00:00Z"
+//	apiKey := "api_key"
+//	resp, err := cs.GetServiceDetailsList(ctx, id, st, apiKey)
+//
+//	// Verify the mock response
+//	assert.Equal(t, mockResults, resp)
+//	assert.Equal(t, mockError, err)
+//
+//	// Verify that the GetPixieData method was called with the expected arguments
+//	expectedTx := tablemux.MethodTemplate{MethodSignature: utils.GetServiceListMethodSignature(st), DataFrameName: "my_first_list"}
+//	mockRepo.AssertCalled(t, "GetPixieData", ctx, mock.AnythingOfType("pxapi.TableMuxer"), expectedTx, id, apiKey, details.Domain)
+//}
+
+func (s *ServiceTestSuite) TestClusterService_List_ResourceDetails_IncorrectTime_Fail() {
+	var ctx iris.Context
+	zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
+	resp, err := s.service.GetServiceDetailsList(ctx, "1", "-9MIN", "apiKey")
+	assert.Nil(s.T(), resp)
+	assert.Equal(s.T(), &zkErr, err)
+}
+
 func (s *ServiceTestSuite) TestClusterService_Map_ResourceDetails_InternalServerError_Fail() {
 	var zkErr zkerrors.ZkError
 	zkErr = zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil)
@@ -51,6 +102,14 @@ func (s *ServiceTestSuite) TestClusterService_Map_ResourceDetails_InternalServer
 	s.pixieRepoMock.On("GetPixieData", mock.Anything, mock.Anything, temp, clusterIdx, apiKey, mock.Anything).Return(nil, &zkErr)
 
 	resp, err := s.service.GetServiceDetailsMap(nil, clusterIdx, st, apiKey)
+	assert.Nil(s.T(), resp)
+	assert.Equal(s.T(), &zkErr, err)
+}
+
+func (s *ServiceTestSuite) TestGetPodDetailsTimeSeries_IncorrectTime_Fail() {
+	var ctx iris.Context
+	zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
+	resp, err := s.service.GetPodDetailsTimeSeries(ctx, "1", "pod", "ns", "st", "apiKey")
 	assert.Nil(s.T(), resp)
 	assert.Equal(s.T(), &zkErr, err)
 }
