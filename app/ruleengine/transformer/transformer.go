@@ -5,10 +5,10 @@ import (
 )
 
 type RulesResponse struct {
-	Rules []model.FilterRule `json:"rules"`
+	Rules []model.NewRuleSchema `json:"rules"`
 }
 
-func FromFilterRuleArrayToRulesResponse(rArr []model.FilterRule) *RulesResponse {
+func FromFilterRuleArrayToRulesResponse(rArr []model.NewRuleSchema) *RulesResponse {
 	var resp RulesResponse
 	if rArr != nil && len(rArr) != 0 {
 		for _, v := range rArr {

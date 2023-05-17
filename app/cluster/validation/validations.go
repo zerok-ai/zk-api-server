@@ -1,9 +1,9 @@
 package validation
 
 import (
-	"github.com/kataras/iris/v12"
 	"main/app/utils"
 	"main/app/utils/zkerrors"
+	"strconv"
 )
 
 func ValidatePxlTime(s string) bool {
@@ -33,7 +33,7 @@ func ValidateGraphDetailsApi(serviceName, ns, st, apiKey string) *zkerrors.ZkErr
 	return nil
 }
 
-func ValidatePodDetailsApi(ctx iris.Context, podName, ns, st, apiKey string) *zkerrors.ZkError {
+func ValidatePodDetailsApi(podName, ns, st, apiKey string) *zkerrors.ZkError {
 	if utils.IsEmpty(podName) {
 		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_SERVICE_POD_EMPTY, nil)
 		return &zkErr
@@ -62,6 +62,43 @@ func ValidateGetResourceDetailsApi(st string, apiKey string) *zkerrors.ZkError {
 		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY, nil)
 		return &zkErr
 	}
+	return nil
+}
+
+func ValidateGetAllRulesApi(clusterId, version, deleted, limit, offset string) *zkerrors.ZkError {
+	if utils.IsEmpty(clusterId) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_CLUSTER_ID_EMPTY, nil)
+		return &zkErr
+	}
+	if utils.IsEmpty(version) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_VERSION_EMPTY, nil)
+		return &zkErr
+	}
+
+	_, err := strconv.ParseInt(version, 10, 64)
+	if err != nil {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_VERSION_IS_NOT_INTEGER, nil)
+		return &zkErr
+	}
+
+	_, err = strconv.ParseBool(deleted)
+	if err != nil {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_DELETED_IS_NOT_BOOLEAN, nil)
+		return &zkErr
+	}
+
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_LIMIT_IS_NOT_INTEGER, nil)
+		return &zkErr
+	}
+
+	_, err = strconv.Atoi(offset)
+	if err != nil {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_OFFSET_IS_NOT_INTEGER, nil)
+		return &zkErr
+	}
+
 	return nil
 }
 

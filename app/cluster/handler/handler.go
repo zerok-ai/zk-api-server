@@ -147,7 +147,7 @@ func (h *clusterHandler) GetPodDetails(ctx iris.Context) {
 	podName := ctx.URLParam("pod_name")
 	ns := ctx.URLParam("ns")
 
-	if err := validation.ValidatePodDetailsApi(ctx, podName, ns, st, apiKey); err != nil {
+	if err := validation.ValidatePodDetailsApi(podName, ns, st, apiKey); err != nil {
 		z := &utils.ZkHttpResponseBuilder[any]{}
 		zkHttpResponse := z.WithZkErrorType(err.Error).Build()
 		ctx.StatusCode(zkHttpResponse.Status)

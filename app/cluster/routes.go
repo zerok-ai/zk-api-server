@@ -21,7 +21,7 @@ func Initialize(app router.Party) {
 		clusterAPI.Get("/traces", utils.ValidateApiKeyMiddleware, ch.GetPxData)
 	}
 
-	rr := repository.NewRulesFromFileRepo()
+	rr := repository.NewZkPostgresRepo()
 	rs := service.NewRuleService(rr)
 	rh := handler2.NewRuleHandler(rs)
 	ruleEngineAPI := app.Party("/o/cluster")

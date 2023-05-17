@@ -70,7 +70,7 @@ func TestValidatePodDetailsApi(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		err := ValidatePodDetailsApi(nil, tc.podName, tc.ns, tc.st, tc.apiKey)
+		err := ValidatePodDetailsApi(tc.podName, tc.ns, tc.st, tc.apiKey)
 		if tc.expectedErr == nil {
 			assert.Nil(t, tc.expectedErr)
 		} else {

@@ -16,9 +16,10 @@ type Rule struct {
 }
 
 type FilterRule struct {
-	Condition     *string      `json:"condition,omitempty"`
-	ZkRequestType *Rule        `json:"zk_request_type,omitempty"`
-	Rules         []FilterType `json:"rules,omitempty"`
+	Condition *string      `json:"condition,omitempty"`
+	Service   *string      `json:"service,omitempty"`
+	TraceRole *string      `json:"trace_role,omitempty"`
+	Rules     []FilterType `json:"rules,omitempty"`
 }
 
 type FilterType struct {
@@ -26,12 +27,14 @@ type FilterType struct {
 	Rule
 }
 
-type Value interface {
-	string | int | float64 | SourceDestinationHolder
+type NewRuleSchema struct {
+	Version   int                   `json:"version"`
+	Workloads map[string]FilterType `json:"workloads"`
+	FilterId  string                `json:"filter_id"`
+	Filters   Filters               `json:"filters"`
 }
-
-type SourceDestinationHolder struct {
-	ServiceName string `json:"service_name"`
-	Ip          string `json:"ip"`
-	PodName     string `json:"pod_name"`
+type Filters struct {
+	Type      string   `json:"type"`
+	Condition string   `json:"condition"`
+	Workloads []string `json:"workloads"`
 }
