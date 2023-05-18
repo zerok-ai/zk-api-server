@@ -82,12 +82,14 @@ func NewZkPostgresRepo() RulesRepo {
 }
 
 func (zkPostgresService zkPostgresRepo) GetAllRules(filters *RuleQueryFilter) (*[]model.NewRuleSchema, *zkerrors.ZkError) {
-
 	query := GetAllRulesSqlStatement
-	zkPostgresRepo := zkpostgres.NewZkPostgresRepo()
+	zkPostgresRepo := zkpostgres.NewZkPostgresRepo[model.NewRuleSchema]()
 
 	params := []any{filters.ClusterId, filters.Version, filters.Deleted, filters.Version, filters.Limit, filters.Offset}
-	rows, sqlErr := zkPostgresRepo.GetAll(query, params)
+	return zkPostgresRepo.GetAll(query, params, Processor)
+}
+
+func Processor(rows *sql.Rows, sqlErr error) (*[]model.NewRuleSchema, *zkerrors.ZkError) {
 	defer rows.Close()
 
 	switch sqlErr {

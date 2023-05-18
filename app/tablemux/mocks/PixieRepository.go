@@ -55,6 +55,5 @@ type mockConstructorTestingTNewPixieRepository interface {
 func NewPixieRepository() *PixieRepository {
 	mock := &PixieRepository{}
 
-
 	return mock
 }

@@ -9,18 +9,19 @@ import (
 	"main/app/utils/zkerrors"
 )
 
-type DatabaseRepo interface {
+type DatabaseRepo[T any] interface {
 	CreateConnection() *sql.DB
 	Delete(stmt string, param []any, tx *sql.Tx, rollback bool) (int, error)
 	Get(query string, param []any, args ...any) *zkerrors.ZkError
-	GetAll(query string, param []any) (*sql.Rows, error)
+	GetAll(query string, param []any, rowsProcessor func(rows *sql.Rows, sqlErr error) (*[]T, *zkerrors.ZkError)) (*[]T, *zkerrors.ZkError)
 }
 
-type zkPostgresRepo struct {
+type zkPostgresRepo[T any] struct {
 }
 
-func NewZkPostgresRepo() DatabaseRepo {
-	return &zkPostgresRepo{}
+func NewZkPostgresRepo[T any]() DatabaseRepo[T] {
+	x := zkPostgresRepo[T]{}
+	return &x
 }
 
 var config pgConfig.PostgresConfig
@@ -31,7 +32,7 @@ func Init(c pgConfig.PostgresConfig) {
 	config = c
 }
 
-func (zkPostgresService zkPostgresRepo) CreateConnection() *sql.DB {
+func (zkPostgresService zkPostgresRepo[T]) CreateConnection() *sql.DB {
 	config.Host = "localhost"
 	config.Port = 5432
 	config.Password = "pl"
@@ -54,7 +55,7 @@ func (zkPostgresService zkPostgresRepo) CreateConnection() *sql.DB {
 	return db
 }
 
-func (zkPostgresService zkPostgresRepo) Get(query string, param []any, args ...any) *zkerrors.ZkError {
+func (zkPostgresService zkPostgresRepo[T]) Get(query string, param []any, args ...any) *zkerrors.ZkError {
 	db := zkPostgresService.CreateConnection()
 	defer db.Close()
 	row := db.QueryRow(query, param...)
@@ -74,13 +75,15 @@ func (zkPostgresService zkPostgresRepo) Get(query string, param []any, args ...a
 	}
 }
 
-func (zkPostgresService zkPostgresRepo) GetAll(query string, param []any) (*sql.Rows, error) {
+func (zkPostgresService zkPostgresRepo[T]) GetAll(query string, param []any, rowsProcessor func(rows *sql.Rows, sqlErr error) (*[]T, *zkerrors.ZkError)) (*[]T, *zkerrors.ZkError) {
 	db := zkPostgresService.CreateConnection()
 	defer db.Close()
-	return db.Query(query, param...)
+	rows, err := db.Query(query, param...)
+	defer rows.Close()
+	return rowsProcessor(rows, err)
 }
 
-func (zkPostgresService zkPostgresRepo) Delete(stmt string, param []any, tx *sql.Tx, rollback bool) (int, error) {
+func (zkPostgresService zkPostgresRepo[T]) Delete(stmt string, param []any, tx *sql.Tx, rollback bool) (int, error) {
 	res, err := tx.Exec(stmt, param...)
 	if err == nil {
 		count, err := res.RowsAffected()

@@ -1,5 +1,12 @@
 package model
 
+import (
+	"encoding/json"
+	"fmt"
+	"main/app/utils"
+	"sort"
+)
+
 type DataTypes string
 type InputTypes = string
 type OperatorTypes = string
@@ -37,4 +44,82 @@ type Filters struct {
 	Type      string   `json:"type"`
 	Condition string   `json:"condition"`
 	Workloads []string `json:"workloads"`
+}
+
+type Rules []FilterType
+
+func (a Rules) Len() int      { return len(a) }
+func (a Rules) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a Rules) Less(i, j int) bool {
+	if a[i].Condition == nil && a[j].Condition != nil {
+		sort.Sort(Rules(a[j].Rules))
+		return true
+	} else if a[i].Condition != nil && a[j].Condition == nil {
+		sort.Sort(Rules(a[i].Rules))
+		return false
+	} else if a[i].Condition != nil && a[j].Condition != nil {
+		var ret *bool
+		if *a[i].Condition != *a[j].Condition {
+			ret = utils.ToPtr(*a[i].Condition < *a[j].Condition)
+		} else if *a[i].Service != *a[j].Service {
+			ret = utils.ToPtr(*a[i].Service < *a[j].Service)
+		} else if *a[i].TraceRole != *a[j].TraceRole {
+			ret = utils.ToPtr(*a[i].TraceRole < *a[j].TraceRole)
+		}
+
+		sort.Sort(Rules(a[i].Rules))
+		sort.Sort(Rules(a[j].Rules))
+
+		str1, err1 := json.Marshal(a[i])
+		str2, err2 := json.Marshal(a[j])
+
+		if err1 != nil {
+			fmt.Println("err1: ", err1)
+			panic(err1)
+		}
+
+		if err1 != nil {
+			fmt.Println("err2: ", err2)
+			panic(err1)
+		}
+
+		if ret == nil {
+			ret = utils.ToPtr(string(str1) < string(str2))
+		}
+
+		return *ret
+	} else {
+
+		if a[i].ID != a[j].ID {
+			return a[i].ID < a[j].ID
+		}
+
+		if a[i].Field != a[j].Field {
+			return a[i].Field < a[j].Field
+		}
+
+		if a[i].Type != a[j].Type {
+			return a[i].Type < a[j].Type
+		}
+
+		if a[i].Input != a[j].Input {
+			return a[i].Input < a[j].Input
+		}
+
+		if a[i].Operator != a[j].Operator {
+			return a[i].Operator < a[j].Operator
+		}
+
+		if a[i].Key != a[j].Key {
+			return a[i].Key < a[j].Key
+		}
+
+		x := a[i].Value.(string)
+		y := a[j].Value.(string)
+		if x != y {
+			return x < y
+		}
+
+		return true
+	}
 }
