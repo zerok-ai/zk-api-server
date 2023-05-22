@@ -1,14 +1,14 @@
 package transformer
 
 import (
-	"main/app/ruleengine/model"
+	"github.com/zerok-ai/zk-utils-go/rules/model"
 )
 
 type RulesResponse struct {
-	Rules []model.NewRuleSchema `json:"rules"`
+	Rules []model.FilterRule `json:"rules"`
 }
 
-func FromFilterRuleArrayToRulesResponse(rArr []model.NewRuleSchema) *RulesResponse {
+func FromFilterRuleArrayToRulesResponse(rArr []model.FilterRule) *RulesResponse {
 	var resp RulesResponse
 	if rArr != nil && len(rArr) != 0 {
 		for _, v := range rArr {

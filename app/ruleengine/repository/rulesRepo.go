@@ -4,12 +4,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/zerok-ai/zk-utils-go/rules/model"
+	zkUtilsGo "github.com/zerok-ai/zk-utils-go/utils"
 	"log"
-	"main/app/ruleengine/model"
 	"main/app/utils"
 	zkLogger "main/app/utils/logs"
-	zkpostgres "main/app/utils/postgres"
+	zkPostgres "main/app/utils/postgres"
 	"main/app/utils/zkerrors"
+	"sort"
 )
 
 var LOG_TAG = "zkpostgres_db_repo"
@@ -23,7 +26,7 @@ type RuleQueryFilter struct {
 }
 
 type RulesRepo interface {
-	GetAllRules(filters *RuleQueryFilter) (*[]model.NewRuleSchema, *zkerrors.ZkError)
+	GetAllRules(filters *RuleQueryFilter) (*[]model.FilterRule, *zkerrors.ZkError)
 }
 
 //
@@ -81,15 +84,15 @@ func NewZkPostgresRepo() RulesRepo {
 	return &zkPostgresRepo{}
 }
 
-func (zkPostgresService zkPostgresRepo) GetAllRules(filters *RuleQueryFilter) (*[]model.NewRuleSchema, *zkerrors.ZkError) {
+func (zkPostgresService zkPostgresRepo) GetAllRules(filters *RuleQueryFilter) (*[]model.FilterRule, *zkerrors.ZkError) {
 	query := GetAllRulesSqlStatement
-	zkPostgresRepo := zkpostgres.NewZkPostgresRepo[model.NewRuleSchema]()
+	zkPostgresRepo := zkPostgres.NewZkPostgresRepo[model.FilterRule]()
 
 	params := []any{filters.ClusterId, filters.Version, filters.Deleted, filters.Version, filters.Limit, filters.Offset}
 	return zkPostgresRepo.GetAll(query, params, Processor)
 }
 
-func Processor(rows *sql.Rows, sqlErr error) (*[]model.NewRuleSchema, *zkerrors.ZkError) {
+func Processor(rows *sql.Rows, sqlErr error) (*[]model.FilterRule, *zkerrors.ZkError) {
 	defer rows.Close()
 
 	switch sqlErr {
@@ -112,7 +115,7 @@ func Processor(rows *sql.Rows, sqlErr error) (*[]model.NewRuleSchema, *zkerrors.
 
 	var ruleString string
 	var ruleStringArr []string
-	var rulesList []model.NewRuleSchema
+	var rulesList []model.FilterRule
 
 	for rows.Next() {
 
@@ -134,7 +137,7 @@ func Processor(rows *sql.Rows, sqlErr error) (*[]model.NewRuleSchema, *zkerrors.
 	}
 
 	for _, js := range ruleStringArr {
-		var d model.NewRuleSchema
+		var d model.FilterRule
 		err := json.Unmarshal([]byte(js), &d)
 		if err != nil || d.Workloads == nil {
 			log.Println(err)
@@ -142,9 +145,20 @@ func Processor(rows *sql.Rows, sqlErr error) (*[]model.NewRuleSchema, *zkerrors.
 		}
 
 		rulesList = append(rulesList, d)
+		for _, v := range d.Workloads {
+			WorkLoadUUID(v)
+		}
 	}
 
 	return &rulesList, nil
 }
 
-const GetAllRulesSqlStatement = `SELECT filters FROM RulesDbResponse WHERE cluster_id=$1 AND version>$2 AND (deleted=$3 OR deleted_at>$4) LIMIT $5 OFFSET $6`
+func WorkLoadUUID(w model.WorkloadRule) uuid.UUID {
+	sort.Sort(model.Rules(w.ConditionalRule.RuleSet))
+	jStr, _ := json.Marshal(w)
+	id := zkUtilsGo.CalculateHash(string(jStr))
+	fmt.Println(id)
+	return id
+}
+
+const GetAllRulesSqlStatement = `SELECT filters FROM FilterRule WHERE cluster_id=$1 AND version>$2 AND (deleted=$3 OR deleted_at>$4) LIMIT $5 OFFSET $6`

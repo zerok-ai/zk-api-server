@@ -3,10 +3,12 @@ module main
 go 1.18
 
 require (
+	github.com/google/uuid v1.3.0
 	github.com/kataras/iris/v12 v12.2.0
 	github.com/lib/pq v1.10.9
 	github.com/stretchr/testify v1.8.2
 	github.com/swaggo/swag v1.16.1
+	github.com/zerok-ai/zk-utils-go v0.4.0
 	px.dev/pxapi v0.4.1
 )
 
@@ -37,7 +39,6 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/imkira/go-interpol v1.1.0 // indirect
