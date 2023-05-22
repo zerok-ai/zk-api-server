@@ -33,11 +33,7 @@ func Init(c pgConfig.PostgresConfig) {
 }
 
 func (zkPostgresService zkPostgresRepo[T]) CreateConnection() *sql.DB {
-	config.Host = "localhost"
-	config.Port = 5432
-	config.Password = "pl"
-	config.Dbname = "pl"
-	config.User = "pl"
+
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password, config.Dbname)

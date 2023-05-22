@@ -88,7 +88,7 @@ func (zkPostgresService zkPostgresRepo) GetAllRules(filters *RuleQueryFilter) (*
 	query := GetAllRulesSqlStatement
 	zkPostgresRepo := zkPostgres.NewZkPostgresRepo[model.FilterRule]()
 
-	params := []any{filters.ClusterId, filters.Version, filters.Deleted, filters.Version, filters.Limit, filters.Offset}
+	params := []any{filters.Version, filters.Deleted, filters.ClusterId, filters.Version, filters.Deleted, filters.Version, filters.Limit, filters.Offset}
 	return zkPostgresRepo.GetAll(query, params, Processor)
 }
 
@@ -161,4 +161,4 @@ func WorkLoadUUID(w model.WorkloadRule) uuid.UUID {
 	return id
 }
 
-const GetAllRulesSqlStatement = `SELECT filters FROM FilterRule WHERE is_default = TRUE UNION SELECT filters FROM FilterRule WHERE cluster_id=$1 AND version>$2 AND is_default=FALSE AND (deleted=$3 OR deleted_at>$4) LIMIT $5 OFFSET $6`
+const GetAllRulesSqlStatement = `SELECT filters FROM FilterRule WHERE is_default = TRUE version>$1 AND deleted=$2 UNION SELECT filters FROM FilterRule WHERE cluster_id=$3 AND version>$4 AND is_default=FALSE AND (deleted=$5 OR deleted_at>$6) LIMIT $7 OFFSET $8`

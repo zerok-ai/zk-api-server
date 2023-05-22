@@ -14,16 +14,6 @@ import (
 	"testing"
 )
 
-func TestInit_False(t *testing.T) {
-	Init(false)
-	assert.False(t, HTTP_DEBUG)
-}
-
-func TestInit_True(t *testing.T) {
-	assert.False(t, HTTP_DEBUG)
-	Init(true)
-	assert.True(t, HTTP_DEBUG)
-}
 func TestContains(t *testing.T) {
 	strSlice := []string{"apple", "banana", "orange"}
 	result := Contains(strSlice, "banana")

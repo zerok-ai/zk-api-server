@@ -65,14 +65,6 @@ var (
 	colorFatal string = colorPurple
 )
 
-// type zkLogger struct {
-
-// }
-
-// func NewZkLogger() ZkLogger {
-// 	return zkLogger{}
-// }
-
 func Debug(tag string, messages ...any) {
 	Log(_DEBUG_LEVEL, tag, messages...)
 }

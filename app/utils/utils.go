@@ -29,10 +29,6 @@ var getPodDetailsForCpuUsageTemplate = "pod_details_resource_timeseries('%s', '%
 
 var HTTP_DEBUG = false
 
-func Init(httpDebug bool) {
-	HTTP_DEBUG = httpDebug
-}
-
 func GetDataByIdx(tag string, datatypeName string, r *types.Record) interface{} {
 	var retVal any = nil
 	var strRetVal, _ = GetStringFromRecord(tag, r)

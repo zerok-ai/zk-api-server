@@ -5,7 +5,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"github.com/zerok-ai/zk-utils-go/rules/model"
-	mocks "main/app/ruleengine/repository/mocks"
+	"main/app/ruleengine/repository/mocks"
 	"main/app/utils"
 	"main/app/utils/zkerrors"
 	"testing"

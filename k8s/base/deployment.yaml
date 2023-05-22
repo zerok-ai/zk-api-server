@@ -23,7 +23,20 @@ spec:
           volumeMounts:
             - name: cluster-details
               mountPath: /opt
+          env: # Setting Enviornmental Variables
+            - name: PL_POSTGRES_USERNAME  # Setting Database username from Secret
+              valueFrom:
+                secretKeyRef:
+                  name: pl-db-secrets
+                  key: PL_POSTGRES_USERNAME
+
+            - name: PL_POSTGRES_PASSWORD # Setting Database password from Secret
+              valueFrom:
+                secretKeyRef:
+                  name: pl-db-secrets
+                  key: PL_POSTGRES_PASSWORD
       volumes:
         - name: cluster-details
           configMap:
             name: cluster-details-config-file
+
