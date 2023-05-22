@@ -161,4 +161,4 @@ func WorkLoadUUID(w model.WorkloadRule) uuid.UUID {
 	return id
 }
 
-const GetAllRulesSqlStatement = `SELECT filters FROM FilterRule WHERE cluster_id=$1 AND version>$2 AND (deleted=$3 OR deleted_at>$4) LIMIT $5 OFFSET $6`
+const GetAllRulesSqlStatement = `SELECT filters FROM FilterRule WHERE is_default = TRUE UNION SELECT filters FROM FilterRule WHERE cluster_id=$1 AND version>$2 AND (deleted=$3 OR deleted_at>$4) LIMIT $5 OFFSET $6`

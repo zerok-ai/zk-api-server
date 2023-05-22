@@ -1,10 +1,12 @@
 package service
 
 import (
-	"errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"github.com/zerok-ai/zk-utils-go/rules/model"
 	mocks "main/app/ruleengine/repository/mocks"
+	"main/app/utils"
 	"main/app/utils/zkerrors"
 	"testing"
 )
@@ -28,154 +30,95 @@ func (s *ServiceTestSuite) SetupSuite() {
 
 func (s *ServiceTestSuite) TestRuleService_GetAllRules_twoRules_Success() {
 
-	val := []map[string]interface{}{
-		{
-			"condition": "AND",
-			"zk_request_type": map[string]interface{}{
-				"id":       "zk_req_type",
-				"field":    "zk_req_type",
-				"type":     "string",
-				"input":    "string",
-				"operator": "equal",
-				"value":    "HTTP",
-			},
-			"rules": []interface{}{
-				map[string]interface{}{
-					"id":       "zk_req_type",
-					"field":    "zk_req_type",
-					"type":     "string",
-					"input":    "string",
-					"operator": "equal/not_equal",
-					"value":    "HTTP",
-				},
-				map[string]interface{}{
-					"id":       "req_method",
-					"field":    "req_method",
-					"type":     "string",
-					"input":    "string",
-					"operator": "equal",
-					"value":    "POST",
-				},
-				map[string]interface{}{
-					"id":       "req_path",
-					"field":    "req_path",
-					"type":     "string",
-					"input":    "string",
-					"operator": "ends_with",
-					"value":    "/exception",
-				},
-				map[string]interface{}{
-					"id":       "source",
-					"field":    "source",
-					"type":     "key-value",
-					"input":    "key-value",
-					"operator": "equal",
-					"value":    "{'service_name':'demo/inventory'}",
-				},
-				map[string]interface{}{
-					"id":       "destination",
-					"field":    "destination",
-					"type":     "key-value",
-					"input":    "key-value",
-					"operator": "equal",
-					"value":    "{'service_name':'demo/inventory'}",
-				},
-			},
-			"valid": true,
-		},
-		{
-			"condition": "OR",
-			"zk_request_type": map[string]interface{}{
-				"id":       "zk_req_type",
-				"field":    "zk_req_type",
-				"type":     "string",
-				"input":    "string",
-				"operator": "equal",
-				"value":    "HTTP",
-			},
-			"rules": []interface{}{
-				map[string]interface{}{
-					"id":       "zk_req_type",
-					"field":    "zk_req_type",
-					"type":     "string",
-					"input":    "string",
-					"operator": "equal/not_equal",
-					"value":    "HTTP",
-				},
-				map[string]interface{}{
-					"id":       "req_method",
-					"field":    "req_method",
-					"type":     "string",
-					"input":    "string",
-					"operator": "equal",
-					"value":    "POST",
-				},
-				map[string]interface{}{
-					"id":       "req_path",
-					"field":    "req_path",
-					"type":     "string",
-					"input":    "string",
-					"operator": "ends_with",
-					"value":    "/exception",
-				},
-				map[string]interface{}{
-					"id":       "source",
-					"field":    "source",
-					"type":     "key-value",
-					"input":    "key-value",
-					"operator": "equal",
-					"value":    "{'service_name':'demo/inventory'}",
-				},
-				map[string]interface{}{
-					"id":       "destination",
-					"field":    "destination",
-					"type":     "key-value",
-					"input":    "key-value",
-					"operator": "equal",
-					"value":    "{'service_name':'demo/inventory'}",
-				},
-			},
-			"valid": true,
+	rs1 := model.RuleSet{
+		Rule: model.Rule{
+			ID:       "req_method",
+			Field:    "req_method",
+			Type:     "string",
+			Input:    "string",
+			Operator: "equal",
+			Value:    "POST",
 		},
 	}
 
-	// Mock the repository method to return the input JSON
-	s.repoMock.On("GetAllRules").Return(val, nil).Once()
+	fr1 := model.FilterRule{
+		Version: 1684740000,
+		Workloads: map[string]model.WorkloadRule{
+			"ws1": {
+				Service:   utils.ToPtr[string]("s1"),
+				TraceRole: utils.ToPtr[string]("client"),
+				Protocol:  utils.ToPtr[string]("HTTP"),
+				ConditionalRule: model.ConditionalRule{
+					Condition: utils.ToPtr[string]("AND"),
+					RuleSet:   []model.RuleSet{rs1},
+				},
+			},
+		},
+		FilterId: "f1",
+		Filters: model.Filters{
+			Type:        "workload",
+			Condition:   "AND",
+			WorkloadSet: []string{"ws1"},
+		},
+	}
 
-	res, err := s.service.GetAllRules()
+	rs2 := model.RuleSet{
+		Rule: model.Rule{
+			ID:       "req_method",
+			Field:    "req_method",
+			Type:     "string",
+			Input:    "string",
+			Operator: "equal",
+			Value:    "POST",
+		},
+	}
+
+	fr2 := model.FilterRule{
+		Version: 1684749999,
+		Workloads: map[string]model.WorkloadRule{
+			"ws2": {
+				Service:   utils.ToPtr[string]("s2"),
+				TraceRole: utils.ToPtr[string]("server"),
+				Protocol:  utils.ToPtr[string]("HTTP"),
+				ConditionalRule: model.ConditionalRule{
+					Condition: utils.ToPtr[string]("AND"),
+					RuleSet:   []model.RuleSet{rs2},
+				},
+			},
+		},
+		FilterId: "f2",
+		Filters: model.Filters{
+			Type:        "workload",
+			Condition:   "AND",
+			WorkloadSet: []string{"ws2"},
+		},
+	}
+
+	clusterId, version, deleted, offset, limit := "clusterId1", 0, false, 0, 10
+
+	//filter := repository.RuleQueryFilter{
+	//	ClusterId: clusterId,
+	//	Deleted:   deleted,
+	//	Version:   int64(version),
+	//	Limit:     limit,
+	//	Offset:    offset,
+	//}
+	// Mock the repository method to return the input JSON
+	s.repoMock.On("GetAllRules", mock.Anything).Return(utils.ToPtr([]model.FilterRule{fr1, fr2}), nil).Once()
+
+	res, err := s.service.GetAllRules(clusterId, int64(version), deleted, offset, limit)
 	assert.Equal(s.T(), 2, len(res.Rules))
 	assert.Nil(s.T(), err)
 	assert.NotNil(s.T(), res)
-	assert.Equal(s.T(), "AND", *(res.Rules[0].Condition))
-	assert.Equal(s.T(), "OR", *(res.Rules[1].Condition))
-}
-
-func (s *ServiceTestSuite) TestRuleService_GetAllRules_UnmarshallErr_Failure() {
-
-	val := []map[string]interface{}{
-		{
-			"abc": "AND",
-		},
-		{
-			"xyz": 1,
-		},
-		{
-			"jkl": true,
-		},
-	}
-
-	// Mock the repository method to return the input JSON
-	s.repoMock.On("GetAllRules").Return(val, nil).Once()
-
-	res, err := s.service.GetAllRules()
-	assert.Equal(s.T(), zkerrors.ZK_ERROR_INTERNAL_SERVER, err.Error)
-	assert.Nil(s.T(), res)
+	assert.NotNil(s.T(), res.Rules[0].Workloads["ws1"])
+	assert.NotNil(s.T(), res.Rules[0].Workloads["ws2"])
 }
 
 func (s *ServiceTestSuite) TestRuleService_GetAllRules_RepoErr_Failure() {
-	s.repoMock.On("GetAllRules").Return(nil, errors.New("some err from repo")).Once()
+	zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_NOT_FOUND, nil)
+	s.repoMock.On("GetAllRules", mock.Anything).Return(nil, &zkError).Once()
 
-	res, err := s.service.GetAllRules()
+	res, err := s.service.GetAllRules("clusterId1", 0, false, 0, 10)
 	assert.Nil(s.T(), res)
-	assert.Equal(s.T(), zkerrors.ZK_ERROR_INTERNAL_SERVER, err.Error)
+	assert.Equal(s.T(), zkerrors.ZK_ERROR_NOT_FOUND, err.Error)
 }

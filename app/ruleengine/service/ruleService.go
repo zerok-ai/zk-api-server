@@ -8,7 +8,7 @@ import (
 )
 
 type RuleService interface {
-	GetAllRules(clusterId string, version int64, deleted bool, limit, offset int) (*transformer.RulesResponse, *zkerrors.ZkError)
+	GetAllRules(clusterId string, version int64, deleted bool, offset, limit int) (*transformer.RulesResponse, *zkerrors.ZkError)
 }
 
 type ruleService struct {
@@ -19,7 +19,7 @@ func NewRuleService(repo repository.RulesRepo) RuleService {
 	return &ruleService{repo: repo}
 }
 
-func (r ruleService) GetAllRules(clusterId string, version int64, deleted bool, limit, offset int) (*transformer.RulesResponse, *zkerrors.ZkError) {
+func (r ruleService) GetAllRules(clusterId string, version int64, deleted bool, offset, limit int) (*transformer.RulesResponse, *zkerrors.ZkError) {
 	filter := repository.RuleQueryFilter{
 		ClusterId: clusterId,
 		Deleted:   deleted,

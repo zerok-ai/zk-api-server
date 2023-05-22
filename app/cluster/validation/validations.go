@@ -65,7 +65,7 @@ func ValidateGetResourceDetailsApi(st string, apiKey string) *zkerrors.ZkError {
 	return nil
 }
 
-func ValidateGetAllRulesApi(clusterId, version, deleted, limit, offset string) *zkerrors.ZkError {
+func ValidateGetAllRulesApi(clusterId, version, deleted, offset, limit string) *zkerrors.ZkError {
 	if utils.IsEmpty(clusterId) {
 		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_CLUSTER_ID_EMPTY, nil)
 		return &zkErr

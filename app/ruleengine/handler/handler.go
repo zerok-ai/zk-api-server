@@ -27,7 +27,7 @@ func (r ruleHandler) GetAllRules(ctx iris.Context) {
 	deleted := ctx.URLParamDefault("deleted", "false")
 	limit := ctx.URLParamDefault("limit", "100000")
 	offset := ctx.URLParamDefault("offset", "0")
-	if err := validation.ValidateGetAllRulesApi(clusterId, version, deleted, limit, offset); err != nil {
+	if err := validation.ValidateGetAllRulesApi(clusterId, version, deleted, offset, limit); err != nil {
 		z := &utils.ZkHttpResponseBuilder[any]{}
 		zkHttpResponse := z.WithZkErrorType(err.Error).Build()
 		ctx.StatusCode(zkHttpResponse.Status)
@@ -40,6 +40,6 @@ func (r ruleHandler) GetAllRules(ctx iris.Context) {
 	l, _ := strconv.Atoi(limit)
 	o, _ := strconv.Atoi(offset)
 
-	retVal, err := r.service.GetAllRules(clusterId, v, d, l, o)
+	retVal, err := r.service.GetAllRules(clusterId, v, d, o, l)
 	utils.SetResponseInCtxAndReturn[transformer.RulesResponse](ctx, retVal, err)
 }
