@@ -163,7 +163,6 @@ func WorkLoadUUID(w model.WorkloadRule) uuid.UUID {
 	sort.Sort(model.Rules(w.ConditionalRule.RuleSet))
 	jStr, _ := json.Marshal(w)
 	id := zkUtilsGo.CalculateHash(string(jStr))
-	fmt.Println(id)
 	return id
 }
 
