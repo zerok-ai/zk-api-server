@@ -8,6 +8,7 @@ import (
 	"github.com/zerok-ai/zk-utils-go/rules/model"
 	zkUtilsGo "github.com/zerok-ai/zk-utils-go/utils"
 	"log"
+	rulesResponseModel "main/app/ruleengine/model"
 	"main/app/utils"
 	zkLogger "main/app/utils/logs"
 	zkPostgres "main/app/utils/postgres"
@@ -26,7 +27,7 @@ type RuleQueryFilter struct {
 }
 
 type RulesRepo interface {
-	GetAllRules(filters *RuleQueryFilter) (*[]model.FilterRule, *zkerrors.ZkError)
+	GetAllRules(filters *RuleQueryFilter) (*[]model.FilterRule, *[]string, *zkerrors.ZkError)
 }
 
 //
@@ -84,50 +85,49 @@ func NewZkPostgresRepo() RulesRepo {
 	return &zkPostgresRepo{}
 }
 
-func (zkPostgresService zkPostgresRepo) GetAllRules(filters *RuleQueryFilter) (*[]model.FilterRule, *zkerrors.ZkError) {
+func (zkPostgresService zkPostgresRepo) GetAllRules(filters *RuleQueryFilter) (*[]model.FilterRule, *[]string, *zkerrors.ZkError) {
 	query := GetAllRulesSqlStatement
 	zkPostgresRepo := zkPostgres.NewZkPostgresRepo[model.FilterRule]()
 
-	params := []any{filters.Version, filters.Deleted, filters.ClusterId, filters.Version, filters.Deleted, filters.Version, filters.Limit, filters.Offset}
+	params := []any{filters.ClusterId, filters.Version, filters.Limit, filters.Offset}
 	return zkPostgresRepo.GetAll(query, params, Processor)
 }
 
-func Processor(rows *sql.Rows, sqlErr error) (*[]model.FilterRule, *zkerrors.ZkError) {
+func Processor(rows *sql.Rows, sqlErr error) (*[]model.FilterRule, *[]string, *zkerrors.ZkError) {
 	defer rows.Close()
 
 	switch sqlErr {
 	case sql.ErrNoRows:
 		fmt.Println("No rows were returned!")
 		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_NOT_FOUND, nil)
-		return nil, &zkError
+		return nil, nil, &zkError
 	case nil:
 		break
 	default:
 		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil)
 		zkLogger.Debug(LOG_TAG, "unable to scan rows", zkError)
-		return nil, &zkError
+		return nil, nil, &zkError
 	}
 
 	if rows == nil {
 		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil)
-		return nil, &zkErr
+		return nil, nil, &zkErr
 	}
 
-	var ruleString string
-	var ruleStringArr []string
-	var rulesList []model.FilterRule
+	var rulesResponse rulesResponseModel.RulesDbResponse
+	var rulesResponseArr []rulesResponseModel.RulesDbResponse
 
 	for rows.Next() {
 
 		// Scan the values from the current row into variables
-		err := rows.Scan(&ruleString)
+		err := rows.Scan(&rulesResponse.Filters, &rulesResponse.Deleted)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		// Print the retrieved values
-		fmt.Printf("Filter: %s\n", ruleString)
-		ruleStringArr = append(ruleStringArr, ruleString)
+		//fmt.Printf("Filter: %s\n", rulesResponseModel)
+		rulesResponseArr = append(rulesResponseArr, rulesResponse)
 	}
 
 	// Check for any errors occurred during iteration
@@ -136,21 +136,27 @@ func Processor(rows *sql.Rows, sqlErr error) (*[]model.FilterRule, *zkerrors.ZkE
 		log.Fatal(err)
 	}
 
-	for _, js := range ruleStringArr {
+	var rulesList []model.FilterRule
+	var deletedRulesList []string
+	for _, rs := range rulesResponseArr {
 		var d model.FilterRule
-		err := json.Unmarshal([]byte(js), &d)
+		err := json.Unmarshal([]byte(rs.Filters), &d)
 		if err != nil || d.Workloads == nil {
 			log.Println(err)
-			return nil, utils.ToPtr[zkerrors.ZkError](zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil))
+			return nil, nil, utils.ToPtr[zkerrors.ZkError](zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil))
 		}
 
-		rulesList = append(rulesList, d)
-		for _, v := range d.Workloads {
-			WorkLoadUUID(v)
+		if rs.Deleted == false {
+			rulesList = append(rulesList, d)
+			for _, v := range d.Workloads {
+				WorkLoadUUID(v)
+			}
+		} else {
+			deletedRulesList = append(deletedRulesList, d.FilterId)
 		}
 	}
 
-	return &rulesList, nil
+	return &rulesList, &deletedRulesList, nil
 }
 
 func WorkLoadUUID(w model.WorkloadRule) uuid.UUID {
@@ -161,4 +167,4 @@ func WorkLoadUUID(w model.WorkloadRule) uuid.UUID {
 	return id
 }
 
-const GetAllRulesSqlStatement = `SELECT filters FROM FilterRule WHERE is_default = TRUE AND version>$1 AND deleted=$2 UNION SELECT filters FROM FilterRule WHERE cluster_id=$3 AND version>$4 AND is_default=FALSE AND (deleted=$5 OR deleted_at>$6) LIMIT $7 OFFSET $8`
+const GetAllRulesSqlStatement = `SELECT filters, deleted FROM FilterRule WHERE (cluster_id=$1 OR cluster_id IS NULL) AND version>$2 LIMIT $3 OFFSET $4`

@@ -13,7 +13,7 @@ type DatabaseRepo[T any] interface {
 	CreateConnection() *sql.DB
 	Delete(stmt string, param []any, tx *sql.Tx, rollback bool) (int, error)
 	Get(query string, param []any, args ...any) *zkerrors.ZkError
-	GetAll(query string, param []any, rowsProcessor func(rows *sql.Rows, sqlErr error) (*[]T, *zkerrors.ZkError)) (*[]T, *zkerrors.ZkError)
+	GetAll(query string, param []any, rowsProcessor func(rows *sql.Rows, sqlErr error) (*[]T, *[]string, *zkerrors.ZkError)) (*[]T, *[]string, *zkerrors.ZkError)
 }
 
 type zkPostgresRepo[T any] struct {
@@ -71,7 +71,7 @@ func (zkPostgresService zkPostgresRepo[T]) Get(query string, param []any, args .
 	}
 }
 
-func (zkPostgresService zkPostgresRepo[T]) GetAll(query string, param []any, rowsProcessor func(rows *sql.Rows, sqlErr error) (*[]T, *zkerrors.ZkError)) (*[]T, *zkerrors.ZkError) {
+func (zkPostgresService zkPostgresRepo[T]) GetAll(query string, param []any, rowsProcessor func(rows *sql.Rows, sqlErr error) (*[]T, *[]string, *zkerrors.ZkError)) (*[]T, *[]string, *zkerrors.ZkError) {
 	db := zkPostgresService.CreateConnection()
 	defer db.Close()
 	rows, err := db.Query(query, param...)

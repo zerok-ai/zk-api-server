@@ -28,11 +28,11 @@ func (r ruleService) GetAllRules(clusterId string, version int64, deleted bool, 
 		Offset:    offset,
 	}
 
-	retVal, zkErr := r.repo.GetAllRules(&filter)
+	rulesList, deletedRulesId, zkErr := r.repo.GetAllRules(&filter)
 	if zkErr != nil {
 		log.Println(zkErr)
 		return nil, zkErr
 	}
 
-	return transformer.FromFilterRuleArrayToRulesResponse(*retVal), nil
+	return transformer.FromFilterRuleArrayToRulesResponse(rulesList, deletedRulesId), nil
 }

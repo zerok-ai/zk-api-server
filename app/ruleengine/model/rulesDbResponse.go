@@ -12,4 +12,5 @@ type RulesDbResponse struct {
 	DeletedAt     int64  `json:"deleted_at"`
 	CreatedBy     string `json:"created_by"`
 	CreatedAt     int64  `json:"created_at"`
+	IsDeleted     bool   `json:"is_deleted"`
 }
