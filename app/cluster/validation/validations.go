@@ -81,22 +81,28 @@ func ValidateGetAllRulesApi(clusterId, version, deleted, offset, limit string) *
 		return &zkErr
 	}
 
-	_, err = strconv.ParseBool(deleted)
-	if err != nil {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_DELETED_IS_NOT_BOOLEAN, nil)
-		return &zkErr
+	if !utils.IsEmpty(deleted) {
+		_, err = strconv.ParseBool(deleted)
+		if err != nil {
+			zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_DELETED_IS_NOT_BOOLEAN, nil)
+			return &zkErr
+		}
 	}
 
-	_, err = strconv.Atoi(limit)
-	if err != nil {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_LIMIT_IS_NOT_INTEGER, nil)
-		return &zkErr
+	if !utils.IsEmpty(limit) {
+		_, err = strconv.Atoi(limit)
+		if err != nil {
+			zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_LIMIT_IS_NOT_INTEGER, nil)
+			return &zkErr
+		}
 	}
 
-	_, err = strconv.Atoi(offset)
-	if err != nil {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_OFFSET_IS_NOT_INTEGER, nil)
-		return &zkErr
+	if !utils.IsEmpty(offset) {
+		_, err = strconv.Atoi(offset)
+		if err != nil {
+			zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_OFFSET_IS_NOT_INTEGER, nil)
+			return &zkErr
+		}
 	}
 
 	return nil

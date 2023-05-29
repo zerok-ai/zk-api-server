@@ -38,7 +38,7 @@ var (
 	ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY              = ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Api Key cannot be empty"}
 	ZK_ERROR_BAD_REQUEST_ZK_API_KEY_MIDDLEWARE_EMPTY   = ZkErrorType{Status: iris.StatusUnauthorized, Type: "BAD_REQUEST", Message: "Api Key cannot be empty"}
 	ZK_ERROR_BAD_REQUEST_CLUSTER_ID_EMPTY              = ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "ClusterId cannot be empty"}
-	ZK_ERROR_BAD_REQUEST_VERSION_IS_NOT_INTEGER        = ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Filter Version cannot be empty"}
+	ZK_ERROR_BAD_REQUEST_VERSION_IS_NOT_INTEGER        = ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Filter Version is not integer"}
 	ZK_ERROR_BAD_REQUEST_VERSION_EMPTY                 = ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Filter Version is not an integer"}
 	ZK_ERROR_BAD_REQUEST_DELETED_IS_NOT_BOOLEAN        = ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "deleted is not bool"}
 	ZK_ERROR_BAD_REQUEST_DEFAULT_FILTER_IS_NOT_BOOLEAN = ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "default_filter is not bool"}

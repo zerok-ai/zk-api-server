@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/x/errors"
+	"io"
 	"main/app/utils/zkerrors"
 	"math"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -232,4 +234,23 @@ func SetResponseInCtxAndReturn[T any](ctx iris.Context, resp *T, zkError *zkerro
 	ctx.StatusCode(zkHttpResponse.Status)
 	ctx.JSON(zkHttpResponse)
 	return
+}
+
+func GetBytes(path string) []byte {
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return nil
+	}
+	defer file.Close()
+
+	// Read the file content
+	content, err := io.ReadAll(file)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return nil
+	}
+
+	return content
+
 }

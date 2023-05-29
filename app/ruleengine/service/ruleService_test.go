@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -30,84 +31,16 @@ func (s *ServiceTestSuite) SetupSuite() {
 
 func (s *ServiceTestSuite) TestRuleService_GetAllRules_twoRules_Success() {
 
-	rs1 := model.RuleSet{
-		Rule: model.Rule{
-			ID:       "req_method",
-			Field:    "req_method",
-			Type:     "string",
-			Input:    "string",
-			Operator: "equal",
-			Value:    "POST",
-		},
-	}
-
-	fr1 := model.FilterRule{
-		Version: 1684740000,
-		Workloads: map[string]model.WorkloadRule{
-			"ws1": {
-				Service:   utils.ToPtr[string]("s1"),
-				TraceRole: utils.ToPtr[string]("client"),
-				Protocol:  utils.ToPtr[string]("HTTP"),
-				ConditionalRule: model.ConditionalRule{
-					Condition: utils.ToPtr[string]("AND"),
-					RuleSet:   []model.RuleSet{rs1},
-				},
-			},
-		},
-		FilterId: "f1",
-		Filters: model.Filters{
-			Type:        "workload",
-			Condition:   "AND",
-			WorkloadSet: []string{"ws1"},
-		},
-	}
-
-	rs2 := model.RuleSet{
-		Rule: model.Rule{
-			ID:       "req_method",
-			Field:    "req_method",
-			Type:     "string",
-			Input:    "string",
-			Operator: "equal",
-			Value:    "POST",
-		},
-	}
-
-	fr2 := model.FilterRule{
-		Version: 1684749999,
-		Workloads: map[string]model.WorkloadRule{
-			"ws2": {
-				Service:   utils.ToPtr[string]("s2"),
-				TraceRole: utils.ToPtr[string]("server"),
-				Protocol:  utils.ToPtr[string]("HTTP"),
-				ConditionalRule: model.ConditionalRule{
-					Condition: utils.ToPtr[string]("AND"),
-					RuleSet:   []model.RuleSet{rs2},
-				},
-			},
-		},
-		FilterId: "f2",
-		Filters: model.Filters{
-			Type:        "workload",
-			Condition:   "AND",
-			WorkloadSet: []string{"ws2"},
-		},
-	}
+	var s1 model.Scenario
+	validScenarioJsonString := string(utils.GetBytes("files/validScenarioJsonString.json"))
+	err1 := json.Unmarshal([]byte(validScenarioJsonString), &s1)
+	assert.NoError(s.T(), err1)
 
 	clusterId, version, deleted, offset, limit := "clusterId1", 0, false, 0, 10
-
-	//filter := repository.RuleQueryFilter{
-	//	ClusterId: clusterId,
-	//	Deleted:   deleted,
-	//	Version:   int64(version),
-	//	Limit:     limit,
-	//	Offset:    offset,
-	//}
-	// Mock the repository method to return the input JSON
-	s.repoMock.On("GetAllRules", mock.Anything).Return(utils.ToPtr([]model.FilterRule{fr1, fr2}), nil).Once()
+	s.repoMock.On("GetAllRules", mock.Anything).Return(utils.ToPtr([]model.Scenario{s1}), utils.ToPtr([]string{"deleted_scenario_id"}), nil).Once()
 
 	res, err := s.service.GetAllRules(clusterId, int64(version), deleted, offset, limit)
-	assert.Equal(s.T(), 2, len(res.Rules))
+	assert.Equal(s.T(), 1, len(res.Rules))
 	assert.Nil(s.T(), err)
 	assert.NotNil(s.T(), res)
 	assert.NotNil(s.T(), res.Rules[0].Workloads["ws1"])
@@ -116,7 +49,7 @@ func (s *ServiceTestSuite) TestRuleService_GetAllRules_twoRules_Success() {
 
 func (s *ServiceTestSuite) TestRuleService_GetAllRules_RepoErr_Failure() {
 	zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_NOT_FOUND, nil)
-	s.repoMock.On("GetAllRules", mock.Anything).Return(nil, &zkError).Once()
+	s.repoMock.On("GetAllRules", mock.Anything).Return(nil, nil, &zkError).Once()
 
 	res, err := s.service.GetAllRules("clusterId1", 0, false, 0, 10)
 	assert.Nil(s.T(), res)

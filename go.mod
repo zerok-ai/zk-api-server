@@ -7,9 +7,9 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.4.2
 	github.com/kataras/iris/v12 v12.2.0
 	github.com/lib/pq v1.10.9
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	github.com/swaggo/swag v1.16.1
-	github.com/zerok-ai/zk-utils-go v0.4.4
+	github.com/zerok-ai/zk-utils-go v0.4.7-0.20230529092417-87d055b1d253
 	px.dev/pxapi v0.4.1
 )
 

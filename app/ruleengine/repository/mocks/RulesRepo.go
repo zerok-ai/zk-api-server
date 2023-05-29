@@ -17,31 +17,40 @@ type RulesRepo struct {
 }
 
 // GetAllRules provides a mock function with given fields: filters
-func (_m *RulesRepo) GetAllRules(filters *repository.RuleQueryFilter) (*[]model.FilterRule, *zkerrors.ZkError) {
+func (_m *RulesRepo) GetAllRules(filters *repository.RuleQueryFilter) (*[]model.Scenario, *[]string, *zkerrors.ZkError) {
 	ret := _m.Called(filters)
 
-	var r0 *[]model.FilterRule
-	var r1 *zkerrors.ZkError
-	if rf, ok := ret.Get(0).(func(*repository.RuleQueryFilter) (*[]model.FilterRule, *zkerrors.ZkError)); ok {
+	var r0 *[]model.Scenario
+	var r1 *[]string
+	var r2 *zkerrors.ZkError
+	if rf, ok := ret.Get(0).(func(*repository.RuleQueryFilter) (*[]model.Scenario, *[]string, *zkerrors.ZkError)); ok {
 		return rf(filters)
 	}
-	if rf, ok := ret.Get(0).(func(*repository.RuleQueryFilter) *[]model.FilterRule); ok {
+	if rf, ok := ret.Get(0).(func(*repository.RuleQueryFilter) *[]model.Scenario); ok {
 		r0 = rf(filters)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*[]model.FilterRule)
+			r0 = ret.Get(0).(*[]model.Scenario)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(*repository.RuleQueryFilter) *zkerrors.ZkError); ok {
+	if rf, ok := ret.Get(1).(func(*repository.RuleQueryFilter) *[]string); ok {
 		r1 = rf(filters)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*zkerrors.ZkError)
+			r1 = ret.Get(1).(*[]string)
 		}
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(*repository.RuleQueryFilter) *zkerrors.ZkError); ok {
+		r2 = rf(filters)
+	} else {
+		if ret.Get(2) != nil {
+			r2 = ret.Get(2).(*zkerrors.ZkError)
+		}
+	}
+
+	return r0, r1, r2
 }
 
 type mockConstructorTestingTNewRulesRepo interface {
@@ -51,6 +60,6 @@ type mockConstructorTestingTNewRulesRepo interface {
 
 // NewRulesRepo creates a new instance of RulesRepo. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 func NewRulesRepo() *RulesRepo {
-	mock := &RulesRepo{}
-	return mock
+	return &RulesRepo{}
+
 }

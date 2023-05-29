@@ -100,6 +100,46 @@ func TestValidateGetResourceDetailsApi(t *testing.T) {
 	}
 }
 
+func TestValidateGetAllRulesApi(t *testing.T) {
+	testCases := []struct {
+		clusterId, version, deleted, offset, limit string
+		expectedErr                                *zkerrors.ZkError
+	}{
+		// Test case 1: All parameters are valid
+		{"cid", "165439089", "", "", "", nil},
+
+		// Test case 2: All parameters are valid
+		{"cid", "165390989", "true", "0", "100", nil},
+
+		// Test case 3: ClusterId empty
+		{"", "165439089", "true", "0", "100", utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_CLUSTER_ID_EMPTY, nil))},
+
+		// Test case 4: version empty
+		{"cid", "", "true", "0", "100", utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_VERSION_EMPTY, nil))},
+
+		// Test case 5: deleted invalid
+		{"cid", "165390989", "abc", "0", "100", utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_DELETED_IS_NOT_BOOLEAN, nil))},
+
+		// Test case 6: offset invalid
+		{"cid", "165439089", "true", "abc", "100", utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_OFFSET_IS_NOT_INTEGER, nil))},
+
+		// Test case 7: limit invalid
+		{"cid", "165430989", "true", "0", "abc", utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_LIMIT_IS_NOT_INTEGER, nil))},
+
+		// Test case 8: version not int
+		{"cid", "16543ax", "true", "0", "100", utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_VERSION_IS_NOT_INTEGER, nil))},
+	}
+
+	for _, tc := range testCases {
+		err := ValidateGetAllRulesApi(tc.clusterId, tc.version, tc.deleted, tc.offset, tc.limit)
+		if tc.expectedErr == nil {
+			assert.Nil(t, err)
+		} else {
+			assert.Equal(t, tc.expectedErr, err)
+		}
+	}
+}
+
 func TestValidateGetPxlData(t *testing.T) {
 	testCases := []struct {
 		s, apiKey   string

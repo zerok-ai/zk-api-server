@@ -5,18 +5,18 @@ import (
 )
 
 type RulesResponse struct {
-	Rules           []model.FilterRule `json:"rules"`
-	DeletedFilterId []string           `json:"deleted_filter_id"`
+	Rules           []model.Scenario `json:"rules"`
+	DeletedFilterId []string         `json:"deleted_filter_id"`
 }
 
-func FromFilterRuleArrayToRulesResponse(rArr *[]model.FilterRule, deletedIdArr *[]string) *RulesResponse {
+func FromFilterRuleArrayToRulesResponse(rArr *[]model.Scenario, deletedIdArr *[]string) *RulesResponse {
 	var resp RulesResponse
 	if rArr != nil && len(*rArr) != 0 {
 		for _, v := range *rArr {
 			resp.Rules = append(resp.Rules, v)
 		}
 	} else {
-		resp.Rules = make([]model.FilterRule, 0)
+		resp.Rules = make([]model.Scenario, 0)
 	}
 
 	if deletedIdArr != nil && len(*deletedIdArr) != 0 {
