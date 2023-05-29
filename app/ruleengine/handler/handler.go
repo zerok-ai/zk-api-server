@@ -22,7 +22,7 @@ func NewRuleHandler(s service.RuleService) RuleHandler {
 }
 
 func (r ruleHandler) GetAllRules(ctx iris.Context) {
-	clusterId := ctx.URLParam("clusterId")
+	clusterId := ctx.GetHeader("cluster_id")
 	version := ctx.URLParam("version")
 	deleted := ctx.URLParamDefault("deleted", "false")
 	limit := ctx.URLParamDefault("limit", "100000")
