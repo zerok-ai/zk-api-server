@@ -18,14 +18,14 @@ const docTemplateruleengine = `{
     "paths": {
         "/o/cluster/rules": {
             "get": {
-                "description": "Returns all the Rules",
+                "description": "Returns all the Scenario",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "rules"
                 ],
-                "summary": "Returns all the Rules",
+                "summary": "Returns all the Scenario",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -86,7 +86,7 @@ var SwaggerInforuleengine = &swag.Spec{
 	Schemes:          []string{},
 	Title:            "",
 	Description:      "",
-	InfoInstanceName: "ruleengine",
+	InfoInstanceName: "scenario",
 	SwaggerTemplate:  docTemplateruleengine,
 	LeftDelim:        "{{",
 	RightDelim:       "}}",

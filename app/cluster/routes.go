@@ -3,9 +3,9 @@ package cluster
 import (
 	"github.com/kataras/iris/v12/core/router"
 	"main/app/cluster/handler"
-	handler2 "main/app/ruleengine/handler"
-	"main/app/ruleengine/repository"
-	"main/app/ruleengine/service"
+	handler2 "main/app/scenario/handler"
+	"main/app/scenario/repository"
+	"main/app/scenario/service"
 	"main/app/utils"
 )
 
@@ -22,10 +22,10 @@ func Initialize(app router.Party) {
 	}
 
 	rr := repository.NewZkPostgresRepo()
-	rs := service.NewRuleService(rr)
-	rh := handler2.NewRuleHandler(rs)
+	rs := service.NewScenarioService(rr)
+	rh := handler2.NewScenarioHandler(rs)
 	ruleEngineAPI := app.Party("/o/cluster")
 	{
-		ruleEngineAPI.Get("/rules", rh.GetAllRules)
+		ruleEngineAPI.Get("/rules", rh.GetAllScenario)
 	}
 }

@@ -1,9 +1,9 @@
 package model
 
-type RulesDbResponse struct {
+type ScenarioDbResponse struct {
 	ClusterId     string `json:"cluster_id"`
-	Filters       string `json:"filters"`
-	FilterId      string `json:"filter_id"`
+	Scenario      string `json:"scenario"`
+	ScenarioId    string `json:"scenario_id"`
 	SchemaVersion string `json:"schema_version"`
 	Version       int64  `json:"version"`
 	UpdatedAt     int64  `json:"updated_at"`

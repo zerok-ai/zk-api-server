@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/zerok-ai/zk-utils-go/rules/model"
 	"log"
-	rulesResponseModel "main/app/ruleengine/model"
+	scenarioResponseModel "main/app/scenario/model"
 	"main/app/utils"
 	zkLogger "main/app/utils/logs"
 	zkPostgres "main/app/utils/postgres"
@@ -15,7 +15,7 @@ import (
 
 var LOG_TAG = "zkpostgres_db_repo"
 
-type RuleQueryFilter struct {
+type ScenarioQueryFilter struct {
 	ClusterId string
 	Deleted   bool
 	Version   int64
@@ -23,19 +23,19 @@ type RuleQueryFilter struct {
 	Offset    int
 }
 
-type RulesRepo interface {
-	GetAllRules(filters *RuleQueryFilter) (*[]model.Scenario, *[]string, *zkerrors.ZkError)
+type ScenarioRepo interface {
+	GetAllScenario(filters *ScenarioQueryFilter) (*[]model.Scenario, *[]string, *zkerrors.ZkError)
 }
 
 type zkPostgresRepo struct {
 }
 
-func NewZkPostgresRepo() RulesRepo {
+func NewZkPostgresRepo() ScenarioRepo {
 	return &zkPostgresRepo{}
 }
 
-func (zkPostgresService zkPostgresRepo) GetAllRules(filters *RuleQueryFilter) (*[]model.Scenario, *[]string, *zkerrors.ZkError) {
-	query := GetAllRulesSqlStatement
+func (zkPostgresService zkPostgresRepo) GetAllScenario(filters *ScenarioQueryFilter) (*[]model.Scenario, *[]string, *zkerrors.ZkError) {
+	query := GetAllScenarioSqlStatement
 	zkPostgresRepo := zkPostgres.NewZkPostgresRepo[model.Scenario]()
 
 	params := []any{filters.ClusterId, filters.Version, filters.Limit, filters.Offset}
@@ -63,20 +63,15 @@ func Processor(rows *sql.Rows, sqlErr error) (*[]model.Scenario, *[]string, *zke
 		return nil, nil, &zkErr
 	}
 
-	var rulesResponse rulesResponseModel.RulesDbResponse
-	var rulesResponseArr []rulesResponseModel.RulesDbResponse
-
+	var scenarioResponse scenarioResponseModel.ScenarioDbResponse
+	var scenarioResponseArr []scenarioResponseModel.ScenarioDbResponse
 	for rows.Next() {
-
-		// Scan the values from the current row into variables
-		err := rows.Scan(&rulesResponse.Filters, &rulesResponse.Deleted)
+		err := rows.Scan(&scenarioResponse.Scenario, &scenarioResponse.Deleted)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		// Print the retrieved values
-		//fmt.Printf("Filter: %s\n", rulesResponseModel)
-		rulesResponseArr = append(rulesResponseArr, rulesResponse)
+		scenarioResponseArr = append(scenarioResponseArr, scenarioResponse)
 	}
 
 	// Check for any errors occurred during iteration
@@ -85,29 +80,29 @@ func Processor(rows *sql.Rows, sqlErr error) (*[]model.Scenario, *[]string, *zke
 		log.Fatal(err)
 	}
 
-	var rulesList []model.Scenario
-	var deletedRulesList []string
-	for _, rs := range rulesResponseArr {
+	var scenarios []model.Scenario
+	var deletedScenarioIdList []string
+	for _, rs := range scenarioResponseArr {
 		var d model.Scenario
-		err := json.Unmarshal([]byte(rs.Filters), &d)
+		err := json.Unmarshal([]byte(rs.Scenario), &d)
 		if err != nil || d.Workloads == nil {
 			log.Println(err)
 			return nil, nil, utils.ToPtr[zkerrors.ZkError](zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil))
 		}
 
 		if rs.Deleted == false {
-			rulesList = append(rulesList, d)
+			scenarios = append(scenarios, d)
 			//for oldId, v := range d.Workloads {
 			//	id := model.WorkLoadUUID(v)
 			//	delete(d.Workloads, oldId)
 			//	d.Workloads[id.String()] = v
 			//}
 		} else {
-			deletedRulesList = append(deletedRulesList, d.ScenarioId)
+			deletedScenarioIdList = append(deletedScenarioIdList, d.ScenarioId)
 		}
 	}
 
-	return &rulesList, &deletedRulesList, nil
+	return &scenarios, &deletedScenarioIdList, nil
 }
 
-const GetAllRulesSqlStatement = `SELECT filters, deleted FROM Scenario WHERE (cluster_id=$1 OR cluster_id IS NULL) AND version>$2 LIMIT $3 OFFSET $4`
+const GetAllScenarioSqlStatement = `SELECT scenario, deleted FROM Scenario WHERE (cluster_id=$1 OR cluster_id IS NULL) AND version>$2 LIMIT $3 OFFSET $4`

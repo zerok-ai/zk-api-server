@@ -31,8 +31,8 @@ package repository
 //	filePath = file.Name()
 //	defer func() { filePath = oldFilePath }()
 //
-//	// Call GetAllRules and check the returned data
-//	rules, err := repo.GetAllRules(nil)
+//	// Call GetAllScenario and check the returned data
+//	rules, err := repo.GetAllScenario(nil)
 //	assert.Len(t, rules, 2)
 //
 //	rule1 := rules[0]
@@ -77,8 +77,8 @@ package repository
 //	filePath = file.Name()
 //	defer func() { filePath = oldFilePath }()
 //
-//	// Call GetAllRules and check the returned data
-//	rules, err := repo.GetAllRules(nil)
+//	// Call GetAllScenario and check the returned data
+//	rules, err := repo.GetAllScenario(nil)
 //
 //	assert.NotNil(t, err)
 //	assert.Equal(t, "invalid character 'z' after object key:value pair", err.Error())
@@ -101,8 +101,8 @@ package repository
 //	filePath = file.Name()
 //	defer func() { filePath = oldFilePath }()
 //
-//	// Call GetAllRules and check the returned data
-//	rules, err := repo.GetAllRules(nil)
+//	// Call GetAllScenario and check the returned data
+//	rules, err := repo.GetAllScenario(nil)
 //	assert.Len(t, rules, 0)
 //	assert.Equal(t, "cannot access given file", err.Error())
 //}

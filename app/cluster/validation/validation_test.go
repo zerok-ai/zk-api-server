@@ -131,7 +131,7 @@ func TestValidateGetAllRulesApi(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		err := ValidateGetAllRulesApi(tc.clusterId, tc.version, tc.deleted, tc.offset, tc.limit)
+		err := ValidateGetAllScenarioApi(tc.clusterId, tc.version, tc.deleted, tc.offset, tc.limit)
 		if tc.expectedErr == nil {
 			assert.Nil(t, err)
 		} else {
