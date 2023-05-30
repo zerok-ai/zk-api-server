@@ -26,6 +26,6 @@ func Initialize(app router.Party) {
 	rh := handler2.NewScenarioHandler(rs)
 	ruleEngineAPI := app.Party("/o/cluster")
 	{
-		ruleEngineAPI.Get("/rules", rh.GetAllScenario)
+		ruleEngineAPI.Get("/scenario", rh.GetAllScenario)
 	}
 }
