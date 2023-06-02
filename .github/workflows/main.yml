@@ -1,0 +1,26 @@
+name: CICD
+on:
+  workflow_dispatch:
+env:
+  NS: "apps"
+  ENV: "poc"
+  GOOS: "linux"
+  GOARCH: "amd64"
+  GKE_SA_KEY: ${{ secrets.GKE_SA_KEY }}
+  GKE_CLUSTER: ${{ vars.GKE_CLUSTER }}
+  GKE_ZONE : ${{ vars.GKE_ZONE }}
+  DOCKER_REG: ${{ vars.DOCKER_REG }}
+  PROJECT_ID:  ${{ vars.PROJECT_ID }}
+  DOCKER_REPO:  ${{ vars.DOCKER_REPO }}
+  APP_NAME:  ${{ vars.APP_NAME }}
+  
+
+  
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+    
