@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"github.com/zerok-ai/zk-utils-go/rules/model"
 	"log"
 	scenarioResponseModel "main/app/scenario/model"
@@ -47,14 +46,14 @@ func Processor(rows *sql.Rows, sqlErr error) (*[]model.Scenario, *[]string, *zke
 
 	switch sqlErr {
 	case sql.ErrNoRows:
-		fmt.Println("No rows were returned!")
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_NOT_FOUND, nil)
+		zkLogger.Debug(LOG_TAG, "no rows were returned", sqlErr)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_NOT_FOUND, sqlErr)
 		return nil, nil, &zkError
 	case nil:
 		break
 	default:
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil)
-		zkLogger.Debug(LOG_TAG, "unable to scan rows", zkError)
+		zkLogger.Debug(LOG_TAG, "unable to scan rows", sqlErr)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, sqlErr)
 		return nil, nil, &zkError
 	}
 
