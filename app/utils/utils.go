@@ -3,9 +3,6 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"math"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -59,10 +56,6 @@ func GetDataByIdx(tag string, datatypeName string, r *types.Record) interface{} 
 
 }
 
-func ToPtr[T any](arg T) *T {
-	return &arg
-}
-
 func GetStringFromRecord(key string, r *types.Record) (*string, error) {
 	v := r.GetDatum(key)
 	if v == nil {
@@ -73,13 +66,8 @@ func GetStringFromRecord(key string, r *types.Record) (*string, error) {
 
 func GetFloatFromRecord(key string, r *types.Record) (*float64, error) {
 	dCasted := r.GetDatum(key).(*types.Float64Value)
-	floatVal := Round(dCasted.Value(), 12)
+	floatVal := zkcommon.Round(dCasted.Value(), 12)
 	return &floatVal, nil
-}
-
-// Rounds to nearest like 12.3456 -> 12.35
-func Round(val float64, precision int) float64 {
-	return math.Round(val*(math.Pow10(precision))) / math.Pow10(precision)
 }
 
 func GetIntegerFromRecord(key string, r *types.Record) (*int, error) {
@@ -87,7 +75,7 @@ func GetIntegerFromRecord(key string, r *types.Record) (*int, error) {
 	if s == nil {
 		return nil, e
 	}
-	i, e := GetIntegerFromString(*s)
+	i, e := zkcommon.GetIntegerFromString(*s)
 	return zkcommon.ToPtr[int](i), nil
 }
 
@@ -107,10 +95,6 @@ func GetTimestampFromRecord(key string, r *types.Record) (*string, error) {
 	}
 	strValue := string(*t)
 	return zkcommon.ToPtr[string](strValue), nil
-}
-
-func GetIntegerFromString(k string) (int, error) {
-	return strconv.Atoi(k)
 }
 
 func GetFloatFromString(k string, b int) (float64, error) {
@@ -180,23 +164,4 @@ func IsValidPxlTime(s string) bool {
 	}
 
 	return true
-}
-
-func GetBytes(path string) []byte {
-	file, err := os.Open(path)
-	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return nil
-	}
-	defer file.Close()
-
-	// Read the file content
-	content, err := io.ReadAll(file)
-	if err != nil {
-		fmt.Println("Error reading file:", err)
-		return nil
-	}
-
-	return content
-
 }

@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"main/app/utils"
+	"main/app/utils/errors"
 	"os"
 	"px.dev/pxapi"
 	"px.dev/pxapi/errdefs"
 	"text/template"
-	
+
 	"github.com/kataras/iris/v12"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 )
@@ -92,7 +92,7 @@ func GetResult(resultSet *pxapi.ScriptResults) (*pxapi.ScriptResults, error) {
 			fmt.Printf("Got error : %+v, while streaming\n", err)
 		}
 		if err.Error() == "rpc error: code = Internal desc = Auth middleware failed: failed to fetch token - unauthenticated" {
-			return nil, utils.ErrAuthenticationFailed
+			return nil, errors.ErrAuthenticationFailed
 		}
 		return nil, err
 	}

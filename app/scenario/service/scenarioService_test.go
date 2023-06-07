@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	zkCommon "github.com/zerok-ai/zk-utils-go/common"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"main/app/scenario/repository/mocks"
-	"main/app/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,12 +35,12 @@ func (s *ServiceTestSuite) SetupSuite() {
 func (s *ServiceTestSuite) TestScenarioService_GetAllScenario_oneScenarios_Success() {
 
 	var s1 model.Scenario
-	validScenarioJsonString := string(utils.GetBytes("files/validScenarioJsonString.json"))
+	validScenarioJsonString := string(zkCommon.GetBytesFromFile("files/validScenarioJsonString.json"))
 	err1 := json.Unmarshal([]byte(validScenarioJsonString), &s1)
 	assert.NoError(s.T(), err1)
 
 	clusterId, version, deleted, offset, limit := "clusterId1", 0, false, 0, 10
-	s.repoMock.On("GetAllScenario", mock.Anything).Return(utils.ToPtr([]model.Scenario{s1}), utils.ToPtr([]string{"deleted_scenario_id"}), nil).Once()
+	s.repoMock.On("GetAllScenario", mock.Anything).Return(zkCommon.ToPtr([]model.Scenario{s1}), zkCommon.ToPtr([]string{"deleted_scenario_id"}), nil).Once()
 
 	res, err := s.service.GetAllScenario(clusterId, int64(version), deleted, offset, limit)
 	assert.Equal(s.T(), 1, len(res.Scenarios))

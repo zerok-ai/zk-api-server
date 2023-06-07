@@ -170,7 +170,7 @@ func TestIsEmpty(t *testing.T) {
 func TestGetIntegerFromString(t *testing.T) {
 	inputStr := "1234"
 	expected := 1234
-	actual, err := GetIntegerFromString(inputStr)
+	actual, err := zkcommon.GetIntegerFromString(inputStr)
 	assert.Nil(t, err, "Unexpected error for valid input string")
 	assert.Equal(t, expected, actual, "Unexpected result for valid input string")
 
@@ -180,7 +180,7 @@ func TestGetIntegerFromString(t *testing.T) {
 		Num:  "hello",
 		Err:  errors.New("invalid syntax"),
 	}
-	actual, err = GetIntegerFromString(inputStr)
+	actual, err = zkcommon.GetIntegerFromString(inputStr)
 	assert.Equal(t, &expectedErr, err, "Unexpected error for invalid input string")
 	assert.Zero(t, actual, "Expected result to be 0 for invalid input string")
 }
@@ -408,7 +408,7 @@ func TestRound(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		result := Round(tc.input, tc.precision)
+		result := zkcommon.Round(tc.input, tc.precision)
 		if result != tc.expected {
 			t.Errorf("Expected Round(%f, %d) to be %f, but got %f", tc.input, tc.precision, tc.expected, result)
 		}
