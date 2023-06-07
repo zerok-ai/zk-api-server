@@ -3,13 +3,15 @@ package service
 import (
 	"encoding/json"
 	"github.com/kataras/iris/v12"
+	zkCommon "github.com/zerok-ai/zk-utils-go/common"
+	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"log"
 	"main/app/cluster/transformer"
 	"main/app/cluster/validation"
 	"main/app/tablemux"
 	"main/app/tablemux/handlerimplementation"
 	"main/app/utils"
-	"main/app/utils/zkerrors"
+	"main/app/utils/errors"
 	"os"
 	"px.dev/pxapi"
 )
@@ -63,7 +65,7 @@ func init() {
 
 func (cs *clusterService) GetNamespaceList(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[string], *zkerrors.ZkError) {
 	if !validation.ValidatePxlTime(st) {
-		e := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
+		e := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeFormat, nil)
 		return nil, &e
 	}
 	mux := handlerimplementation.New[string]()
@@ -75,7 +77,7 @@ func (cs *clusterService) GetNamespaceList(ctx iris.Context, id, st, apiKey stri
 
 func (cs *clusterService) GetServiceDetailsMap(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceMap], *zkerrors.ZkError) {
 	if !validation.ValidatePxlTime(st) {
-		e := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
+		e := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeFormat, nil)
 		return nil, &e
 	}
 
@@ -88,7 +90,7 @@ func (cs *clusterService) GetServiceDetailsMap(ctx iris.Context, id, st, apiKey 
 
 func (cs *clusterService) GetServiceDetailsList(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.Service], *zkerrors.ZkError) {
 	if !validation.ValidatePxlTime(st) {
-		e := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
+		e := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeFormat, nil)
 		return nil, &e
 	}
 
@@ -100,7 +102,7 @@ func (cs *clusterService) GetServiceDetailsList(ctx iris.Context, id, st, apiKey
 
 func (cs *clusterService) GetServiceDetails(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceStat], *zkerrors.ZkError) {
 	if !validation.ValidatePxlTime(st) {
-		err := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
+		err := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeFormat, nil)
 		return nil, &err
 	}
 
@@ -113,7 +115,7 @@ func (cs *clusterService) GetServiceDetails(ctx iris.Context, clusterIdx, name, 
 
 func (cs *clusterService) GetPodDetailsTimeSeries(ctx iris.Context, clusterIdx, podName, ns, st, apiKey string) (*transformer.PodDetailsPixieHTTPResponse, *zkerrors.ZkError) {
 	if !validation.ValidatePxlTime(st) {
-		err := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
+		err := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeFormat, nil)
 		return nil, &err
 	}
 
@@ -133,7 +135,7 @@ func (cs *clusterService) GetPodDetailsTimeSeries(ctx iris.Context, clusterIdx, 
 	cpuUsageHttpResp := transformer.PixieResponseToHTTPResponse(resultSetCpuUsage, cpuUsageMux, errCpuUsage)
 
 	if errReqAndErr != nil && errLatency != nil && errCpuUsage != nil {
-		return nil, utils.ToPtr[zkerrors.ZkError](zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil))
+		return nil, zkCommon.ToPtr[zkerrors.ZkError](zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, nil))
 	}
 	return transformer.PixieResponseToPodDetailsHTTPResponse(reqAndErrHttpResp, httpLatencyHttpResp, cpuUsageHttpResp), nil
 
@@ -141,7 +143,7 @@ func (cs *clusterService) GetPodDetailsTimeSeries(ctx iris.Context, clusterIdx, 
 
 func (cs *clusterService) GetPodList(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.PodDetails], *zkerrors.ZkError) {
 	if !validation.ValidatePxlTime(st) {
-		e := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
+		e := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeFormat, nil)
 		return nil, &e
 	}
 	var resultSet *pxapi.ScriptResults
@@ -153,7 +155,7 @@ func (cs *clusterService) GetPodList(ctx iris.Context, clusterIdx, name, ns, st,
 
 func (cs *clusterService) GetPxlData(ctx iris.Context, clusterIdx, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.PixieTraceData], *zkerrors.ZkError) {
 	if !validation.ValidatePxlTime(st) {
-		err := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_FORMAT, nil)
+		err := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeFormat, nil)
 		return nil, &err
 	}
 	mux := handlerimplementation.New[handlerimplementation.PixieTraceData]()

@@ -1,19 +1,17 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/kataras/iris/v12"
 	"main/app/cluster"
-	httpConfig "main/app/utils/http/config"
-	zkLogger "main/app/utils/logs"
-	zkPostgres "main/app/utils/postgres"
 	"main/internal/model"
-	"os"
+
+	"github.com/kataras/iris/v12"
+	zkConfig "github.com/zerok-ai/zk-utils-go/config"
+	httpConfig "github.com/zerok-ai/zk-utils-go/http/config"
+	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
+	zkPostgres "github.com/zerok-ai/zk-utils-go/storage/sqlDB/postgres"
 )
 
-var LOG_TAG = "main"
+var LogTag = "main"
 
 type Args struct {
 	ConfigPath string
@@ -21,21 +19,16 @@ type Args struct {
 
 func main() {
 	var cfg model.ZkApiServerConfig
-	// path := "/opt/zk-auth-configmap.yaml"
-	args := ProcessArgs(&cfg)
-
-	// read configuration from the file and environment variables
-	if err := cleanenv.ReadConfig(args.ConfigPath, &cfg); err != nil {
-		zkLogger.Error(LOG_TAG, err)
-		os.Exit(2)
+	if err := zkConfig.ProcessArgs[model.ZkApiServerConfig](&cfg); err != nil {
+		panic(err)
 	}
 
-	zkLogger.Info(LOG_TAG, "")
-	zkLogger.Info(LOG_TAG, "********* Initializing Application *********")
+	zkLogger.Info(LogTag, "")
+	zkLogger.Info(LogTag, "********* Initializing Application *********")
 	httpConfig.Init(cfg.Http.Debug)
 	zkPostgres.Init(cfg.Postgres)
 	zkLogger.Init(cfg.LogsConfig)
-	zkLogger.Debug(LOG_TAG, "Parsed Configuration", cfg)
+	zkLogger.Debug(LogTag, "Parsed Configuration", cfg)
 
 	app := newApp()
 
@@ -44,24 +37,6 @@ func main() {
 		LogLevel:              "debug",
 	})
 	app.Listen(":"+cfg.Server.Port, config)
-}
-
-func ProcessArgs(cfg interface{}) Args {
-	var a Args
-
-	f := flag.NewFlagSet("Example server", 1)
-	f.StringVar(&a.ConfigPath, "c", "config.yaml", "Path to configuration file")
-
-	fu := f.Usage
-	f.Usage = func() {
-		fu()
-		envHelp, _ := cleanenv.GetDescription(cfg, nil)
-		fmt.Fprintln(f.Output())
-		fmt.Fprintln(f.Output(), envHelp)
-	}
-
-	f.Parse(os.Args[1:])
-	return a
 }
 
 func newApp() *iris.Application {

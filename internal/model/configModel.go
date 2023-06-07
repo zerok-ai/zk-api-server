@@ -1,9 +1,9 @@
 package model
 
 import (
-	httpConfig "main/app/utils/http/config"
-	logConfig "main/app/utils/logs/config"
-	postgresConfig "main/app/utils/postgres/config"
+	httpConfig "github.com/zerok-ai/zk-utils-go/http/config"
+	zkLoggerConfig "github.com/zerok-ai/zk-utils-go/logs/config"
+	zkPostgres "github.com/zerok-ai/zk-utils-go/storage/sqlDB/postgres/config"
 )
 
 type ServerConfig struct {
@@ -14,8 +14,8 @@ type ServerConfig struct {
 // ZkApiServerConfig https://github.com/ilyakaznacheev/cleanenv/blob/master/example/simple_config/example.go
 // Config is an application configuration structure
 type ZkApiServerConfig struct {
-	Server     ServerConfig                  `yaml:"server"`
-	LogsConfig logConfig.LogsConfig          `yaml:"logs"`
-	Http       httpConfig.HttpConfig         `yaml:"http"`
-	Postgres   postgresConfig.PostgresConfig `yaml:"postgres"`
+	Server     ServerConfig              `yaml:"server"`
+	LogsConfig zkLoggerConfig.LogsConfig `yaml:"logs"`
+	Http       httpConfig.HttpConfig     `yaml:"http"`
+	Postgres   zkPostgres.PostgresConfig `yaml:"postgres"`
 }

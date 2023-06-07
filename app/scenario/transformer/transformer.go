@@ -1,7 +1,7 @@
 package transformer
 
 import (
-	"github.com/zerok-ai/zk-utils-go/rules/model"
+	"github.com/zerok-ai/zk-utils-go/scenario/model"
 )
 
 type ScenarioResponse struct {

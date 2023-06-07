@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	zkCommon "github.com/zerok-ai/zk-utils-go/common"
 	"io"
 	"log"
 	"net/http"
@@ -54,7 +55,7 @@ func makeGetRequest(url, authToken string) (*http.Request, error) {
 		return nil, err
 	}
 
-	if !IsEmpty(authToken) {
+	if !zkCommon.IsEmpty(authToken) {
 		req.Header.Add("Token", authToken)
 	}
 	return req, nil

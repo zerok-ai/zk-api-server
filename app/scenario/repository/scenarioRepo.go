@@ -3,16 +3,13 @@ package repository
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/zerok-ai/zk-utils-go/rules/model"
-	"log"
+	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
+	"github.com/zerok-ai/zk-utils-go/scenario/model"
+	zkUtilsPostgres "github.com/zerok-ai/zk-utils-go/storage/sqlDB/postgres"
 	scenarioResponseModel "main/app/scenario/model"
-	"main/app/utils"
-	zkLogger "main/app/utils/logs"
-	zkPostgres "main/app/utils/postgres"
-	"main/app/utils/zkerrors"
 )
 
-var LOG_TAG = "zkpostgres_db_repo"
+var LogTag = "scenario_repo"
 
 type ScenarioQueryFilter struct {
 	ClusterId string
@@ -23,7 +20,7 @@ type ScenarioQueryFilter struct {
 }
 
 type ScenarioRepo interface {
-	GetAllScenario(filters *ScenarioQueryFilter) (*[]model.Scenario, *[]string, *zkerrors.ZkError)
+	GetAllScenario(filters *ScenarioQueryFilter) (*[]model.Scenario, *[]string, error)
 }
 
 type zkPostgresRepo struct {
@@ -33,33 +30,30 @@ func NewZkPostgresRepo() ScenarioRepo {
 	return &zkPostgresRepo{}
 }
 
-func (zkPostgresService zkPostgresRepo) GetAllScenario(filters *ScenarioQueryFilter) (*[]model.Scenario, *[]string, *zkerrors.ZkError) {
+func (zkPostgresService zkPostgresRepo) GetAllScenario(filters *ScenarioQueryFilter) (*[]model.Scenario, *[]string, error) {
 	query := GetAllScenarioSqlStatement
-	zkPostgresRepo := zkPostgres.NewZkPostgresRepo[model.Scenario]()
+	dbRepo := zkUtilsPostgres.NewZkPostgresRepo()
+	db, err := dbRepo.GetDBInstance()
+	if err != nil {
+		zkLogger.Error(LogTag, "unable to get db instance", err)
+	}
 
 	params := []any{filters.ClusterId, filters.Version, filters.Limit, filters.Offset}
-	return zkPostgresRepo.GetAll(query, params, Processor)
+	rows, err, closeRow := dbRepo.GetAll(db, query, params)
+
+	return Processor(rows, err, closeRow)
 }
 
-func Processor(rows *sql.Rows, sqlErr error) (*[]model.Scenario, *[]string, *zkerrors.ZkError) {
-	defer rows.Close()
+func Processor(rows *sql.Rows, sqlErr error, f func()) (*[]model.Scenario, *[]string, error) {
+	defer f()
 
-	switch sqlErr {
-	case sql.ErrNoRows:
-		zkLogger.Debug(LOG_TAG, "no rows were returned", sqlErr)
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_NOT_FOUND, sqlErr)
-		return nil, nil, &zkError
-	case nil:
-		break
-	default:
-		zkLogger.Debug(LOG_TAG, "unable to scan rows", sqlErr)
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, sqlErr)
-		return nil, nil, &zkError
+	if sqlErr != nil {
+		return nil, nil, sqlErr
 	}
 
 	if rows == nil {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil)
-		return nil, nil, &zkErr
+		zkLogger.Debug(LogTag, "rows nil", sqlErr)
+		return nil, nil, sqlErr
 	}
 
 	var scenarioResponse scenarioResponseModel.ScenarioDbResponse
@@ -67,7 +61,7 @@ func Processor(rows *sql.Rows, sqlErr error) (*[]model.Scenario, *[]string, *zke
 	for rows.Next() {
 		err := rows.Scan(&scenarioResponse.Scenario, &scenarioResponse.Deleted)
 		if err != nil {
-			log.Fatal(err)
+			zkLogger.Error(LogTag, err)
 		}
 
 		scenarioResponseArr = append(scenarioResponseArr, scenarioResponse)
@@ -76,7 +70,7 @@ func Processor(rows *sql.Rows, sqlErr error) (*[]model.Scenario, *[]string, *zke
 	// Check for any errors occurred during iteration
 	err := rows.Err()
 	if err != nil {
-		log.Fatal(err)
+		zkLogger.Error(LogTag, err)
 	}
 
 	var scenarios []model.Scenario
@@ -85,8 +79,8 @@ func Processor(rows *sql.Rows, sqlErr error) (*[]model.Scenario, *[]string, *zke
 		var d model.Scenario
 		err := json.Unmarshal([]byte(rs.Scenario), &d)
 		if err != nil || d.Workloads == nil {
-			log.Println(err)
-			return nil, nil, utils.ToPtr[zkerrors.ZkError](zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil))
+			zkLogger.Error(LogTag, err)
+			return nil, nil, err
 		}
 
 		if rs.Deleted == false {

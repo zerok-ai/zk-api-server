@@ -1,15 +1,18 @@
 package service
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
+	"github.com/zerok-ai/zk-utils-go/zkerrors"
+	"main/app/scenario/repository/mocks"
+	"main/app/utils"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"github.com/zerok-ai/zk-utils-go/rules/model"
-	"main/app/scenario/repository/mocks"
-	"main/app/utils"
-	"main/app/utils/zkerrors"
-	"testing"
+	"github.com/zerok-ai/zk-utils-go/scenario/model"
 )
 
 type ServiceTestSuite struct {
@@ -43,15 +46,25 @@ func (s *ServiceTestSuite) TestScenarioService_GetAllScenario_oneScenarios_Succe
 	assert.Equal(s.T(), 1, len(res.Scenarios))
 	assert.Nil(s.T(), err)
 	assert.NotNil(s.T(), res)
-	assert.NotNil(s.T(), res.Scenarios[0].Workloads["ws1"])
-	assert.NotNil(s.T(), res.Scenarios[0].Workloads["ws2"])
+	assert.NotNil(s.T(), (*res.Scenarios[0].Workloads)["idA"])
+	_, y := (*res.Scenarios[0].Workloads)["any_random_key"]
+	assert.False(s.T(), y)
 }
 
 func (s *ServiceTestSuite) TestScenarioService_GetAllScenarios_RepoErr_Failure() {
-	zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_NOT_FOUND, nil)
-	s.repoMock.On("GetAllScenario", mock.Anything).Return(nil, nil, &zkError).Once()
+	zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorNotFound, nil)
+	s.repoMock.On("GetAllScenario", mock.Anything).Return(nil, nil, sql.ErrNoRows).Once()
 
 	res, err := s.service.GetAllScenario("clusterId1", 0, false, 0, 10)
 	assert.Nil(s.T(), res)
-	assert.Equal(s.T(), zkerrors.ZK_ERROR_NOT_FOUND, err.Error)
+	assert.Equal(s.T(), zkError.Error, err.Error)
+}
+
+func (s *ServiceTestSuite) TestScenarioService_GetAllScenarios_SomeErr_Failure() {
+	zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, nil)
+	s.repoMock.On("GetAllScenario", mock.Anything).Return(nil, nil, errors.New("some err")).Once()
+
+	res, err := s.service.GetAllScenario("clusterId1", 0, false, 0, 10)
+	assert.Nil(s.T(), res)
+	assert.Equal(s.T(), zkError.Error, err.Error)
 }

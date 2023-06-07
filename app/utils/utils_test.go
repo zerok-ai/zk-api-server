@@ -3,11 +3,9 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-	"github.com/kataras/iris/v12"
 	"github.com/stretchr/testify/assert"
-	"main/app/utils/zkerrors"
+	zkcommon "github.com/zerok-ai/zk-utils-go/common"
 	"math"
-	"net/http/httptest"
 	"px.dev/pxapi/proto/vizierpb"
 	"px.dev/pxapi/types"
 	"strconv"
@@ -16,15 +14,15 @@ import (
 
 func TestContains(t *testing.T) {
 	strSlice := []string{"apple", "banana", "orange"}
-	result := Contains(strSlice, "banana")
+	result := zkcommon.Contains(strSlice, "banana")
 	assert.True(t, result)
 
 	intSlice := []int{1, 2, 3}
-	result = Contains(intSlice, 4)
+	result = zkcommon.Contains(intSlice, 4)
 	assert.False(t, result)
 
 	emptySlice := []float64{}
-	result = Contains(emptySlice, 5.5)
+	result = zkcommon.Contains(emptySlice, 5.5)
 	assert.False(t, result)
 }
 
@@ -164,9 +162,9 @@ func GetDataByIdx_HelperFunc[T any](val interface{}) T {
 }
 
 func TestIsEmpty(t *testing.T) {
-	assert.True(t, IsEmpty(""))
+	assert.True(t, zkcommon.IsEmpty(""))
 
-	assert.False(t, IsEmpty("hello"))
+	assert.False(t, zkcommon.IsEmpty("hello"))
 }
 
 func TestGetIntegerFromString(t *testing.T) {
@@ -468,29 +466,3 @@ func TestGetFloatFromRecord(t *testing.T) {
 //	//actualOutput = DecodeGzip(nonGzipInput)
 //	//assert.Equal(t, nonGzipInput, actualOutput)
 //}
-
-func TestSetResponseInCtxAndReturn_Success(t *testing.T) {
-	// Create a new Iris context and response recorder
-	app := iris.New()
-	recorder := httptest.NewRecorder()
-	ctx := app.ContextPool.Acquire(recorder, httptest.NewRequest("GET", "/", nil))
-
-	// Test with a nil error and string response
-	resp := "Hello, world!"
-	zkError := (*zkerrors.ZkError)(nil)
-	SetResponseInCtxAndReturn(ctx, &resp, zkError)
-	assert.Equal(t, 200, recorder.Code)
-	assert.Equal(t, "{\"payload\":\"Hello, world!\"}\n", recorder.Body.String())
-}
-func TestSetResponseInCtxAndReturn_Error(t *testing.T) {
-	// Create a new Iris context and response recorder
-	app := iris.New()
-	recorder := httptest.NewRecorder()
-	ctx := app.ContextPool.Acquire(recorder, httptest.NewRequest("GET", "/", nil))
-
-	// Test with a non-nil error
-	zkError := &zkerrors.ZkError{Error: zkerrors.ZK_ERROR_INTERNAL_SERVER_SERVER}
-	SetResponseInCtxAndReturn(ctx, (*string)(nil), zkError)
-	assert.Equal(t, 500, ctx.GetStatusCode())
-	assert.Equal(t, ``, recorder.Body.String())
-}

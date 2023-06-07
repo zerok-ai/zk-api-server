@@ -1,10 +1,12 @@
 package validation
 
 import (
-	"github.com/stretchr/testify/assert"
-	"main/app/utils"
-	"main/app/utils/zkerrors"
+	"github.com/zerok-ai/zk-utils-go/common"
+	"main/app/utils/errors"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/zerok-ai/zk-utils-go/zkerrors"
 )
 
 func TestValidatePxlTime(t *testing.T) {
@@ -29,19 +31,19 @@ func TestValidateGraphDetailsApi(t *testing.T) {
 	// invalid input
 	zkErr = ValidateGraphDetailsApi("", "ns", "st", "apiKey") // empty service name
 	assert.NotNil(t, zkErr)
-	assert.Equal(t, *zkErr, zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_SERVICE_NAME_EMPTY, nil))
+	assert.Equal(t, *zkErr, zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestServiceNameEmpty, nil))
 
 	zkErr = ValidateGraphDetailsApi("serviceName", "", "st", "apiKey") // empty namespace
 	assert.NotNil(t, zkErr)
-	assert.Equal(t, *zkErr, zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_NAMESPACE_EMPTY, nil))
+	assert.Equal(t, *zkErr, zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestNamespaceEmpty, nil))
 
 	zkErr = ValidateGraphDetailsApi("serviceName", "ns", "", "apiKey") // empty time
 	assert.NotNil(t, zkErr)
-	assert.Equal(t, *zkErr, zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_EMPTY, nil))
+	assert.Equal(t, *zkErr, zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeEmpty, nil))
 
 	zkErr = ValidateGraphDetailsApi("serviceName", "ns", "st", "") // empty api key
 	assert.NotNil(t, zkErr)
-	assert.Equal(t, *zkErr, zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY, nil))
+	assert.Equal(t, *zkErr, zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestZkApiKeyEmpty, nil))
 }
 
 func TestValidatePodDetailsApi(t *testing.T) {
@@ -54,19 +56,19 @@ func TestValidatePodDetailsApi(t *testing.T) {
 
 		// Test case 2: podName is empty
 		{"", "namespace-1", "2023-04-25T09:00:00Z", "api-key-1",
-			utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_SERVICE_POD_EMPTY, nil))},
+			zkcommon.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestServicePodEmpty, nil))},
 
 		// Test case 3: ns is empty
 		{"pod-1", "", "2023-04-25T09:00:00Z", "api-key-1",
-			utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_NAMESPACE_EMPTY, nil))},
+			zkcommon.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestNamespaceEmpty, nil))},
 
 		// Test case 4: st is empty
 		{"pod-1", "namespace-1", "", "api-key-1",
-			utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_EMPTY, nil))},
+			zkcommon.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeEmpty, nil))},
 
 		// Test case 5: apiKey is empty
 		{"pod-1", "namespace-1", "2023-04-25T09:00:00Z", "",
-			utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY, nil))},
+			zkcommon.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestZkApiKeyEmpty, nil))},
 	}
 
 	for _, tc := range testCases {
@@ -88,10 +90,10 @@ func TestValidateGetResourceDetailsApi(t *testing.T) {
 		{"2023-04-25T09:00:00Z", "api-key-1", nil},
 
 		// Test case 2: st is empty
-		{st: "", apiKey: "api-key-1", expectedErr: utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_EMPTY, nil))},
+		{st: "", apiKey: "api-key-1", expectedErr: zkcommon.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeEmpty, nil))},
 
 		// Test case 3: apiKey is empty
-		{st: "2023-04-25T09:00:00Z", expectedErr: utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY, nil))},
+		{st: "2023-04-25T09:00:00Z", expectedErr: zkcommon.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestZkApiKeyEmpty, nil))},
 	}
 
 	for _, tc := range testCases {
@@ -112,22 +114,22 @@ func TestValidateGetAllRulesApi(t *testing.T) {
 		{"cid", "165390989", "true", "0", "100", nil},
 
 		// Test case 3: ClusterId empty
-		{"", "165439089", "true", "0", "100", utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_CLUSTER_ID_EMPTY, nil))},
+		{"", "165439089", "true", "0", "100", zkcommon.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestClusterIdEmpty, nil))},
 
 		// Test case 4: version empty
-		{"cid", "", "true", "0", "100", utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_VERSION_EMPTY, nil))},
+		{"cid", "", "true", "0", "100", zkcommon.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestVersionEmpty, nil))},
 
 		// Test case 5: deleted invalid
-		{"cid", "165390989", "abc", "0", "100", utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_DELETED_IS_NOT_BOOLEAN, nil))},
+		{"cid", "165390989", "abc", "0", "100", zkcommon.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestDeletedIsNotBoolean, nil))},
 
 		// Test case 6: offset invalid
-		{"cid", "165439089", "true", "abc", "100", utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_OFFSET_IS_NOT_INTEGER, nil))},
+		{"cid", "165439089", "true", "abc", "100", zkcommon.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequestOffsetIsNotInteger, nil))},
 
 		// Test case 7: limit invalid
-		{"cid", "165430989", "true", "0", "abc", utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_LIMIT_IS_NOT_INTEGER, nil))},
+		{"cid", "165430989", "true", "0", "abc", zkcommon.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequestLimitIsNotInteger, nil))},
 
 		// Test case 8: version not int
-		{"cid", "16543ax", "true", "0", "100", utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_VERSION_IS_NOT_INTEGER, nil))},
+		{"cid", "16543ax", "true", "0", "100", zkcommon.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestVersionIsNotInteger, nil))},
 	}
 
 	for _, tc := range testCases {
@@ -150,11 +152,11 @@ func TestValidateGetPxlData(t *testing.T) {
 
 		// Test case 2: s is empty
 		{"", "api-key-1",
-			utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_CLUSTER_ID_EMPTY, nil))},
+			zkcommon.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestClusterIdEmpty, nil))},
 
 		// Test case 3: apiKey is empty
 		{"cluster-1", "",
-			utils.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY, nil))},
+			zkcommon.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestZkApiKeyEmpty, nil))},
 	}
 
 	for _, tc := range testCases {
