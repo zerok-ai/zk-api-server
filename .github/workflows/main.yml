@@ -6,6 +6,7 @@ env:
   ENV: "poc"
   GOOS: "linux"
   GOARCH: "amd64"
+  CGO_ENABLED: 0
   GKE_SA_KEY: ${{ secrets.GKE_SA_KEY }}
   GKE_CLUSTER: ${{ vars.GKE_CLUSTER }}
   GKE_ZONE : ${{ vars.GKE_ZONE }}
@@ -13,7 +14,8 @@ env:
   PROJECT_ID:  ${{ vars.PROJECT_ID }}
   DOCKER_REPO:  ${{ vars.DOCKER_REPO }}
   APP_NAME:  ${{ vars.APP_NAME }}
-
+  DOMAIN: ${{ vars.DOMAIN }}
+  URL: ${{ vars.URL }}
   
 jobs:
   build:
@@ -75,6 +77,8 @@ jobs:
              helm --install  \
              --set=image.repository=$DOCKER_REG/$PROJECT_ID/$DOCKER_REPO/$APP_NAME \
              --set=image.tag=$GITHUB_SHA \
+             --set=app.DOMAIN=$DOMAIN \
+             --set=app.URL=$URL \
              upgrade $APP_NAME \
               -f ./helm-charts/$ENV.yaml ./helm-charts/ \
               --namespace $NS 
