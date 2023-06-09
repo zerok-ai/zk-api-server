@@ -47,6 +47,13 @@ spec:
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: cluster-details
+              mountPath: /opt
+      volumes:
+        - name: cluster-details
+          configMap:
+            name: cluster-details-config-file
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
