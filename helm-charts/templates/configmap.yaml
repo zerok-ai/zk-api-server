@@ -3,7 +3,7 @@ data:
   cluster.conf: |-
     {
         "Domain": "{{ .Values.app.DOMAIN }}",
-        "Url": ""{{ .Values.app.URL }}"
+        "Url": "{{ .Values.app.URL }}"
     }
 kind: ConfigMap
 metadata:
