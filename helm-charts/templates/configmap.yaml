@@ -1,0 +1,10 @@
+apiVersion: v1
+data:
+  cluster.conf: |-
+    {
+        "Domain": "{{ .Values.app.DOMAIN }}",
+        "Url": ""{{ .Values.app.URL }}"
+    }
+kind: ConfigMap
+metadata:
+  name: cluster-details-config-file
