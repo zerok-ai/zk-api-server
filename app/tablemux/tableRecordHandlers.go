@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/kataras/iris/v12"
 	"io"
 	"log"
-	"main/app/utils"
-	"main/app/utils/zkerrors"
+	"main/app/utils/errors"
 	"os"
 	"px.dev/pxapi"
 	"px.dev/pxapi/errdefs"
 	"text/template"
+
+	"github.com/kataras/iris/v12"
+	"github.com/zerok-ai/zk-utils-go/zkerrors"
 )
 
 type PixieRepository interface {
@@ -91,7 +92,7 @@ func GetResult(resultSet *pxapi.ScriptResults) (*pxapi.ScriptResults, error) {
 			fmt.Printf("Got error : %+v, while streaming\n", err)
 		}
 		if err.Error() == "rpc error: code = Internal desc = Auth middleware failed: failed to fetch token - unauthenticated" {
-			return nil, utils.ErrAuthenticationFailed
+			return nil, errors.ErrAuthenticationFailed
 		}
 		return nil, err
 	}
@@ -104,21 +105,21 @@ func (p *pixie) GetPixieData(ctx iris.Context, t pxapi.TableMuxer, tx MethodTemp
 	var zkErr zkerrors.ZkError
 	if err != nil {
 		log.Printf("failed to create vizier api client, error: %s\n", err.Error())
-		zkErr = zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil)
+		zkErr = zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, nil)
 		return nil, &zkErr
 	}
 
 	resultSet, err := vz.ExecuteScript(ctxNew, pxl, t)
 	if err != nil && err != io.EOF {
 		log.Printf("failed to execute pixie script, error: %s\n", err.Error())
-		zkErr = zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil)
+		zkErr = zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, nil)
 		return nil, &zkErr
 	}
 
 	resultSet, err = GetResult(resultSet)
 	if err != nil {
 		log.Printf("failed to get pixie data result, error: %s\n", err.Error())
-		zkErr = zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_INTERNAL_SERVER, nil)
+		zkErr = zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, nil)
 		return nil, &zkErr
 	}
 

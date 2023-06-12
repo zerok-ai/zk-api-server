@@ -833,7 +833,7 @@
       "FilterType": {
         "oneOf": [
           {
-            "$ref": "#/components/schemas/FilterRule"
+            "$ref": "#/components/schemas/Scenario"
           },
           {
             "$ref": "#/components/schemas/Rule"
@@ -846,7 +846,7 @@
           "rules": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/FilterRule"
+              "$ref": "#/components/schemas/Scenario"
             }
           }
         }

@@ -1,9 +1,10 @@
 package transformer
 
 import (
-	"main/app/tablemux/handlerimplementation"
-	"main/app/utils/zkerrors"
 	"px.dev/pxapi"
+
+	"github.com/zerok-ai/zk-utils-go/zkerrors"
+	"main/app/tablemux/handlerimplementation"
 )
 
 type PixieHTTPResponse[T handlerimplementation.ItemType] struct {
