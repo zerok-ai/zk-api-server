@@ -32,7 +32,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Configure git for private modules
-        run: git config --global url."https://avingoyal:${TOKEN}@github.com"
+        run: git config --global url."https://$TOKEN:x-oauth-basic@github.com/".insteadOf "https://github.com/"
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
