@@ -1,9 +1,11 @@
 package validation
 
 import (
-	"github.com/kataras/iris/v12"
+	zkCommon "github.com/zerok-ai/zk-utils-go/common"
+	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"main/app/utils"
-	"main/app/utils/zkerrors"
+	"main/app/utils/errors"
+	"strconv"
 )
 
 func ValidatePxlTime(s string) bool {
@@ -14,64 +16,107 @@ func ValidatePxlTime(s string) bool {
 }
 
 func ValidateGraphDetailsApi(serviceName, ns, st, apiKey string) *zkerrors.ZkError {
-	if utils.IsEmpty(serviceName) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_SERVICE_NAME_EMPTY, nil)
+	if zkCommon.IsEmpty(serviceName) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestServiceNameEmpty, nil)
 		return &zkErr
 	}
-	if utils.IsEmpty(ns) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_NAMESPACE_EMPTY, nil)
+	if zkCommon.IsEmpty(ns) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestNamespaceEmpty, nil)
 		return &zkErr
 	}
-	if utils.IsEmpty(st) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_EMPTY, nil)
+	if zkCommon.IsEmpty(st) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeEmpty, nil)
 		return &zkErr
 	}
-	if utils.IsEmpty(apiKey) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY, nil)
+	if zkCommon.IsEmpty(apiKey) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestZkApiKeyEmpty, nil)
 		return &zkErr
 	}
 	return nil
 }
 
-func ValidatePodDetailsApi(ctx iris.Context, podName, ns, st, apiKey string) *zkerrors.ZkError {
-	if utils.IsEmpty(podName) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_SERVICE_POD_EMPTY, nil)
+func ValidatePodDetailsApi(podName, ns, st, apiKey string) *zkerrors.ZkError {
+	if zkCommon.IsEmpty(podName) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestServicePodEmpty, nil)
 		return &zkErr
 	}
-	if utils.IsEmpty(ns) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_NAMESPACE_EMPTY, nil)
+	if zkCommon.IsEmpty(ns) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestNamespaceEmpty, nil)
 		return &zkErr
 	}
-	if utils.IsEmpty(st) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_EMPTY, nil)
+	if zkCommon.IsEmpty(st) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeEmpty, nil)
 		return &zkErr
 	}
-	if utils.IsEmpty(apiKey) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY, nil)
+	if zkCommon.IsEmpty(apiKey) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestZkApiKeyEmpty, nil)
 		return &zkErr
 	}
 	return nil
 }
 
 func ValidateGetResourceDetailsApi(st string, apiKey string) *zkerrors.ZkError {
-	if utils.IsEmpty(st) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_TIME_EMPTY, nil)
+	if zkCommon.IsEmpty(st) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeEmpty, nil)
 		return &zkErr
 	}
-	if utils.IsEmpty(apiKey) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY, nil)
+	if zkCommon.IsEmpty(apiKey) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestZkApiKeyEmpty, nil)
 		return &zkErr
 	}
 	return nil
 }
 
-func ValidateGetPxlData(s string, apiKey string) *zkerrors.ZkError {
-	if utils.IsEmpty(s) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_CLUSTER_ID_EMPTY, nil)
+func ValidateGetAllScenarioApi(clusterId, version, deleted, offset, limit string) *zkerrors.ZkError {
+	if zkCommon.IsEmpty(clusterId) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestClusterIdEmpty, nil)
 		return &zkErr
 	}
-	if utils.IsEmpty(apiKey) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZK_ERROR_BAD_REQUEST_ZK_API_KEY_EMPTY, nil)
+	if zkCommon.IsEmpty(version) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestVersionEmpty, nil)
+		return &zkErr
+	}
+
+	_, err := strconv.ParseInt(version, 10, 64)
+	if err != nil {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestVersionIsNotInteger, nil)
+		return &zkErr
+	}
+
+	if !zkCommon.IsEmpty(deleted) {
+		_, err = strconv.ParseBool(deleted)
+		if err != nil {
+			zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestDeletedIsNotBoolean, nil)
+			return &zkErr
+		}
+	}
+
+	if !zkCommon.IsEmpty(limit) {
+		_, err = strconv.Atoi(limit)
+		if err != nil {
+			zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequestLimitIsNotInteger, nil)
+			return &zkErr
+		}
+	}
+
+	if !zkCommon.IsEmpty(offset) {
+		_, err = strconv.Atoi(offset)
+		if err != nil {
+			zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequestOffsetIsNotInteger, nil)
+			return &zkErr
+		}
+	}
+
+	return nil
+}
+
+func ValidateGetPxlData(s string, apiKey string) *zkerrors.ZkError {
+	if zkCommon.IsEmpty(s) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestClusterIdEmpty, nil)
+		return &zkErr
+	}
+	if zkCommon.IsEmpty(apiKey) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestZkApiKeyEmpty, nil)
 		return &zkErr
 	}
 	return nil

@@ -37,8 +37,3 @@ func newApp() *iris.Application {
 
 	return app
 }
-
-func Start() {
-	app := newApp()
-	app.Listen(":80")
-}

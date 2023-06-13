@@ -2,12 +2,12 @@ package handler
 
 import (
 	"github.com/kataras/iris/v12"
+	zkHttp "github.com/zerok-ai/zk-utils-go/http"
 	"main/app/cluster/service"
 	"main/app/cluster/transformer"
 	"main/app/cluster/validation"
 	"main/app/tablemux"
 	"main/app/tablemux/handlerimplementation"
-	"main/app/utils"
 )
 
 type ClusterHandler interface {
@@ -42,14 +42,16 @@ func (h *clusterHandler) GetServiceDetailsList(ctx iris.Context) {
 	st := ctx.URLParam("st")
 
 	if err := validation.ValidateGetResourceDetailsApi(st, apiKey); err != nil {
-		zkHttpResponse := utils.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
+		zkHttpResponse := zkHttp.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
 		return
 	}
 
 	resp, zkError := s.GetServiceDetailsList(ctx, clusterIdx, st, apiKey)
-	utils.SetResponseInCtxAndReturn[transformer.PixieHTTPResponse[handlerimplementation.Service]](ctx, resp, zkError)
+	zkHttpResponse := zkHttp.ToZkResponse[transformer.PixieHTTPResponse[handlerimplementation.Service]](200, *resp, resp, zkError)
+	ctx.StatusCode(zkHttpResponse.Status)
+	ctx.JSON(zkHttpResponse)
 }
 
 // GetServiceDetailsMap Returns the data between two services that directly interacts with each other
@@ -66,14 +68,16 @@ func (h *clusterHandler) GetServiceDetailsMap(ctx iris.Context) {
 	st := ctx.URLParam("st")
 
 	if err := validation.ValidateGetResourceDetailsApi(st, apiKey); err != nil {
-		zkHttpResponse := utils.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
+		zkHttpResponse := zkHttp.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
 		return
 	}
 
 	resp, zkError := s.GetServiceDetailsMap(ctx, clusterIdx, st, apiKey)
-	utils.SetResponseInCtxAndReturn[transformer.PixieHTTPResponse[handlerimplementation.ServiceMap]](ctx, resp, zkError)
+	zkHttpResponse := zkHttp.ToZkResponse[transformer.PixieHTTPResponse[handlerimplementation.ServiceMap]](200, *resp, resp, zkError)
+	ctx.StatusCode(zkHttpResponse.Status)
+	ctx.JSON(zkHttpResponse)
 }
 
 // GetServiceDetails Returns the data of a service under a cluster
@@ -92,14 +96,17 @@ func (h *clusterHandler) GetServiceDetails(ctx iris.Context) {
 	st := ctx.URLParam("st")
 
 	if err := validation.ValidateGraphDetailsApi(serviceName, ns, st, apiKey); err != nil {
-		zkHttpResponse := utils.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
+		zkHttpResponse := zkHttp.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
 		return
 	}
 
 	resp, zkError := s.GetServiceDetails(ctx, clusterIdx, serviceName, ns, st, apiKey)
-	utils.SetResponseInCtxAndReturn[transformer.PixieHTTPResponse[handlerimplementation.ServiceStat]](ctx, resp, zkError)
+	zkHttpResponse := zkHttp.ToZkResponse[transformer.PixieHTTPResponse[handlerimplementation.ServiceStat]](200, *resp, resp, zkError)
+	ctx.StatusCode(zkHttpResponse.Status)
+	ctx.JSON(zkHttpResponse)
+
 }
 
 // GetPodList Returns a list of all the pods under a cluster and service
@@ -118,14 +125,16 @@ func (h *clusterHandler) GetPodList(ctx iris.Context) {
 	ns := ctx.URLParam("ns")
 
 	if err := validation.ValidateGraphDetailsApi(serviceName, ns, st, apiKey); err != nil {
-		zkHttpResponse := utils.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
+		zkHttpResponse := zkHttp.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
 		return
 	}
 
 	resp, zkError := s.GetPodList(ctx, clusterIdx, serviceName, ns, st, apiKey)
-	utils.SetResponseInCtxAndReturn[transformer.PixieHTTPResponse[handlerimplementation.PodDetails]](ctx, resp, zkError)
+	zkHttpResponse := zkHttp.ToZkResponse[transformer.PixieHTTPResponse[handlerimplementation.PodDetails]](200, *resp, resp, zkError)
+	ctx.StatusCode(zkHttpResponse.Status)
+	ctx.JSON(zkHttpResponse)
 }
 
 // GetPodDetails Returns time-series data for the given pod
@@ -143,14 +152,16 @@ func (h *clusterHandler) GetPodDetails(ctx iris.Context) {
 	podName := ctx.URLParam("pod_name")
 	ns := ctx.URLParam("ns")
 
-	if err := validation.ValidatePodDetailsApi(ctx, podName, ns, st, apiKey); err != nil {
-		zkHttpResponse := utils.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
+	if err := validation.ValidatePodDetailsApi(podName, ns, st, apiKey); err != nil {
+		zkHttpResponse := zkHttp.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
 		return
 	}
 	resp, zkError := s.GetPodDetailsTimeSeries(ctx, clusterIdx, podName, ns, st, apiKey)
-	utils.SetResponseInCtxAndReturn[transformer.PodDetailsPixieHTTPResponse](ctx, resp, zkError)
+	zkHttpResponse := zkHttp.ToZkResponse[transformer.PodDetailsPixieHTTPResponse](200, *resp, resp, zkError)
+	ctx.StatusCode(zkHttpResponse.Status)
+	ctx.JSON(zkHttpResponse)
 }
 
 // GetPxData Returns pixie data for a given cluster
@@ -167,12 +178,14 @@ func (h *clusterHandler) GetPxData(ctx iris.Context) {
 	clusterIdx := ctx.URLParam("cluster_id")
 
 	if err := validation.ValidateGetPxlData(clusterIdx, apiKey); err != nil {
-		zkHttpResponse := utils.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
+		zkHttpResponse := zkHttp.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
 		ctx.StatusCode(zkHttpResponse.Status)
 		ctx.JSON(zkHttpResponse)
 		return
 	}
 
 	resp, zkError := s.GetPxlData(ctx, clusterIdx, st, apiKey)
-	utils.SetResponseInCtxAndReturn[transformer.PixieHTTPResponse[handlerimplementation.PixieTraceData]](ctx, resp, zkError)
+	zkHttpResponse := zkHttp.ToZkResponse[transformer.PixieHTTPResponse[handlerimplementation.PixieTraceData]](200, *resp, resp, zkError)
+	ctx.StatusCode(zkHttpResponse.Status)
+	ctx.JSON(zkHttpResponse)
 }
