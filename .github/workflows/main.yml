@@ -87,4 +87,5 @@ jobs:
              --set=app.URL=$URL \
              upgrade $APP_NAME \
               -f ./helm-charts/$ENV.yaml ./helm-charts/ \
+              --create-namespace \
               --namespace $NS 
