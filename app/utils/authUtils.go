@@ -10,7 +10,7 @@ import (
 
 func ValidateApiKeyMiddleware(ctx iris.Context) {
 	request := ctx.Request()
-	apiKey := request.Header["Zk_api_key"]
+	apiKey := request.Header["Zk-Api-Key"]
 
 	if apiKey == nil || apiKey[0] == "" {
 		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestZkApiKeyMiddlewareEmpty, nil)

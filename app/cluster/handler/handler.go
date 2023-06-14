@@ -8,6 +8,7 @@ import (
 	"main/app/cluster/validation"
 	"main/app/tablemux"
 	"main/app/tablemux/handlerimplementation"
+	"main/utils"
 )
 
 type ClusterHandler interface {
@@ -38,7 +39,7 @@ var s = service.NewClusterService(tablemux.NewPixieRepository())
 //	@Router			/u/cluster/{clusterIdx}/service/list [get]
 func (h *clusterHandler) GetServiceDetailsList(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
-	apiKey := ctx.GetHeader("ZK_API_KEY")
+	apiKey := ctx.GetHeader(utils.HttpUtilsZkApiKey)
 	st := ctx.URLParam("st")
 
 	if err := validation.ValidateGetResourceDetailsApi(st, apiKey); err != nil {
@@ -63,7 +64,7 @@ func (h *clusterHandler) GetServiceDetailsList(ctx iris.Context) {
 //	@Success		200 {object} utils.ZkHttpResponse[transformer.PixieHTTPResponse[handlerimplementation.ServiceMap]]
 //	@Router			/u/cluster/{clusterIdx}/service/map [get]
 func (h *clusterHandler) GetServiceDetailsMap(ctx iris.Context) {
-	apiKey := ctx.GetHeader("ZK_API_KEY")
+	apiKey := ctx.GetHeader(utils.HttpUtilsZkApiKey)
 	clusterIdx := ctx.Params().Get("clusterIdx")
 	st := ctx.URLParam("st")
 
@@ -90,7 +91,7 @@ func (h *clusterHandler) GetServiceDetailsMap(ctx iris.Context) {
 //	@Router			/u/cluster/{clusterIdx}/service/details [get]
 func (h *clusterHandler) GetServiceDetails(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
-	apiKey := ctx.GetHeader("ZK_API_KEY")
+	apiKey := ctx.GetHeader(utils.HttpUtilsZkApiKey)
 	serviceName := ctx.URLParam("name")
 	ns := ctx.URLParam("ns")
 	st := ctx.URLParam("st")
@@ -119,7 +120,7 @@ func (h *clusterHandler) GetServiceDetails(ctx iris.Context) {
 //	@Router			/u/cluster/{clusterIdx}/pod/list [get]
 func (h *clusterHandler) GetPodList(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
-	apiKey := ctx.GetHeader("ZK_API_KEY")
+	apiKey := ctx.GetHeader(utils.HttpUtilsZkApiKey)
 	st := ctx.URLParam("st")
 	serviceName := ctx.URLParam("service_name")
 	ns := ctx.URLParam("ns")
@@ -147,7 +148,7 @@ func (h *clusterHandler) GetPodList(ctx iris.Context) {
 //	@Router			/u/cluster/{clusterIdx}/pod/details [get]
 func (h *clusterHandler) GetPodDetails(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get("clusterIdx")
-	apiKey := ctx.GetHeader("ZK_API_KEY")
+	apiKey := ctx.GetHeader(utils.HttpUtilsZkApiKey)
 	st := ctx.URLParam("st")
 	podName := ctx.URLParam("pod_name")
 	ns := ctx.URLParam("ns")
@@ -173,7 +174,7 @@ func (h *clusterHandler) GetPodDetails(ctx iris.Context) {
 //	@Success		200 {object} utils.ZkHttpResponse[transformer.PixieHTTPResponse[handlerimplementation.PixieTraceData]]
 //	@Router			/u/cluster/traces [get]
 func (h *clusterHandler) GetPxData(ctx iris.Context) {
-	apiKey := ctx.GetHeader("ZK_API_KEY")
+	apiKey := ctx.GetHeader(utils.HttpUtilsZkApiKey)
 	st := ctx.URLParamDefault("st", "-10m")
 	clusterIdx := ctx.URLParam("cluster_id")
 
