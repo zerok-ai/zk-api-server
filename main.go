@@ -13,10 +13,6 @@ import (
 
 var LogTag = "main"
 
-type Args struct {
-	ConfigPath string
-}
-
 func main() {
 	var cfg model.ZkApiServerConfig
 	if err := zkConfig.ProcessArgs[model.ZkApiServerConfig](&cfg); err != nil {
@@ -65,6 +61,10 @@ func newApp() *iris.Application {
 	app.UseRouter(crs)
 
 	app.AllowMethods(iris.MethodOptions)
+
+	app.Get("/healthz", func(ctx iris.Context) {
+		ctx.WriteString("pong")
+	}).Describe("healthcheck")
 
 	v1 := app.Party("/v1")
 	cluster.Initialize(v1)

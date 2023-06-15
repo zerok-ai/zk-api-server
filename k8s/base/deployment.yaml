@@ -23,6 +23,11 @@ spec:
           volumeMounts:
             - name: cluster-details
               mountPath: /opt
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            successThreshold: 3
           env: # Setting Enviornmental Variables
             - name: PL_POSTGRES_USERNAME  # Setting Database username from Secret
               valueFrom:
