@@ -23,7 +23,7 @@ func NewScenarioHandler(s service.ScenarioService) ScenarioHandler {
 
 func (r scenarioHandler) GetAllScenario(ctx iris.Context) {
 	clusterId := ctx.GetHeader("Cluster-Id")
-	version := ctx.URLParam("version")
+	version := ctx.URLParam("last_sync_ts")
 	deleted := ctx.URLParamDefault("deleted", "false")
 	limit := ctx.URLParamDefault("limit", "100000")
 	offset := ctx.URLParamDefault("offset", "0")

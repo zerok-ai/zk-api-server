@@ -5,16 +5,15 @@ import (
 )
 
 type ScenarioResponse struct {
-	Scenarios       []model.Scenario `json:"scenarios"`
-	DeletedFilterId []string         `json:"deleted_scenario_id"`
+	Scenarios        []model.Scenario `json:"scenarios"`
+	DeletedFilterId  []string         `json:"deleted_scenario_id"`
+	DisabledFilterId []string         `json:"disabled_filter_id"`
 }
 
-func FromScenarioArrayToScenarioResponse(sArr *[]model.Scenario, deletedIdArr *[]string) *ScenarioResponse {
+func FromScenarioArrayToScenarioResponse(sArr *[]model.Scenario, deletedIdArr *[]string, disabledIdArr *[]string) *ScenarioResponse {
 	var resp ScenarioResponse
 	if sArr != nil && len(*sArr) != 0 {
-		for _, v := range *sArr {
-			resp.Scenarios = append(resp.Scenarios, v)
-		}
+		resp.Scenarios = append(resp.Scenarios, *sArr...)
 	} else {
 		resp.Scenarios = make([]model.Scenario, 0)
 	}
@@ -23,7 +22,13 @@ func FromScenarioArrayToScenarioResponse(sArr *[]model.Scenario, deletedIdArr *[
 		resp.DeletedFilterId = *deletedIdArr
 	} else {
 		resp.DeletedFilterId = make([]string, 0)
-
 	}
+
+	if disabledIdArr != nil && len(*disabledIdArr) != 0 {
+		resp.DisabledFilterId = *disabledIdArr
+	} else {
+		resp.DisabledFilterId = make([]string, 0)
+	}
+
 	return &resp
 }
