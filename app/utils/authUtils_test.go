@@ -2,7 +2,6 @@ package utils
 
 import (
 	"github.com/kataras/iris/v12"
-	"main/utils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -15,7 +14,7 @@ func TestValidateApiKeyMiddleware_Fail(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	ctx := app.ContextPool.Acquire(httptest.NewRecorder(), req)
 
-	ctx.Request().Header.Set(utils.HttpUtilsZkApiKey, "")
+	ctx.Request().Header.Set(HttpUtilsZkApiKeyHeader, "")
 
 	ValidateApiKeyMiddleware(ctx)
 
@@ -27,7 +26,7 @@ func TestValidateApiKeyMiddleware_Success(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	ctx := app.ContextPool.Acquire(httptest.NewRecorder(), req)
 
-	ctx.Request().Header.Set(utils.HttpUtilsZkApiKey, "SOME_VALUE_HERE")
+	ctx.Request().Header.Set(HttpUtilsZkApiKeyHeader, "SOME_VALUE_HERE")
 
 	ValidateApiKeyMiddleware(ctx)
 

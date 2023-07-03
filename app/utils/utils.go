@@ -26,6 +26,24 @@ var getPodDetailsForHTTPDataAndErrTemplate = "pod_details_inbound_request_timese
 var getPodDetailsForHTTPLatencyTemplate = "pod_details_inbound_latency_timeseries('%s', '%s')"
 var getPodDetailsForCpuUsageTemplate = "pod_details_resource_timeseries('%s', '%s')"
 
+const (
+	ClusterIdHeader         = "Cluster-Id"
+	HttpUtilsZkApiKeyHeader = "Zk-Api-Key"
+
+	ClusterIdxPathParam = "clusterIdx"
+
+	LastSyncTS  = "last_sync_ts"
+	Offset      = "offset"
+	Limit       = "limit"
+	Deleted     = "deleted"
+	StartTime   = "st"
+	Name        = "name"
+	Namespace   = "ns"
+	ServiceName = "service_name"
+	PodName     = "pod_name"
+	ClusterId   = "cluster_id"
+)
+
 func GetDataByIdx(tag string, datatypeName string, r *types.Record) interface{} {
 	var retVal any = nil
 	var strRetVal, _ = GetStringFromRecord(tag, r)
