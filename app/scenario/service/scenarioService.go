@@ -67,14 +67,17 @@ func (r scenarioService) GetAllScenario(clusterId string, version int64, deleted
 		} else if rs.Disabled == true {
 			disabledScenarioIdList = append(disabledScenarioIdList, d.Id)
 		} else {
+			//workLoadIds := make(model.WorkloadIds, 0)
+			//for oldId, v := range *d.Workloads {
+			//	id := model.WorkLoadUUID(v)
+			//	if oldId != id.String() {
+			//		delete(*d.Workloads, oldId)
+			//		(*d.Workloads)[id.String()] = v
+			//	}
+			//	workLoadIds = append(workLoadIds, id.String())
+			//}
+			//d.Filter.WorkloadIds = &workLoadIds
 			scenarios = append(scenarios, d)
-			for oldId, v := range *d.Workloads {
-				id := model.WorkLoadUUID(v)
-				if oldId != id.String() {
-					delete(*d.Workloads, oldId)
-					(*d.Workloads)[id.String()] = v
-				}
-			}
 		}
 	}
 

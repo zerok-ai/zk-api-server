@@ -6,7 +6,7 @@ require (
 	github.com/kataras/iris/v12 v12.2.0
 	github.com/stretchr/testify v1.8.3
 	github.com/swaggo/swag v1.16.1
-	github.com/zerok-ai/zk-utils-go v0.4.7-0.20230621090838-44bcd13a46cc
+	github.com/zerok-ai/zk-utils-go v0.4.7-0.20230706054022-5469907cf003
 	px.dev/pxapi v0.4.1
 )
 
