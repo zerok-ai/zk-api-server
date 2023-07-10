@@ -15,4 +15,5 @@ COPY data.json .
 
 EXPOSE 80
 
+#CMD [ "/deploy/main" ]
 CMD [ "/deploy/main", "-c", "internal/config/config.yaml"]
