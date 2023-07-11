@@ -30,7 +30,7 @@ env:
   TOKEN: ${{ secrets.GITPAT }}
   
 jobs:
-  build:
+  app-build:
     environment: ${{ github.event.inputs.ENV }}
     runs-on: self-hosted
     steps:
@@ -51,8 +51,25 @@ jobs:
         uses: 'google-github-actions/auth@v0'
         with:
           credentials_json: '${{ env.GKE_SA_KEY }}'
+      - uses: actions/upload-artifact@v3
+        with:
+          name: helm-charts
+          path: |
+            helm-charts
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: |
+            app/px/
+            main
+            internal/config/config.yaml
+            data.json
+            Dockerfile
         
-
+  docker-build:
+    environment: ${{ github.event.inputs.ENV }}
+    runs-on: self-hosted
+    steps:
       - uses: google-github-actions/setup-gcloud@v0
         with:
           version: latest
@@ -66,7 +83,9 @@ jobs:
         with:
            cluster_name: '${{ env.GKE_CLUSTER }}'
            location: '${{ env.GKE_ZONE }}'
-
+      - uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
       - name: Docker build
         run: |-
             docker build  --tag "$DOCKER_REG/$PROJECT_ID/$DOCKER_REPO/$APP_NAME:$GITHUB_SHA" .
@@ -79,7 +98,19 @@ jobs:
         run: |-
             docker push "$DOCKER_REG/$PROJECT_ID/$DOCKER_REPO/$APP_NAME:$GITHUB_SHA"
             docker push  "$DOCKER_REG/$PROJECT_ID/$DOCKER_REPO/$APP_NAME:$DOCKER_TAG" 
-     
+  deploy:
+    environment: ${{ github.event.inputs.ENV }}
+    runs-on: self-hosted
+    steps:  
+      - uses: google-github-actions/setup-gcloud@v0
+        with:
+          version: latest
+          export_default_credentials: true
+      - id: 'get-credentials'
+        uses: 'google-github-actions/get-gke-credentials@v1'
+        with:
+           cluster_name: '${{ env.GKE_CLUSTER }}'
+           location: '${{ env.GKE_ZONE }}'
       - name: Set up helm
         run: |-
            curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
@@ -89,7 +120,9 @@ jobs:
         run: |-
              kubectl create namespace $NS --dry-run=client -o yaml | kubectl apply -f -
              kubectl -n plc get secret pl-db-secrets -o yaml | yq 'del(.metadata.creationTimestamp, .metadata.uid, .metadata.resourceVersion, .metadata.namespace)' | kubectl apply --namespace $NS  -f -
-           
+      - uses: actions/download-artifact@v3
+        with:
+          name: helm-charts     
 
       - name: Deploy
         run: |-
