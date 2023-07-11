@@ -6,9 +6,14 @@ on:
             description: 'ENV'
             required: true
             default: 'poc'
+        DOCKER_TAG:
+            description: 'docker image tag'
+            required: true
+            default: 'latest'
 env:
   NS: ${{ vars.NS }}
   ENV: ${{ github.event.inputs.ENV }}
+  DOCKER_TAGS: ${{ github.event.inputs.DOCKER_TAGS }}
   GOOS: ${{ vars.GOOS }}
   GOARCH: ${{ vars.GOARCH }}
   CGO_ENABLED: ${{ vars.CGO_ENABLED }}
@@ -65,11 +70,12 @@ jobs:
       - name: Docker build
         run: |-
             docker build  --tag "$DOCKER_REG/$PROJECT_ID/$DOCKER_REPO/$APP_NAME:$GITHUB_SHA" .
+            docker tag "$DOCKER_REG/$PROJECT_ID/$DOCKER_REPO/$APP_NAME:$GITHUB_SHA" "$DOCKER_REG/$PROJECT_ID/$DOCKER_REPO/$APP_NAME:$TAG"
       
       - name: Docker push
         run: |-
             docker push "$DOCKER_REG/$PROJECT_ID/$DOCKER_REPO/$APP_NAME:$GITHUB_SHA"
-   
+            docker push  "$DOCKER_REG/$PROJECT_ID/$DOCKER_REPO/$APP_NAME:$TAG"
       
       - name: Set up helm
         run: |-
@@ -82,7 +88,7 @@ jobs:
         run: |-
              helm --install  \
              --set=image.repository=$DOCKER_REG/$PROJECT_ID/$DOCKER_REPO/$APP_NAME \
-             --set=image.tag=$GITHUB_SHA \
+             --set=image.tag=$TAG \
              --set=app.DOMAIN=$DOMAIN \
              --set=app.URL=$URL \
              upgrade $APP_NAME \
