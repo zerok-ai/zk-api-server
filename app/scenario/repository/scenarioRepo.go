@@ -2,11 +2,14 @@ package repository
 
 import (
 	"database/sql"
-	"encoding/json"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
-	"github.com/zerok-ai/zk-utils-go/scenario/model"
-	zkUtilsPostgres "github.com/zerok-ai/zk-utils-go/storage/sqlDB/postgres"
+	"github.com/zerok-ai/zk-utils-go/storage/sqlDB"
 	scenarioResponseModel "main/app/scenario/model"
+)
+
+const (
+	DefaultClusterId           = "Zk_default_cluster_id_for_all_scenarios"
+	GetAllScenarioSqlStatement = `SELECT scenario_data, deleted, disabled FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE (scenario_version>$1 OR deleted_at>$2 OR disabled_at>$3) AND (cluster_id=$4 OR cluster_id=$5)`
 )
 
 var LogTag = "scenario_repo"
@@ -20,46 +23,40 @@ type ScenarioQueryFilter struct {
 }
 
 type ScenarioRepo interface {
-	GetAllScenario(filters *ScenarioQueryFilter) (*[]model.Scenario, *[]string, error)
+	GetAllScenario(filters *ScenarioQueryFilter) (*[]scenarioResponseModel.ScenarioDbResponse, error)
 }
 
 type zkPostgresRepo struct {
+	dbRepo sqlDB.DatabaseRepo
 }
 
-func NewZkPostgresRepo() ScenarioRepo {
-	return &zkPostgresRepo{}
+func NewZkPostgresRepo(db sqlDB.DatabaseRepo) ScenarioRepo {
+	return &zkPostgresRepo{db}
 }
 
-func (zkPostgresService zkPostgresRepo) GetAllScenario(filters *ScenarioQueryFilter) (*[]model.Scenario, *[]string, error) {
-	query := GetAllScenarioSqlStatement
-	dbRepo := zkUtilsPostgres.NewZkPostgresRepo()
-	db, err := dbRepo.GetDBInstance()
-	if err != nil {
-		zkLogger.Error(LogTag, "unable to get db instance", err)
-	}
-
-	params := []any{filters.ClusterId, filters.Version, filters.Limit, filters.Offset}
-	rows, err, closeRow := dbRepo.GetAll(db, query, params)
+func (zkPostgresRepo zkPostgresRepo) GetAllScenario(filters *ScenarioQueryFilter) (*[]scenarioResponseModel.ScenarioDbResponse, error) {
+	params := []any{filters.Version, filters.Version, filters.Version, filters.ClusterId, DefaultClusterId}
+	rows, err, closeRow := zkPostgresRepo.dbRepo.GetAll(GetAllScenarioSqlStatement, params)
 
 	return Processor(rows, err, closeRow)
 }
 
-func Processor(rows *sql.Rows, sqlErr error, f func()) (*[]model.Scenario, *[]string, error) {
+func Processor(rows *sql.Rows, sqlErr error, f func()) (*[]scenarioResponseModel.ScenarioDbResponse, error) {
 	defer f()
 
 	if sqlErr != nil {
-		return nil, nil, sqlErr
+		return nil, sqlErr
 	}
 
 	if rows == nil {
 		zkLogger.Debug(LogTag, "rows nil", sqlErr)
-		return nil, nil, sqlErr
+		return nil, sqlErr
 	}
 
 	var scenarioResponse scenarioResponseModel.ScenarioDbResponse
 	var scenarioResponseArr []scenarioResponseModel.ScenarioDbResponse
 	for rows.Next() {
-		err := rows.Scan(&scenarioResponse.Scenario, &scenarioResponse.Deleted)
+		err := rows.Scan(&scenarioResponse.ScenarioData, &scenarioResponse.Deleted, &scenarioResponse.Disabled)
 		if err != nil {
 			zkLogger.Error(LogTag, err)
 		}
@@ -67,35 +64,10 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) (*[]model.Scenario, *[]st
 		scenarioResponseArr = append(scenarioResponseArr, scenarioResponse)
 	}
 
-	// Check for any errors occurred during iteration
 	err := rows.Err()
 	if err != nil {
 		zkLogger.Error(LogTag, err)
 	}
 
-	var scenarios []model.Scenario
-	var deletedScenarioIdList []string
-	for _, rs := range scenarioResponseArr {
-		var d model.Scenario
-		err := json.Unmarshal([]byte(rs.Scenario), &d)
-		if err != nil || d.Workloads == nil {
-			zkLogger.Error(LogTag, err)
-			return nil, nil, err
-		}
-
-		if rs.Deleted == false {
-			scenarios = append(scenarios, d)
-			//for oldId, v := range d.Workloads {
-			//	id := model.WorkLoadUUID(v)
-			//	delete(d.Workloads, oldId)
-			//	d.Workloads[id.String()] = v
-			//}
-		} else {
-			deletedScenarioIdList = append(deletedScenarioIdList, d.ScenarioId)
-		}
-	}
-
-	return &scenarios, &deletedScenarioIdList, nil
+	return &scenarioResponseArr, nil
 }
-
-const GetAllScenarioSqlStatement = `SELECT scenario, deleted FROM Scenario WHERE (cluster_id=$1 OR cluster_id IS NULL) AND version>$2 LIMIT $3 OFFSET $4`

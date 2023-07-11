@@ -10,7 +10,7 @@ import (
 	"px.dev/pxapi/types"
 
 	"github.com/kataras/iris/v12/x/errors"
-	"github.com/zerok-ai/zk-utils-go/common"
+	zkCommon "github.com/zerok-ai/zk-utils-go/common"
 )
 
 var ResourceList = []string{"pod", "service", "workload", "namespace"}
@@ -25,6 +25,24 @@ var getPodDetailsMethodTemplate = "pods('%s', '%s', '%s')"
 var getPodDetailsForHTTPDataAndErrTemplate = "pod_details_inbound_request_timeseries_by_container('%s', '%s')"
 var getPodDetailsForHTTPLatencyTemplate = "pod_details_inbound_latency_timeseries('%s', '%s')"
 var getPodDetailsForCpuUsageTemplate = "pod_details_resource_timeseries('%s', '%s')"
+
+const (
+	ClusterIdHeader         = "Cluster-Id"
+	HttpUtilsZkApiKeyHeader = "Zk-Api-Key"
+
+	ClusterIdxPathParam = "clusterIdx"
+
+	LastSyncTS  = "last_sync_ts"
+	Offset      = "offset"
+	Limit       = "limit"
+	Deleted     = "deleted"
+	StartTime   = "st"
+	Name        = "name"
+	Namespace   = "ns"
+	ServiceName = "service_name"
+	PodName     = "pod_name"
+	ClusterId   = "cluster_id"
+)
 
 func GetDataByIdx(tag string, datatypeName string, r *types.Record) interface{} {
 	var retVal any = nil
@@ -61,12 +79,12 @@ func GetStringFromRecord(key string, r *types.Record) (*string, error) {
 	if v == nil {
 		return nil, errors.New(fmt.Sprintf("key %s not found", key))
 	}
-	return zkcommon.ToPtr[string](v.String()), nil
+	return zkCommon.ToPtr[string](v.String()), nil
 }
 
 func GetFloatFromRecord(key string, r *types.Record) (*float64, error) {
 	dCasted := r.GetDatum(key).(*types.Float64Value)
-	floatVal := zkcommon.Round(dCasted.Value(), 12)
+	floatVal := zkCommon.Round(dCasted.Value(), 12)
 	return &floatVal, nil
 }
 
@@ -75,8 +93,8 @@ func GetIntegerFromRecord(key string, r *types.Record) (*int, error) {
 	if s == nil {
 		return nil, e
 	}
-	i, e := zkcommon.GetIntegerFromString(*s)
-	return zkcommon.ToPtr[int](i), nil
+	i, e := zkCommon.GetIntegerFromString(*s)
+	return zkCommon.ToPtr[int](i), nil
 }
 
 func GetBooleanFromRecord(key string, r *types.Record) (*bool, error) {
@@ -85,7 +103,7 @@ func GetBooleanFromRecord(key string, r *types.Record) (*bool, error) {
 		return nil, e
 	}
 	boolValue, e := strconv.ParseBool(*s)
-	return zkcommon.ToPtr[bool](boolValue), e
+	return zkCommon.ToPtr[bool](boolValue), e
 }
 
 func GetTimestampFromRecord(key string, r *types.Record) (*string, error) {
@@ -94,7 +112,7 @@ func GetTimestampFromRecord(key string, r *types.Record) (*string, error) {
 		return nil, e
 	}
 	strValue := string(*t)
-	return zkcommon.ToPtr[string](strValue), nil
+	return zkCommon.ToPtr[string](strValue), nil
 }
 
 func GetFloatFromString(k string, b int) (float64, error) {
@@ -147,16 +165,16 @@ func IsValidPxlTime(s string) bool {
 	t := strings.Split(s, d[0])
 	var params = make([]string, 0)
 	for _, v := range t {
-		if !zkcommon.IsEmpty(v) {
+		if !zkCommon.IsEmpty(v) {
 			params = append(params, v)
 		}
 	}
 	if len(params) == 2 {
-		if !zkcommon.Contains(TimeUnitPxl, params[1]) || params[0] != "-" {
+		if !zkCommon.Contains(TimeUnitPxl, params[1]) || params[0] != "-" {
 			return false
 		}
 	} else if len(params) == 1 {
-		if !zkcommon.Contains(TimeUnitPxl, params[0]) {
+		if !zkCommon.Contains(TimeUnitPxl, params[0]) {
 			return false
 		}
 	} else {

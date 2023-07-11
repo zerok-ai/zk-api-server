@@ -2,15 +2,12 @@ package cluster
 
 import (
 	"github.com/kataras/iris/v12/core/router"
-	"main/app/cluster/handler"
-	handler2 "main/app/scenario/handler"
-	"main/app/scenario/repository"
-	"main/app/scenario/service"
+	clusterHandler "main/app/cluster/handler"
+	scenarioHandler "main/app/scenario/handler"
 	"main/app/utils"
 )
 
-func Initialize(app router.Party) {
-	ch := handler.NewClusterHandler()
+func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler) {
 	{
 		clusterAPI := app.Party("/u/cluster")
 		clusterAPI.Get("/{clusterIdx}/service/list", utils.ValidateApiKeyMiddleware, ch.GetServiceDetailsList)
@@ -21,9 +18,6 @@ func Initialize(app router.Party) {
 		clusterAPI.Get("/traces", utils.ValidateApiKeyMiddleware, ch.GetPxData)
 	}
 
-	rr := repository.NewZkPostgresRepo()
-	rs := service.NewScenarioService(rr)
-	rh := handler2.NewScenarioHandler(rs)
 	ruleEngineAPI := app.Party("/o/cluster")
 	{
 		ruleEngineAPI.Get("/scenario", rh.GetAllScenario)

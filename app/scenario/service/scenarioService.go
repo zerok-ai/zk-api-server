@@ -2,7 +2,9 @@ package service
 
 import (
 	"database/sql"
+	"encoding/json"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
+	"github.com/zerok-ai/zk-utils-go/scenario/model"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"main/app/scenario/repository"
 	"main/app/scenario/transformer"
@@ -31,7 +33,8 @@ func (r scenarioService) GetAllScenario(clusterId string, version int64, deleted
 		Offset:    offset,
 	}
 
-	scenarioList, deletedScenarioIds, err := r.repo.GetAllScenario(&filter)
+	scenarioList, err := r.repo.GetAllScenario(&filter)
+
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -47,5 +50,36 @@ func (r scenarioService) GetAllScenario(clusterId string, version int64, deleted
 		}
 	}
 
-	return transformer.FromScenarioArrayToScenarioResponse(scenarioList, deletedScenarioIds), nil
+	var scenarios []model.Scenario
+	var deletedScenarioIdList []string
+	var disabledScenarioIdList []string
+	for _, rs := range *scenarioList {
+		var d model.Scenario
+		err := json.Unmarshal([]byte(rs.ScenarioData), &d)
+		if err != nil || d.Workloads == nil {
+			zkLogger.Error(LogTag, err)
+			zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+			return nil, &zkError
+		}
+
+		if rs.Deleted == true {
+			deletedScenarioIdList = append(deletedScenarioIdList, d.Id)
+		} else if rs.Disabled == true {
+			disabledScenarioIdList = append(disabledScenarioIdList, d.Id)
+		} else {
+			//workLoadIds := make(model.WorkloadIds, 0)
+			//for oldId, v := range *d.Workloads {
+			//	id := model.WorkLoadUUID(v)
+			//	if oldId != id.String() {
+			//		delete(*d.Workloads, oldId)
+			//		(*d.Workloads)[id.String()] = v
+			//	}
+			//	workLoadIds = append(workLoadIds, id.String())
+			//}
+			//d.Filter.WorkloadIds = &workLoadIds
+			scenarios = append(scenarios, d)
+		}
+	}
+
+	return transformer.FromScenarioArrayToScenarioResponse(&scenarios, &deletedScenarioIdList, &disabledScenarioIdList), nil
 }

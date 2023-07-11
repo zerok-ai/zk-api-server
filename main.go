@@ -2,6 +2,10 @@ package main
 
 import (
 	"main/app/cluster"
+	clusterHandler "main/app/cluster/handler"
+	scenarioHandler "main/app/scenario/handler"
+	"main/app/scenario/repository"
+	"main/app/scenario/service"
 	"main/internal/model"
 
 	"github.com/kataras/iris/v12"
@@ -22,11 +26,21 @@ func main() {
 	zkLogger.Info(LogTag, "")
 	zkLogger.Info(LogTag, "********* Initializing Application *********")
 	httpConfig.Init(cfg.Http.Debug)
-	zkPostgres.Init(cfg.Postgres)
 	zkLogger.Init(cfg.LogsConfig)
 	zkLogger.Debug(LogTag, "Parsed Configuration", cfg)
+	zkPostgresRepo, err := zkPostgres.NewZkPostgresRepo(cfg.Postgres)
+	if err != nil {
+		return
+	}
 
-	app := newApp()
+	zkLogger.Debug(LogTag, "Parsed Configuration", cfg)
+
+	rr := repository.NewZkPostgresRepo(zkPostgresRepo)
+	rs := service.NewScenarioService(rr)
+	rh := scenarioHandler.NewScenarioHandler(rs)
+	ch := clusterHandler.NewClusterHandler()
+
+	app := newApp(rh, ch)
 
 	config := iris.WithConfiguration(iris.Configuration{
 		DisablePathCorrection: true,
@@ -35,7 +49,7 @@ func main() {
 	app.Listen(":"+cfg.Server.Port, config)
 }
 
-func newApp() *iris.Application {
+func newApp(rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler) *iris.Application {
 	app := iris.Default()
 
 	crs := func(ctx iris.Context) {
@@ -67,7 +81,7 @@ func newApp() *iris.Application {
 	}).Describe("healthcheck")
 
 	v1 := app.Party("/v1")
-	cluster.Initialize(v1)
+	cluster.Initialize(v1, rh, ch)
 
 	return app
 }
