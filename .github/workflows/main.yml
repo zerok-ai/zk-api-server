@@ -46,11 +46,6 @@ jobs:
       - name: Build
         run: go build -o main main.go
       
-      - id: 'auth'
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v0'
-        with:
-          credentials_json: '${{ env.GKE_SA_KEY }}'
       - uses: actions/upload-artifact@v3
         with:
           name: helm-charts
@@ -67,9 +62,15 @@ jobs:
             Dockerfile
         
   docker-build:
+    needs: app-build
     environment: ${{ github.event.inputs.ENV }}
     runs-on: self-hosted
     steps:
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ env.GKE_SA_KEY }}'
       - uses: google-github-actions/setup-gcloud@v0
         with:
           version: latest
@@ -99,9 +100,15 @@ jobs:
             docker push "$DOCKER_REG/$PROJECT_ID/$DOCKER_REPO/$APP_NAME:$GITHUB_SHA"
             docker push  "$DOCKER_REG/$PROJECT_ID/$DOCKER_REPO/$APP_NAME:$DOCKER_TAG" 
   deploy:
+    needs: [app-build,docker-build]
     environment: ${{ github.event.inputs.ENV }}
     runs-on: self-hosted
     steps:  
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ env.GKE_SA_KEY }}'
       - uses: google-github-actions/setup-gcloud@v0
         with:
           version: latest
