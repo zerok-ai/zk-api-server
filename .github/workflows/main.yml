@@ -85,7 +85,11 @@ jobs:
            curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
            chmod 700 get_helm.sh
            ./get_helm.sh
-  
+      - name: copy plc db secrets to ${{ vars.NS }}
+        run: |-
+             kubectl create namespace $NS --dry-run=client -o yaml | kubectl apply -f -
+             kubectl -n plc get secret pl-db-secrets -o yaml | yq 'del(.metadata.creationTimestamp, .metadata.uid, .metadata.resourceVersion, .metadata.namespace)' | kubectl apply --namespace $NS  -f -
+           
 
       - name: Deploy
         run: |-
