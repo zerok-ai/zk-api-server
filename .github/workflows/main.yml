@@ -123,6 +123,9 @@ jobs:
            curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
            chmod 700 get_helm.sh
            ./get_helm.sh
+           gcloud components install kubectl
+           sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+           sudo chmod a+x /usr/local/bin/yq
       - name: copy plc db secrets to ${{ vars.NS }}
         run: |-
              kubectl create namespace $NS --dry-run=client -o yaml | kubectl apply -f -
