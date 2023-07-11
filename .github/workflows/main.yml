@@ -142,6 +142,6 @@ jobs:
              --set=app.DOMAIN=$DOMAIN \
              --set=app.URL=$URL \
              upgrade $APP_NAME \
-              -f ./helm-charts/$ENV.yaml ./ \
+              -f $ENV.yaml ./ \
               --create-namespace \
               --namespace $NS 
