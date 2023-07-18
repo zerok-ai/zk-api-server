@@ -130,6 +130,10 @@ jobs:
         run: |-
              kubectl create namespace $NS --dry-run=client -o yaml | kubectl apply -f -
              kubectl -n plc get secret pl-db-secrets -o yaml | yq 'del(.metadata.creationTimestamp, .metadata.uid, .metadata.resourceVersion, .metadata.namespace)' | kubectl apply --namespace $NS  -f -
+      - name: set PL_POSTGRES_PASSWORD and PL_POSTGRES_USERNAME environment variables
+        run: |-
+              export PL_POSTGRES_PASSWORD=$(kubectl get secret pl-db-secrets -n $NS -o jsonpath="{.data.PL_POSTGRES_PASSWORD}" | base64 --decode)
+              export PL_POSTGRES_USERNAME=$(kubectl get secret pl-db-secrets -n $NS -o jsonpath="{.data.PL_POSTGRES_USERNAME}" | base64 --decode)
       - uses: actions/download-artifact@v3
         with:
           name: helm-charts     
