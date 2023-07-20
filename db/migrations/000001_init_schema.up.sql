@@ -1,2 +1,29 @@
-drop table scenario_version;
-drop table scenario;
+CREATE TABLE IF NOT EXISTS scenario
+(
+    scenario_id    SERIAL PRIMARY KEY,
+    cluster_id     VARCHAR(255),
+    scenario_title VARCHAR(255),
+    disabled       BOOL         DEFAULT FALSE,
+    disabled_by    VARCHAR(255) DEFAULT NULL,
+    disabled_at    BIGINT       DEFAULT NULL,
+    scenario_type  VARCHAR(50),
+    is_default     BOOLEAN      DEFAULT false,
+    deleted        BOOLEAN      DEFAULT FALSE,
+    deleted_by     VARCHAR(255) DEFAULT NULL,
+    deleted_at     BIGINT       DEFAULT NULL
+);
+
+ALTER SEQUENCE scenario_scenario_id_seq RESTART WITH 1000;
+
+CREATE TABLE IF NOT EXISTS scenario_version
+(
+    scenario_version_id SERIAL PRIMARY KEY,
+    scenario_id         INTEGER REFERENCES scenario (scenario_id) ON DELETE CASCADE,
+    scenario_data       BYTEA,
+    schema_version      VARCHAR(255),
+    scenario_version    BIGINT,
+    created_by          VARCHAR(255),
+    created_at          BIGINT
+);
+
+ALTER SEQUENCE scenario_version_scenario_version_id_seq RESTART WITH 1000;
