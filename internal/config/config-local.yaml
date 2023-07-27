@@ -15,4 +15,4 @@ postgres:
   port: 5432
   user: "pl"
   password: "pl"
-  dbname: "pl"
+  dbname: "scenarios"
