@@ -16,6 +16,7 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 		clusterAPI.Get("/{clusterIdx}/pod/list", utils.ValidateApiKeyMiddleware, ch.GetPodList)
 		clusterAPI.Get("/{clusterIdx}/pod/details", utils.ValidateApiKeyMiddleware, ch.GetPodDetails)
 		clusterAPI.Get("/traces", utils.ValidateApiKeyMiddleware, ch.GetPxData)
+		clusterAPI.Get("/scenario", rh.GetAllScenario)
 	}
 
 	ruleEngineAPI := app.Party("/o/cluster")
