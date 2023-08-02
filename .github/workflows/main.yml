@@ -126,10 +126,10 @@ jobs:
            gcloud components install kubectl
            sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
            sudo chmod a+x /usr/local/bin/yq
-      - name: copy plc db secrets to ${{ vars.NS }}
-        run: |-
-             kubectl create namespace $NS --dry-run=client -o yaml | kubectl apply -f -
-             kubectl -n plc get secret pl-db-secrets -o yaml | yq 'del(.metadata.creationTimestamp, .metadata.uid, .metadata.resourceVersion, .metadata.namespace)' | kubectl apply --namespace $NS  -f -
+#      - name: copy plc db secrets to ${{ vars.NS }}
+#        run: |-
+#             kubectl create namespace $NS --dry-run=client -o yaml | kubectl apply -f -
+#             kubectl -n plc get secret pl-db-secrets -o yaml | yq 'del(.metadata.creationTimestamp, .metadata.uid, .metadata.resourceVersion, .metadata.namespace)' | kubectl apply --namespace $NS  -f -
       - uses: actions/download-artifact@v3
         with:
           name: helm-charts     
