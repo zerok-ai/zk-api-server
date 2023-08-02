@@ -517,10 +517,6 @@ def add_source_dest_columns(df):
     df.source = px.select(df.is_server_tracing, df.ra_name, df.pod)
     df.destination = px.select(df.is_server_tracing, df.pod, df.ra_name)
 
-    # Filter out messages with empty source / destination.
-    df = df[df.source != '']
-    df = df[df.destination != '']
-
     df = df.drop(['ra_pod', 'is_ra_pod', 'ra_name', 'is_server_tracing'])
 
     return df
