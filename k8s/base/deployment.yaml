@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: api-server
+  name: zk-api-server
   labels:
-    app: api-server
+    app: zk-api-server
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: api-server
+      app: zk-api-server
   template:
     metadata:
       labels:
-        app: api-server
+        app: zk-api-server
     spec:
       containers:
-        - name: api-server
+        - name: zk-api-server
           imagePullPolicy: Always
           image: us-west1-docker.pkg.dev/zerok-dev/api-server/zk-api-server:dev
           ports:

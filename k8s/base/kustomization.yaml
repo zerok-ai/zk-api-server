@@ -4,4 +4,4 @@ resources:
   - service.yaml
 namespace: zkcloud
 commonLabels:
-  app: api-server
+  app: zk-api-server
