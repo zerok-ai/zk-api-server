@@ -34,16 +34,19 @@ jobs:
     environment: ${{ github.event.inputs.ENV }}
     runs-on: zk-self-hosted
     steps:
-      - uses: shaunco/ssh-agent@git-repo-mapping # this action will configure git to use the right SSH key per each repository.
-        with:
-          ssh-private-key: |
-            ${{ secrets.GITPAT}}
-          repo-mappings: |
-            github.com/zerok-ai/zk-utils-go/
+#      - uses: shaunco/ssh-agent@git-repo-mapping # this action will configure git to use the right SSH key per each repository.
+#        with:
+#          ssh-private-key: |
+#            ${{ secrets.GITPAT}}
+#          repo-mappings: |
+#            github.com/zerok-ai/zk-utils-go/
       - name: Checkout
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITPAT }}
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.GITPAT }}
       - name: Configure git for private modules
         run: git config --global url."https://$TOKEN:x-oauth-basic@github.com/".insteadOf "https://github.com/"
 #      - name: Set up Go
