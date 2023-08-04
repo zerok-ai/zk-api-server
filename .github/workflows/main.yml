@@ -34,22 +34,12 @@ jobs:
     environment: ${{ github.event.inputs.ENV }}
     runs-on: zk-self-hosted
     steps:
-#      - uses: shaunco/ssh-agent@git-repo-mapping # this action will configure git to use the right SSH key per each repository.
-#        with:
-#          ssh-private-key: |
-#            ${{ secrets.GITPAT}}
-#          repo-mappings: |
-#            github.com/zerok-ai/zk-utils-go/
       - name: Checkout
         uses: actions/checkout@v3
-#      - uses: webfactory/ssh-agent@v0.8.0
-#        with:
-#          ssh-private-key: ${{ secrets.GITPAT }}
       - name: Configure git for private modules
         run: | 
           git config --global url."https://$TOKEN:x-oauth-basic@github.com/".insteadOf "https://github.com/"
           cat ~/.gitconfig
-
 #      - name: Set up Go
 #        uses: actions/setup-go@v4
 #        with:
@@ -78,11 +68,11 @@ jobs:
     environment: ${{ github.event.inputs.ENV }}
     runs-on: zk-self-hosted
     steps:
-#      - id: 'auth'
-#        name: 'Authenticate to Google Cloud'
-#        uses: 'google-github-actions/auth@v0'
-#        with:
-#          credentials_json: '${{ env.GKE_SA_KEY }}'
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: '${{ env.GKE_SA_KEY }}'
 #      - uses: google-github-actions/setup-gcloud@v0
 #        with:
 #          version: latest
