@@ -7,9 +7,13 @@ on:
             required: true
             default: 'poc'
         DOCKER_TAG:
-            description: 'docker image tag'
+            description: 'Docker Image Tag'
             required: true
             default: 'latest'
+        GKE_CLUSTER:
+            description: 'Cluster Name'
+            required: true
+            default: 'pxclient01'
         BUILD_AND_PUSH:
           type: boolean
           default: true
@@ -25,7 +29,7 @@ env:
   GOARCH: ${{ vars.GOARCH }}
   CGO_ENABLED: ${{ vars.CGO_ENABLED }}
   GKE_SA_KEY: ${{ secrets.GKE_SA_KEY }}
-  GKE_CLUSTER: ${{ vars.GKE_CLUSTER }}
+  GKE_CLUSTER: ${{ github.event.inputs.GKE_CLUSTER }}
   GKE_ZONE : ${{ vars.GKE_ZONE }}
   DOCKER_REG: ${{ vars.DOCKER_REG }}
   PROJECT_ID:  ${{ vars.PROJECT_ID }}
@@ -54,14 +58,16 @@ jobs:
       - name: Build
         if: ${{ env.BUILD_AND_PUSH == 'true' }}
         run: go build -o main main.go
-      
-      - uses: actions/upload-artifact@v3
+
+      - name: Uploading Helm Charts (for deploy)
+        uses: actions/upload-artifact@v3
         if: ${{ env.DEPLOY == 'true' }}
         with:
           name: helm-charts
           path: |
             helm-charts
-      - uses: actions/upload-artifact@v3
+      - name: Uploading Build files (for docker push)
+        uses: actions/upload-artifact@v3
         if: ${{ env.BUILD_AND_PUSH == 'true' }}
         with:
           name: build-artifacts
@@ -133,17 +139,17 @@ jobs:
       - uses: actions/download-artifact@v3
         if: ${{ env.DEPLOY == 'true' }}
         with:
-          name: helm-charts     
+          name: helm-charts
 
-#      - name: Deploy
-#        if: ${{ env.DEPLOY == 'true' }}
-#        run: |-
-#             helm --install  \
-#             --set=image.repository=$DOCKER_REG/$PROJECT_ID/$DOCKER_REPO/$APP_NAME \
-#             --set=image.tag=$DOCKER_TAG \
-#             --set=app.DOMAIN=$DOMAIN \
-#             --set=app.URL=$URL \
-#             upgrade $APP_NAME \
-#              -f $ENV.yaml ./ \
-#              --create-namespace \
-#              --namespace $NS
+      - name: Deploy
+        if: ${{ env.DEPLOY == 'true' }}
+        run: |-
+             helm --install  \
+             --set=image.repository=$DOCKER_REG/$PROJECT_ID/$DOCKER_REPO/$APP_NAME \
+             --set=image.tag=$DOCKER_TAG \
+             --set=app.DOMAIN=$DOMAIN \
+             --set=app.URL=$URL \
+             upgrade $APP_NAME \
+              -f $ENV.yaml ./ \
+              --create-namespace \
+              --namespace $NS
