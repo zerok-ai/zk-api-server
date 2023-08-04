@@ -34,6 +34,12 @@ jobs:
     environment: ${{ github.event.inputs.ENV }}
     runs-on: zk-self-hosted
     steps:
+      - uses: shaunco/ssh-agent@git-repo-mapping # this action will configure git to use the right SSH key per each repository.
+        with:
+          ssh-private-key: |
+            ${{ secrets.GITPAT}}
+          repo-mappings: |
+            github.com/zerok-ai/zk-utils-go/
       - name: Checkout
         uses: actions/checkout@v3
         with:
