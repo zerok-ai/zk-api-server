@@ -42,11 +42,14 @@ jobs:
 #            github.com/zerok-ai/zk-utils-go/
       - name: Checkout
         uses: actions/checkout@v3
-      - uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.GITPAT }}
+#      - uses: webfactory/ssh-agent@v0.8.0
+#        with:
+#          ssh-private-key: ${{ secrets.GITPAT }}
       - name: Configure git for private modules
-        run: git config --global url."https://$TOKEN:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+        run: | 
+          git config --global url."https://$TOKEN:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+          cat ~/.gitconfig
+
 #      - name: Set up Go
 #        uses: actions/setup-go@v4
 #        with:
