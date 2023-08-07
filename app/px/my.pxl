@@ -273,7 +273,7 @@ def service_let_graph(start_time: str):
 
     final_df = mdf.append(hdf)
 
-    return mdf
+    return final_df
 
 def inbound_let_timeseries(start_time: str, service: px.Service):
     ''' Compute the let as a timeseries for requests received by `service`.
