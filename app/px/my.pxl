@@ -114,17 +114,68 @@ def services_for_cluster(start_time: str):
     return df[['service', 'pod_count', 'http_latency_in', 'http_req_throughput_in', 'http_error_rate_in',
                'inbound_conns', 'outbound_conns']]
 
+def ip_to_pod_name(df, is_source: bool):
+    df.ip = px.select(is_source, df.source_ip, df.destination_ip)
+    df.pod_name = px.pod_id_to_pod_name(px.ip_to_pod_id(df.ip))
+    df.is_pod_name_present = df.pod_name != ''
+    df.workload_name = px.select(df.is_pod_name_present, df.pod_name, df.ip)
+    df = df.drop(['ip', 'is_pod_name_present', 'pod_name'])
+    return df
+
+
+def ip_to_service_name(df, is_source: bool):
+    df.ip = px.select(is_source, df.source_ip, df.destination_ip)
+    df.svc_name = px.service_id_to_service_name(px.ip_to_service_id(df.ip))
+    df.is_svc_name_present = df.svc_name != ''
+    df.workload_name = px.select(df.is_svc_name_present, df.svc_name, df.workload_name)
+    df = df.drop(['ip', 'svc_name', 'is_svc_name_present'])
+    return df
+
+def add_source_dest_columns_for_map_mysql(df):
+    df.pod = df.ctx['pod']
+    df.svc = df.ctx['service']
+    df.namespace = df.ctx['namespace']
+
+    df.local_ip = px.pod_name_to_pod_ip(df.pod)
+    df.remote_ip = df.remote_addr
+
+    df.is_server_tracing = df.trace_role == 2
+    df.is_source_pod_type = px.select(df.is_server_tracing, False, True)
+    df.is_dest_pod_type = px.select(df.is_server_tracing, True, False)
+
+    # Set source and destination based on trace_role.
+    df.source_ip = px.select(df.is_server_tracing, df.remote_ip, df.local_ip)
+    df.destination_ip = px.select(df.is_server_tracing, df.local_ip, df.remote_ip)
+
+    # Filter out messages with empty source / destination.
+    df = df[df.source_ip != '' or df.source_ip != '-' ]
+    df = df[df.destination_ip != '' or df.destination_ip != '-']
+
+    df = df.drop(['is_server_tracing', 'local_ip', 'remote_ip'])
+
+    return df
 
 def mysql_flow_graph(start_time: str):
-
     df = px.DataFrame('mysql_events', start_time=start_time)
-    df = add_source_dest_columns(df)
+    df = add_source_dest_columns_for_map_mysql(df)
+
+    df = ip_to_pod_name(df, True)
+    df = ip_to_service_name(df, True)
+    df.source_name = df.workload_name
+    df = df.drop(['workload_name'])
+
+    df = ip_to_pod_name(df, False)
+    df = ip_to_service_name(df, False)
+    df.destination_name = df.workload_name
+    df = df.drop(['workload_name'])
+
+    df = df[df.remote_port <= 0 ]
 
     # Create 10 ns bin for time_ column
     df.timestamp = px.bin(df.time_, window_ns)
 
-    df = df.groupby(['timestamp', 'source', 'destination', 'is_source_pod_type',
-                     'is_dest_pod_type', 'namespace']).agg(
+    df = df.groupby(['timestamp', 'source_name', 'destination_name', 'is_source_pod_type',
+                     'is_dest_pod_type', 'namespace', 'source_ip', 'destination_ip']).agg(
         latency_quantiles=('latency', px.quantiles),
         throughput_total=('latency', px.count),
     )
@@ -134,8 +185,8 @@ def mysql_flow_graph(start_time: str):
     df.latency_p99 = px.DurationNanos(px.floor(px.pluck_float64(df.latency_quantiles, 'p99')))
     df.request_throughput = df.throughput_total / window_ns
 
-    df = df.groupby(['source', 'destination', 'is_source_pod_type', 'is_dest_pod_type',
-                     'namespace']).agg(
+    df = df.groupby(['source_name', 'destination_name', 'is_source_pod_type', 'is_dest_pod_type',
+                     'namespace', 'source_ip', 'destination_ip']).agg(
         latency_p50=('latency_p50', px.mean),
         latency_p90=('latency_p90', px.mean),
         latency_p99=('latency_p99', px.mean),
@@ -193,17 +244,6 @@ def service_let_summary(start_time: str):
     return df[['service', 'http_latency_in', 'http_req_throughput_in', 'http_error_rate_in',
                'inbound_conns', 'outbound_conns']]
 
-
-def mysql_summary_with_links(start_time: str):
-
-    df = mysql_flow_graph(start_time)
-    # df = add_source_dest_links(df, start_time)
-    df = df[['source', 'destination', 'latency_p50', 'latency_p90',
-            'latency_p99', 'request_throughput', 'throughput_total']]
-
-    return df
-
-
 def service_http_graph(start_time: str):
     ''' Compute a summary of traffic by requesting service, for requests on services
         in the current cluster.
@@ -239,12 +279,19 @@ def service_http_graph(start_time: str):
 def service_mysql_graph(start_time: str):
     mdf = mysql_summary_with_links(start_time)
 
-    mdf.requestor_service = px.pod_name_to_service_name(mdf.source)
-    mdf.responder_service = px.pod_name_to_service_name(mdf.destination)
-    mdf.requestor_pod = mdf.source
-    mdf.responder_pod = mdf.destination
-    mdf.requestor_ip = px.pod_name_to_pod_ip(mdf.source)
-    mdf.responder_ip = px.pod_name_to_pod_ip(mdf.destination)
+    mdf.requestor_service = mdf.source_name
+    mdf.responder_service = mdf.destination_name
+
+    mdf = ip_to_pod_name(mdf, True)
+    mdf.requestor_pod = mdf.workload_name
+    mdf = mdf.drop(['workload_name'])
+
+    mdf = ip_to_pod_name(mdf, False)
+    mdf.responder_pod = mdf.workload_name
+    mdf = mdf.drop(['workload_name'])
+
+    mdf.requestor_ip = mdf.source_ip
+    mdf.responder_ip = mdf.destination_ip
     mdf.error_rate = 0.0
     mdf.inbound_throughput = 0.0
     mdf.outbound_throughput = 0.0
@@ -266,12 +313,31 @@ def service_mysql_graph(start_time: str):
         'throughput_total'
     ]]
 
+def mysql_summary_with_links(start_time: str):
+
+    df = mysql_flow_graph(start_time)
+    # df = add_source_dest_links(df, start_time)
+    df = df[['source_name', 'destination_name', 'latency_p50', 'latency_p90',
+            'latency_p99', 'request_throughput', 'throughput_total', 'source_ip', 'destination_ip']]
+
+    return df
 
 def service_let_graph(start_time: str):
     hdf = service_http_graph(start_time)
     mdf = service_mysql_graph(start_time)
 
     final_df = mdf.append(hdf)
+    final_df = final_df[final_df.requestor_ip != '-']
+    final_df = final_df[final_df.responder_ip != '-']
+
+    final_df.cluster_cidrs = px.get_cidrs()
+    final_df.dest_ip_is_in_cluster = px.cidrs_contain_ip(final_df.cluster_cidrs, final_df.responder_ip)
+    final_df.source_ip_is_in_cluster = px.cidrs_contain_ip(final_df.cluster_cidrs, final_df.requestor_ip)
+
+    final_df.responder_service = px.select(final_df.dest_ip_is_in_cluster, final_df.responder_service, 'External')
+    final_df.requestor_service = px.select(final_df.source_ip_is_in_cluster, final_df.requestor_service, 'External')
+
+    final_df = final_df.drop(['cluster_cidrs', 'dest_ip_is_in_cluster', 'source_ip_is_in_cluster'])
 
     return final_df
 
