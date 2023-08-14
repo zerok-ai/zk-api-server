@@ -1,7 +1,7 @@
 package main
 
 import (
-	"main/app/cluster"
+	zkapp "main/app"
 	clusterHandler "main/app/cluster/handler"
 	scenarioHandler "main/app/scenario/handler"
 	"main/app/scenario/repository"
@@ -81,7 +81,7 @@ func newApp(rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler
 	}).Describe("healthcheck")
 
 	v1 := app.Party("/v1")
-	cluster.Initialize(v1, rh, ch)
+	zkapp.Initialize(v1, rh, ch)
 
 	return app
 }

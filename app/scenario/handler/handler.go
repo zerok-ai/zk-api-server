@@ -12,10 +12,16 @@ import (
 
 type ScenarioHandler interface {
 	GetAllScenario(ctx iris.Context)
+	CreateScenario(ctx iris.Context)
 }
 
 type scenarioHandler struct {
 	service service.ScenarioService
+}
+
+func (r scenarioHandler) CreateScenario(ctx iris.Context) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func NewScenarioHandler(s service.ScenarioService) ScenarioHandler {

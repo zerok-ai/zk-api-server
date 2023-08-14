@@ -1,4 +1,4 @@
-package cluster
+package app
 
 import (
 	"github.com/kataras/iris/v12/core/router"

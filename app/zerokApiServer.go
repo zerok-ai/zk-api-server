@@ -2,7 +2,6 @@ package app
 
 import (
 	"github.com/kataras/iris/v12"
-	"main/app/cluster"
 )
 
 func newApp() *iris.Application {
@@ -33,7 +32,7 @@ func newApp() *iris.Application {
 	app.AllowMethods(iris.MethodOptions)
 
 	v1 := app.Party("/v1")
-	cluster.Initialize(v1, nil, nil)
+	Initialize(v1, nil, nil)
 
 	return app
 }

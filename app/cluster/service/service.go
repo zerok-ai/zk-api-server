@@ -29,6 +29,7 @@ type ClusterService interface {
 	GetPodDetailsTimeSeries(ctx iris.Context, clusterIdx, podName, ns, st, apiKey string) (*transformer.PodDetailsPixieHTTPResponse, *zkerrors.ZkError)
 	GetPxlData(ctx iris.Context, clusterIdx, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.PixieTraceData], *zkerrors.ZkError)
 	GetPodList(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.PodDetails], *zkerrors.ZkError)
+	//CreateScenario(ctx iris.Context, clusterIdx string)
 }
 
 type clusterService struct {
