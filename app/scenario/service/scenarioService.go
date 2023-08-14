@@ -6,8 +6,8 @@ import (
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/scenario/model"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
-	"main/app/scenario/repository"
-	"main/app/scenario/transformer"
+	"zk-api-server/app/scenario/repository"
+	"zk-api-server/app/scenario/transformer"
 )
 
 var LogTag = "scenario_service"

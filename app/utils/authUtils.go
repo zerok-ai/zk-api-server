@@ -5,7 +5,7 @@ import (
 	_ "github.com/zerok-ai/zk-utils-go/http"
 	zkHttp "github.com/zerok-ai/zk-utils-go/http"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
-	"main/app/utils/errors"
+	"zk-api-server/app/utils/errors"
 )
 
 func ValidateApiKeyMiddleware(ctx iris.Context) {

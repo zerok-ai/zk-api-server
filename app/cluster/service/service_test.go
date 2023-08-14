@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
-	"main/app/tablemux"
-	"main/app/tablemux/mocks"
-	"main/app/utils"
-	"main/app/utils/errors"
 	"testing"
+	"zk-api-server/app/tablemux"
+	"zk-api-server/app/tablemux/mocks"
+	"zk-api-server/app/utils"
+	"zk-api-server/app/utils/errors"
 )
 
 type ServiceTestSuite struct {

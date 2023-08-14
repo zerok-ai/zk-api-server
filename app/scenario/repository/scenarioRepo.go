@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/storage/sqlDB"
-	scenarioResponseModel "main/app/scenario/model"
+	scenarioResponseModel "zk-api-server/app/scenario/model"
 )
 
 const (

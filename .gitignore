@@ -3,4 +3,5 @@
 vendor/
 main
 coverage.out
+zk-api-server
 

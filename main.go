@@ -1,12 +1,12 @@
 package main
 
 import (
-	zkapp "main/app"
-	clusterHandler "main/app/cluster/handler"
-	scenarioHandler "main/app/scenario/handler"
-	"main/app/scenario/repository"
-	"main/app/scenario/service"
-	"main/internal/model"
+	zkapp "zk-api-server/app"
+	clusterHandler "zk-api-server/app/cluster/handler"
+	scenarioHandler "zk-api-server/app/scenario/handler"
+	"zk-api-server/app/scenario/repository"
+	"zk-api-server/app/scenario/service"
+	"zk-api-server/internal/model"
 
 	"github.com/kataras/iris/v12"
 	zkConfig "github.com/zerok-ai/zk-utils-go/config"

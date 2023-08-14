@@ -3,12 +3,12 @@ package handler
 import (
 	"github.com/kataras/iris/v12"
 	zkHttp "github.com/zerok-ai/zk-utils-go/http"
-	"main/app/cluster/service"
-	"main/app/cluster/transformer"
-	"main/app/cluster/validation"
-	"main/app/tablemux"
-	"main/app/tablemux/handlerimplementation"
-	"main/app/utils"
+	"zk-api-server/app/cluster/service"
+	"zk-api-server/app/cluster/transformer"
+	"zk-api-server/app/cluster/validation"
+	"zk-api-server/app/tablemux"
+	"zk-api-server/app/tablemux/handlerimplementation"
+	"zk-api-server/app/utils"
 )
 
 type ClusterHandler interface {

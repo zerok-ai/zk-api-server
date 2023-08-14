@@ -3,9 +3,9 @@ package validation
 import (
 	zkCommon "github.com/zerok-ai/zk-utils-go/common"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
-	"main/app/utils"
-	"main/app/utils/errors"
 	"strconv"
+	"zk-api-server/app/utils"
+	"zk-api-server/app/utils/errors"
 )
 
 func ValidatePxlTime(s string) bool {

@@ -1,4 +1,4 @@
-module main
+module zk-api-server
 
 go 1.18
 

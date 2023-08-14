@@ -6,8 +6,8 @@ import (
 	"errors"
 	zkCommon "github.com/zerok-ai/zk-utils-go/common"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
-	"main/app/scenario/repository/mocks"
 	"testing"
+	"zk-api-server/app/scenario/repository/mocks"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

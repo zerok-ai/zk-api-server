@@ -2,9 +2,9 @@ package handlerimplementation
 
 import (
 	"encoding/json"
-	"main/app/utils"
 	"px.dev/pxapi/proto/vizierpb"
 	"px.dev/pxapi/types"
+	"zk-api-server/app/utils"
 )
 
 func ConvertPixieDataToItemStore[itemType ItemType](r *types.Record) itemType {

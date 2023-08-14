@@ -6,14 +6,14 @@ import (
 	zkCommon "github.com/zerok-ai/zk-utils-go/common"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"log"
-	"main/app/cluster/transformer"
-	"main/app/cluster/validation"
-	"main/app/tablemux"
-	"main/app/tablemux/handlerimplementation"
-	"main/app/utils"
-	"main/app/utils/errors"
 	"os"
 	"px.dev/pxapi"
+	"zk-api-server/app/cluster/transformer"
+	"zk-api-server/app/cluster/validation"
+	"zk-api-server/app/tablemux"
+	"zk-api-server/app/tablemux/handlerimplementation"
+	"zk-api-server/app/utils"
+	"zk-api-server/app/utils/errors"
 )
 
 type Details struct {

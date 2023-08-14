@@ -3,13 +3,13 @@
 package mocks
 
 import (
-	handlerimplementation "main/app/tablemux/handlerimplementation"
+	handlerimplementation "zk-api-server/app/tablemux/handlerimplementation"
 
 	context "github.com/kataras/iris/v12/context"
 
 	mock "github.com/stretchr/testify/mock"
 
-	transformer "main/app/cluster/transformer"
+	transformer "zk-api-server/app/cluster/transformer"
 
 	zkerrors "github.com/zerok-ai/zk-utils-go/zkerrors"
 )

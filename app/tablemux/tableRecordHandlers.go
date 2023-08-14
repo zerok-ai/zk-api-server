@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"main/app/utils/errors"
 	"os"
 	"px.dev/pxapi"
 	"px.dev/pxapi/errdefs"
 	"text/template"
+	"zk-api-server/app/utils/errors"
 
 	"github.com/kataras/iris/v12"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"

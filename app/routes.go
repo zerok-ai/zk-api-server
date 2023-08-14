@@ -2,9 +2,9 @@ package app
 
 import (
 	"github.com/kataras/iris/v12/core/router"
-	clusterHandler "main/app/cluster/handler"
-	scenarioHandler "main/app/scenario/handler"
-	"main/app/utils"
+	clusterHandler "zk-api-server/app/cluster/handler"
+	scenarioHandler "zk-api-server/app/scenario/handler"
+	"zk-api-server/app/utils"
 )
 
 func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler) {

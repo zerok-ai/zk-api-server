@@ -3,8 +3,8 @@
 package mocks
 
 import (
-	scenarioResponseModel "main/app/scenario/model"
-	repository "main/app/scenario/repository"
+	scenarioResponseModel "zk-api-server/app/scenario/model"
+	repository "zk-api-server/app/scenario/repository"
 
 	mock "github.com/stretchr/testify/mock"
 )

@@ -3,11 +3,11 @@ package handler
 import (
 	"github.com/kataras/iris/v12"
 	zkHttp "github.com/zerok-ai/zk-utils-go/http"
-	"main/app/cluster/validation"
-	"main/app/scenario/service"
-	"main/app/scenario/transformer"
-	"main/app/utils"
 	"strconv"
+	"zk-api-server/app/cluster/validation"
+	"zk-api-server/app/scenario/service"
+	"zk-api-server/app/scenario/transformer"
+	"zk-api-server/app/utils"
 )
 
 type ScenarioHandler interface {

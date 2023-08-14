@@ -2,8 +2,8 @@ package validation
 
 import (
 	"github.com/zerok-ai/zk-utils-go/common"
-	"main/app/utils/errors"
 	"testing"
+	"zk-api-server/app/utils/errors"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"

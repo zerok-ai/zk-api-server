@@ -4,7 +4,7 @@ import (
 	"px.dev/pxapi"
 
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
-	"main/app/tablemux/handlerimplementation"
+	"zk-api-server/app/tablemux/handlerimplementation"
 )
 
 type PixieHTTPResponse[T handlerimplementation.ItemType] struct {
