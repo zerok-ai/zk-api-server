@@ -169,7 +169,7 @@ def mysql_flow_graph(start_time: str):
     df.destination_name = df.workload_name
     df = df.drop(['workload_name'])
 
-    df = df[df.remote_port <= 0 ]
+    df = df[df.remote_port > 0 ]
 
     # Create 10 ns bin for time_ column
     df.timestamp = px.bin(df.time_, window_ns)
