@@ -3,12 +3,15 @@ package handler
 import (
 	"github.com/kataras/iris/v12"
 	zkHttp "github.com/zerok-ai/zk-utils-go/http"
+	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"strconv"
 	"zk-api-server/app/cluster/validation"
 	"zk-api-server/app/scenario/service"
 	"zk-api-server/app/scenario/transformer"
 	"zk-api-server/app/utils"
 )
+
+var LogTag = "scenario_handler"
 
 type ScenarioHandler interface {
 	GetAllScenario(ctx iris.Context)
@@ -20,8 +23,9 @@ type scenarioHandler struct {
 }
 
 func (r scenarioHandler) CreateScenario(ctx iris.Context) {
-	//TODO implement me
-	panic("implement me")
+	clusterId := ctx.GetHeader(utils.ClusterIdHeader)
+	zkLogger.Debug(LogTag, "ClusterId is ", clusterId)
+
 }
 
 func NewScenarioHandler(s service.ScenarioService) ScenarioHandler {
