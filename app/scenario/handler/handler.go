@@ -25,6 +25,12 @@ type scenarioHandler struct {
 }
 
 func (r scenarioHandler) CreateScenario(ctx iris.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			zkLogger.Error(LogTag, "Recovered from panic ", r)
+			//Send 500 response.
+		}
+	}()
 	clusterId := ctx.GetHeader(utils.ClusterIdHeader)
 	zkLogger.Debug(LogTag, "ClusterId is ", clusterId)
 	var request model2.CreateScenarioRequest
@@ -32,6 +38,7 @@ func (r scenarioHandler) CreateScenario(ctx iris.Context) {
 	// Get the request body as []byte
 	body, err := ctx.GetBody()
 	if err != nil {
+		//TODO: Do this using util-go.
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.WriteString("Error reading request body")
 		return
@@ -39,11 +46,15 @@ func (r scenarioHandler) CreateScenario(ctx iris.Context) {
 
 	// Unmarshal the JSON request body into the struct
 	if err := json.Unmarshal(body, &request); err != nil {
+		//TODO: Do this using util-go.
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.WriteString("Error decoding JSON")
 		return
 	}
-	r.service.CreateScenario(clusterId, request)
+	err = r.service.CreateScenario(clusterId, request)
+	if err != nil {
+		//Send 500 response.
+	}
 }
 
 func NewScenarioHandler(s service.ScenarioService) ScenarioHandler {

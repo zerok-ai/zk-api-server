@@ -2,6 +2,8 @@ package repository
 
 import (
 	"database/sql"
+	"encoding/json"
+	"github.com/zerok-ai/zk-utils-go/common"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/storage/sqlDB"
 	scenarioResponseModel "zk-api-server/app/scenario/model"
@@ -9,9 +11,10 @@ import (
 )
 
 const (
-	DefaultClusterId             = "Zk_default_cluster_id_for_all_scenarios"
-	GetAllScenarioSqlStatement   = `SELECT scenario_data, deleted, disabled FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE (scenario_version>$1 OR deleted_at>$2 OR disabled_at>$3) AND (cluster_id=$4 OR cluster_id=$5)`
-	InsertScenarioTableStatement = "INSERT INTO scenario (cluster_id, scenario_title, scenario_type) VALUES ($1, $2, $3) RETURNING scenario_id"
+	DefaultClusterId                    = "Zk_default_cluster_id_for_all_scenarios"
+	GetAllScenarioSqlStatement          = `SELECT scenario_data, deleted, disabled FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE (scenario_version>$1 OR deleted_at>$2 OR disabled_at>$3) AND (cluster_id=$4 OR cluster_id=$5)`
+	InsertScenarioTableStatement        = "INSERT INTO scenario (cluster_id, scenario_title, scenario_type) VALUES ($1, $2, $3) RETURNING scenario_id"
+	InsertScenarioVersionTableStatement = "INSERT INTO scenario_version (scenario_id, scenario_data, schema_version, scenario_version, created_by, created_at) VALUES ($1, $2, $3, $4, $5, $6)"
 )
 
 var LogTag = "scenario_repo"
@@ -47,9 +50,9 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 
 	params := []any{clusterId, request.ScenarioTitle, request.ScenarioType}
 
-	var scenarioId string
+	var scenarioId int
 
-	//TODO: Discuss with vaibhav about this.
+	//TODO: Discuss with vaibhav about this. Should scenario id state from 1000?
 	err = zkPostgresRepo.dbRepo.Get(InsertScenarioTableStatement, params, []any{&scenarioId})
 
 	if err != nil {
@@ -59,11 +62,52 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 
 	zkLogger.Debug(LogTag, "New scenarioId is ", scenarioId)
 
-	err = tx.Commit()
+	scenarioObj := request.CreateScenarioObj(scenarioId)
+	scenarioData, err := json.Marshal(scenarioObj)
+
 	if err != nil {
-		zkLogger.Error(LogTag, "Error while committing a db transaction in createNewScenario ", err)
+		zkLogger.Error(LogTag, "Error while serializing scenario data ", err)
 		return err
 	}
+
+	currentTime := common.CurrentTime()
+	epochTime := currentTime.Unix()
+
+	scenarioVersionParams := scenarioResponseModel.ScenarioVersionInsertParams{
+		ScenarioId:      scenarioId,
+		ScenarioVersion: epochTime,
+		ScenarioData:    string(scenarioData),
+		SchemaVersion:   "v1",
+		CreatedAt:       epochTime,
+		CreatedBy:       "dashboard",
+	}
+
+	stmt, err := common.GetStmtRawQuery(tx, InsertScenarioVersionTableStatement)
+
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while creating the scenario version insert stmt ", err)
+		return err
+	}
+
+	_, err = zkPostgresRepo.dbRepo.Insert(stmt, scenarioVersionParams)
+
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while inserting into the scenario version table. ", err)
+		return err
+	}
+
+	//TODO: Discuss with vaibhav that db connection is getting closed after insert.
+	done, err2 := common.CommitTransaction(tx, LogTag)
+	if err2 != nil {
+		zkLogger.Error(LogTag, "Error while committing a db transaction in createNewScenario ", err2.Error)
+		return err
+	}
+
+	if !done {
+		zkLogger.Error(LogTag, "Transaction commit failed. ")
+		return err
+	}
+
 	zkLogger.Debug(LogTag, "Reached the end of the handler method.")
 	return nil
 }
