@@ -137,7 +137,7 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 		zkLogger.Error(LogTag, "Error while inserting into the scenario version table. ", err)
 		return handleTxError(tx, err)
 	}
-	
+
 	done, err2 := common.CommitTransaction(tx, LogTag)
 	if err2 != nil {
 		zkLogger.Error(LogTag, "Error while committing a db transaction in createNewScenario ", err2.Error)

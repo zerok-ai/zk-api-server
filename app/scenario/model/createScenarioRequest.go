@@ -19,6 +19,9 @@ type CreateScenarioRequest struct {
 	GroupBy       []GroupByItem    `json:"group_by"`
 }
 
+type CreateScenarioResponse struct {
+}
+
 func (cs CreateScenarioRequest) CreateScenarioObj(scenarioId int) model.Scenario {
 	var workloadMap = make(map[string]model.Workload)
 	currentTime := common.CurrentTime()

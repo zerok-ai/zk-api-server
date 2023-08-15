@@ -15,17 +15,18 @@ var LogTag = "scenario_service"
 
 type ScenarioService interface {
 	GetAllScenario(clusterId string, version int64, deleted bool, offset, limit int) (*transformer.ScenarioResponse, *zkerrors.ZkError)
-	CreateScenario(clusterId string, request model2.CreateScenarioRequest) error
+	CreateScenario(clusterId string, request model2.CreateScenarioRequest) *zkerrors.ZkError
 }
 
 type scenarioService struct {
 	repo repository.ScenarioRepo
 }
 
-func (r scenarioService) CreateScenario(clusterId string, request model2.CreateScenarioRequest) error {
+func (r scenarioService) CreateScenario(clusterId string, request model2.CreateScenarioRequest) *zkerrors.ZkError {
 	err := r.repo.CreateNewScenario(clusterId, request)
 	if err != nil {
-		return err
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		return &zkError
 	}
 	return nil
 }

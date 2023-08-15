@@ -38,23 +38,24 @@ func (r scenarioHandler) CreateScenario(ctx iris.Context) {
 	// Get the request body as []byte
 	body, err := ctx.GetBody()
 	if err != nil {
-		//TODO: Do this using util-go.
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.WriteString("Error reading request body")
 		return
 	}
 
 	// Unmarshal the JSON request body into the struct
-	if err := json.Unmarshal(body, &request); err != nil {
-		//TODO: Do this using util-go.
+	err = json.Unmarshal(body, &request)
+	if err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.WriteString("Error decoding JSON")
 		return
 	}
-	err = r.service.CreateScenario(clusterId, request)
-	if err != nil {
-		//Send 500 response.
-	}
+	zkError := r.service.CreateScenario(clusterId, request)
+	resp := model2.CreateScenarioResponse{}
+	zkHttpResponse := zkHttp.ToZkResponse[model2.CreateScenarioResponse](200, resp, nil, zkError)
+	ctx.StatusCode(zkHttpResponse.Status)
+	ctx.JSON(zkHttpResponse)
+
 }
 
 func NewScenarioHandler(s service.ScenarioService) ScenarioHandler {
