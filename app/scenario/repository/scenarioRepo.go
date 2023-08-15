@@ -5,11 +5,13 @@ import (
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/storage/sqlDB"
 	scenarioResponseModel "zk-api-server/app/scenario/model"
+	"zk-api-server/app/utils/errors"
 )
 
 const (
-	DefaultClusterId           = "Zk_default_cluster_id_for_all_scenarios"
-	GetAllScenarioSqlStatement = `SELECT scenario_data, deleted, disabled FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE (scenario_version>$1 OR deleted_at>$2 OR disabled_at>$3) AND (cluster_id=$4 OR cluster_id=$5)`
+	DefaultClusterId             = "Zk_default_cluster_id_for_all_scenarios"
+	GetAllScenarioSqlStatement   = `SELECT scenario_data, deleted, disabled FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE (scenario_version>$1 OR deleted_at>$2 OR disabled_at>$3) AND (cluster_id=$4 OR cluster_id=$5)`
+	InsertScenarioTableStatement = "INSERT INTO scenario (cluster_id, scenario_title, scenario_type) VALUES ($1, $2, $3) RETURNING scenario_id"
 )
 
 var LogTag = "scenario_repo"
@@ -24,6 +26,7 @@ type ScenarioQueryFilter struct {
 
 type ScenarioRepo interface {
 	GetAllScenario(filters *ScenarioQueryFilter) (*[]scenarioResponseModel.ScenarioDbResponse, error)
+	CreateNewScenario(clusterId string, request scenarioResponseModel.CreateScenarioRequest) error
 }
 
 type zkPostgresRepo struct {
@@ -32,6 +35,37 @@ type zkPostgresRepo struct {
 
 func NewZkPostgresRepo(db sqlDB.DatabaseRepo) ScenarioRepo {
 	return &zkPostgresRepo{db}
+}
+
+func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request scenarioResponseModel.CreateScenarioRequest) error {
+	tx, err := zkPostgresRepo.dbRepo.CreateTransaction()
+
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while creating a db transaction in createNewScenario ", err)
+		return errors.ErrInternalServerError
+	}
+
+	params := []any{clusterId, request.ScenarioTitle, request.ScenarioType}
+
+	var scenarioId string
+
+	//TODO: Discuss with vaibhav about this.
+	err = zkPostgresRepo.dbRepo.Get(InsertScenarioTableStatement, params, []any{&scenarioId})
+
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while executing the insert query ", err)
+		return err
+	}
+
+	zkLogger.Debug(LogTag, "New scenarioId is ", scenarioId)
+
+	err = tx.Commit()
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while committing a db transaction in createNewScenario ", err)
+		return err
+	}
+	zkLogger.Debug(LogTag, "Reached the end of the handler method.")
+	return nil
 }
 
 func (zkPostgresRepo zkPostgresRepo) GetAllScenario(filters *ScenarioQueryFilter) (*[]scenarioResponseModel.ScenarioDbResponse, error) {

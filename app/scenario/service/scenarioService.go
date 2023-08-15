@@ -6,6 +6,7 @@ import (
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/scenario/model"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
+	model2 "zk-api-server/app/scenario/model"
 	"zk-api-server/app/scenario/repository"
 	"zk-api-server/app/scenario/transformer"
 )
@@ -14,10 +15,19 @@ var LogTag = "scenario_service"
 
 type ScenarioService interface {
 	GetAllScenario(clusterId string, version int64, deleted bool, offset, limit int) (*transformer.ScenarioResponse, *zkerrors.ZkError)
+	CreateScenario(clusterId string, request model2.CreateScenarioRequest) error
 }
 
 type scenarioService struct {
 	repo repository.ScenarioRepo
+}
+
+func (r scenarioService) CreateScenario(clusterId string, request model2.CreateScenarioRequest) error {
+	err := r.repo.CreateNewScenario(clusterId, request)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func NewScenarioService(repo repository.ScenarioRepo) ScenarioService {

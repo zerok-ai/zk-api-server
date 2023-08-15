@@ -35,3 +35,13 @@ type CreateScenarioRequest struct {
 	Workloads     []Workload    `json:"workloads"`
 	GroupBy       []GroupByItem `json:"group_by"`
 }
+
+type ScenarioInsertParams struct {
+	ClusterId     string `json:"cluster_id"`
+	ScenarioTitle string `json:"scenario_title"`
+	ScenarioType  string `json:"scenario_type"`
+}
+
+func (si ScenarioInsertParams) GetAllColumns() []any {
+	return []any{si.ClusterId, si.ScenarioTitle, si.ScenarioType}
+}
