@@ -3,18 +3,19 @@ package repository
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"github.com/zerok-ai/zk-utils-go/common"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/storage/sqlDB"
 	scenarioResponseModel "zk-api-server/app/scenario/model"
-	"zk-api-server/app/utils/errors"
 )
 
 const (
 	DefaultClusterId                    = "Zk_default_cluster_id_for_all_scenarios"
 	GetAllScenarioSqlStatement          = `SELECT scenario_data, deleted, disabled FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE (scenario_version>$1 OR deleted_at>$2 OR disabled_at>$3) AND (cluster_id=$4 OR cluster_id=$5)`
-	InsertScenarioTableStatement        = "INSERT INTO scenario (cluster_id, scenario_title, scenario_type) VALUES ($1, $2, $3) RETURNING scenario_id"
+	InsertScenarioTableStatement        = "INSERT INTO scenario (scenario_id, cluster_id, scenario_title, scenario_type) VALUES ($1, $2, $3, $4)"
 	InsertScenarioVersionTableStatement = "INSERT INTO scenario_version (scenario_id, scenario_data, schema_version, scenario_version, created_by, created_at) VALUES ($1, $2, $3, $4, $5, $6)"
+	HighestScenarioIdStatement          = "SELECT MAX(scenario_id) FROM scenario"
 )
 
 var LogTag = "scenario_repo"
@@ -40,34 +41,75 @@ func NewZkPostgresRepo(db sqlDB.DatabaseRepo) ScenarioRepo {
 	return &zkPostgresRepo{db}
 }
 
+func handleTxError(tx *sql.Tx, err2 error) error {
+	var err error = nil
+	err = tx.Rollback()
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while rolling back the transaction ", err)
+	}
+	return err2
+}
+
 func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request scenarioResponseModel.CreateScenarioRequest) error {
 	tx, err := zkPostgresRepo.dbRepo.CreateTransaction()
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while creating a db transaction in createNewScenario ", err)
-		return errors.ErrInternalServerError
+		return handleTxError(tx, err)
 	}
 
-	params := []any{clusterId, request.ScenarioTitle, request.ScenarioType}
+	// Set the isolation level to Serializable for a strong write lock
+	_, err = tx.Exec("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while setting the transaction level to serializable ", err)
+		return handleTxError(tx, err)
+	}
 
-	var scenarioId int
+	var highestScenarioId int
 
-	//TODO: Discuss with vaibhav about this. Should scenario id state from 1000?
-	err = zkPostgresRepo.dbRepo.Get(InsertScenarioTableStatement, params, []any{&scenarioId})
+	err = tx.QueryRow(HighestScenarioIdStatement).Scan(&highestScenarioId)
+	if err != nil {
+		return handleTxError(tx, err)
+	}
+
+	scenarioId := 1000
 
 	if err != nil {
-		zkLogger.Error(LogTag, "Error while executing the insert query ", err)
-		return err
+		return handleTxError(tx, err)
+	}
+
+	if highestScenarioId >= 1000 {
+		scenarioId = highestScenarioId + 1
 	}
 
 	zkLogger.Debug(LogTag, "New scenarioId is ", scenarioId)
+
+	scenarioInsertParams := scenarioResponseModel.ScenarioInsertParams{
+		ScenarioId:    scenarioId,
+		ClusterId:     clusterId,
+		ScenarioType:  request.ScenarioType,
+		ScenarioTitle: request.ScenarioTitle,
+	}
+	scenarioInsertStmt, err := common.GetStmtRawQuery(tx, InsertScenarioTableStatement)
+
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while creating the scenario insert scenarioVersionStmt ", err)
+		return handleTxError(tx, err)
+	}
+
+	_, insertErr := zkPostgresRepo.dbRepo.Insert(scenarioInsertStmt, scenarioInsertParams)
+
+	if insertErr != nil {
+		zkLogger.Error(LogTag, "Error while executing the insert query ", err)
+		return handleTxError(tx, err)
+	}
 
 	scenarioObj := request.CreateScenarioObj(scenarioId)
 	scenarioData, err := json.Marshal(scenarioObj)
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while serializing scenario data ", err)
-		return err
+		return handleTxError(tx, err)
 	}
 
 	currentTime := common.CurrentTime()
@@ -82,24 +124,24 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 		CreatedBy:       "dashboard",
 	}
 
-	stmt, err := common.GetStmtRawQuery(tx, InsertScenarioVersionTableStatement)
+	scenarioVersionStmt, err := common.GetStmtRawQuery(tx, InsertScenarioVersionTableStatement)
 
 	if err != nil {
-		zkLogger.Error(LogTag, "Error while creating the scenario version insert stmt ", err)
-		return err
+		zkLogger.Error(LogTag, "Error while creating the scenario version insert scenarioVersionStmt ", err)
+		return handleTxError(tx, err)
 	}
 
-	_, err = zkPostgresRepo.dbRepo.Insert(stmt, scenarioVersionParams)
+	_, err = zkPostgresRepo.dbRepo.Insert(scenarioVersionStmt, scenarioVersionParams)
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while inserting into the scenario version table. ", err)
-		return err
+		return handleTxError(tx, err)
 	}
-
-	//TODO: Discuss with vaibhav that db connection is getting closed after insert.
+	
 	done, err2 := common.CommitTransaction(tx, LogTag)
 	if err2 != nil {
 		zkLogger.Error(LogTag, "Error while committing a db transaction in createNewScenario ", err2.Error)
+		err = errors.New(err2.Error.Message)
 		return err
 	}
 
