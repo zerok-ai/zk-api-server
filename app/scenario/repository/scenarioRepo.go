@@ -51,6 +51,7 @@ func handleTxError(tx *sql.Tx, err2 error) error {
 }
 
 func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request scenarioResponseModel.CreateScenarioRequest) error {
+	//TODO: Get this reviewed by vaibhav.
 	tx, err := zkPostgresRepo.dbRepo.CreateTransaction()
 
 	if err != nil {
