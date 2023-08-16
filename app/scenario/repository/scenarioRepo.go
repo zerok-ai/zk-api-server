@@ -44,11 +44,9 @@ func handleTxError(tx *sql.Tx, err2 error) error {
 	done, err := common.RollbackTransaction(tx, LogTag)
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while rolling back the transaction ", err.Error)
-		//TODO: Should I add retry mechanism here?
 	}
 	if !done {
 		zkLogger.Error(LogTag, "Rolling back the transaction failed.")
-		//TODO: Should I add retry mechanism here?
 	}
 	return err2
 }
