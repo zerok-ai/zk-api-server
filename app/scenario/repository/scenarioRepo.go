@@ -41,10 +41,14 @@ func NewZkPostgresRepo(db sqlDB.DatabaseRepo) ScenarioRepo {
 }
 
 func handleTxError(tx *sql.Tx, err2 error) error {
-	var err error = nil
-	err = tx.Rollback()
+	done, err := common.RollbackTransaction(tx, LogTag)
 	if err != nil {
-		zkLogger.Error(LogTag, "Error while rolling back the transaction ", err)
+		zkLogger.Error(LogTag, "Error while rolling back the transaction ", err.Error)
+		//TODO: Should I add retry mechanism here?
+	}
+	if !done {
+		zkLogger.Error(LogTag, "Rolling back the transaction failed.")
+		//TODO: Should I add retry mechanism here?
 	}
 	return err2
 }

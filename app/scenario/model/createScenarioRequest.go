@@ -83,14 +83,3 @@ type ScenarioVersionInsertParams struct {
 func (si ScenarioVersionInsertParams) GetAllColumns() []any {
 	return []any{si.ScenarioId, si.ScenarioData, si.SchemaVersion, si.ScenarioVersion, si.CreatedBy, si.CreatedAt}
 }
-
-type ScenarioInsertParams struct {
-	ScenarioId    int
-	ClusterId     string
-	ScenarioTitle string
-	ScenarioType  string
-}
-
-func (si ScenarioInsertParams) GetAllColumns() []any {
-	return []any{si.ScenarioId, si.ClusterId, si.ScenarioTitle, si.ScenarioType}
-}
