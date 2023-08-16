@@ -254,6 +254,12 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/zerok-ai/zk-utils-go v0.4.7-0.20230720072801-f8a934d8e227 h1:9g/Nkv40Dzk1hg1fJ3G/5cUQ+0KESgI1/GfnfrzKn/Q=
 github.com/zerok-ai/zk-utils-go v0.4.7-0.20230720072801-f8a934d8e227/go.mod h1:LNXMma0iQ0V9K4H/bNKbBIOquLp4TLJDjjTyQ4OiEZk=
+github.com/zerok-ai/zk-utils-go v0.4.7-0.20230816052422-c5acfeef3873 h1:2FttQfKp9pCjyqQTov/ynI/StN7UPhstli5uadF6/0Y=
+github.com/zerok-ai/zk-utils-go v0.4.7-0.20230816052422-c5acfeef3873/go.mod h1:LNXMma0iQ0V9K4H/bNKbBIOquLp4TLJDjjTyQ4OiEZk=
+github.com/zerok-ai/zk-utils-go v0.4.7-0.20230816053505-36c94004857b h1:Fs0WWSkSmdTQx9tzbygU+4NwAYevoWg9O9ra5ek3mHY=
+github.com/zerok-ai/zk-utils-go v0.4.7-0.20230816053505-36c94004857b/go.mod h1:LNXMma0iQ0V9K4H/bNKbBIOquLp4TLJDjjTyQ4OiEZk=
+github.com/zerok-ai/zk-utils-go v0.4.7-0.20230816053936-2ea9c4b71bad h1:gM9eZjje16MkePx8Kfg7sHKZoNBI+jopX9kx8FrSftg=
+github.com/zerok-ai/zk-utils-go v0.4.7-0.20230816053936-2ea9c4b71bad/go.mod h1:LNXMma0iQ0V9K4H/bNKbBIOquLp4TLJDjjTyQ4OiEZk=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=

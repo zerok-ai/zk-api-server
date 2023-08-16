@@ -13,9 +13,8 @@ import (
 const (
 	DefaultClusterId                    = "Zk_default_cluster_id_for_all_scenarios"
 	GetAllScenarioSqlStatement          = `SELECT scenario_data, deleted, disabled FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE (scenario_version>$1 OR deleted_at>$2 OR disabled_at>$3) AND (cluster_id=$4 OR cluster_id=$5)`
-	InsertScenarioTableStatement        = "INSERT INTO scenario (scenario_id, cluster_id, scenario_title, scenario_type) VALUES ($1, $2, $3, $4)"
+	InsertScenarioTableStatement        = "INSERT INTO scenario (cluster_id, scenario_title, scenario_type) VALUES ($1, $2, $3) RETURNING scenario_id"
 	InsertScenarioVersionTableStatement = "INSERT INTO scenario_version (scenario_id, scenario_data, schema_version, scenario_version, created_by, created_at) VALUES ($1, $2, $3, $4, $5, $6)"
-	HighestScenarioIdStatement          = "SELECT MAX(scenario_id) FROM scenario"
 )
 
 var LogTag = "scenario_repo"
@@ -51,7 +50,6 @@ func handleTxError(tx *sql.Tx, err2 error) error {
 }
 
 func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request scenarioResponseModel.CreateScenarioRequest) error {
-	//TODO: Get this reviewed by vaibhav.
 	tx, err := zkPostgresRepo.dbRepo.CreateTransaction()
 
 	if err != nil {
@@ -59,38 +57,6 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 		return handleTxError(tx, err)
 	}
 
-	// Set the isolation level to Serializable for a strong write lock
-	_, err = tx.Exec("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE")
-	if err != nil {
-		zkLogger.Error(LogTag, "Error while setting the transaction level to serializable ", err)
-		return handleTxError(tx, err)
-	}
-
-	var highestScenarioId int
-
-	err = tx.QueryRow(HighestScenarioIdStatement).Scan(&highestScenarioId)
-	if err != nil {
-		return handleTxError(tx, err)
-	}
-
-	scenarioId := 1000
-
-	if err != nil {
-		return handleTxError(tx, err)
-	}
-
-	if highestScenarioId >= 1000 {
-		scenarioId = highestScenarioId + 1
-	}
-
-	zkLogger.Debug(LogTag, "New scenarioId is ", scenarioId)
-
-	scenarioInsertParams := scenarioResponseModel.ScenarioInsertParams{
-		ScenarioId:    scenarioId,
-		ClusterId:     clusterId,
-		ScenarioType:  request.ScenarioType,
-		ScenarioTitle: request.ScenarioTitle,
-	}
 	scenarioInsertStmt, err := common.GetStmtRawQuery(tx, InsertScenarioTableStatement)
 
 	if err != nil {
@@ -98,12 +64,17 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 		return handleTxError(tx, err)
 	}
 
-	_, insertErr := zkPostgresRepo.dbRepo.Insert(scenarioInsertStmt, scenarioInsertParams)
+	params := []any{clusterId, request.ScenarioTitle, request.ScenarioType}
+	scenarioId := 1000
+
+	insertErr := zkPostgresRepo.dbRepo.InsertWithReturnRow(scenarioInsertStmt, params, []any{&scenarioId})
 
 	if insertErr != nil {
 		zkLogger.Error(LogTag, "Error while executing the insert query ", err)
 		return handleTxError(tx, err)
 	}
+
+	zkLogger.Debug(LogTag, "New scenarioId is ", scenarioId)
 
 	scenarioObj := request.CreateScenarioObj(scenarioId)
 	scenarioData, err := json.Marshal(scenarioObj)
@@ -148,7 +119,7 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 
 	if !done {
 		zkLogger.Error(LogTag, "Transaction commit failed. ")
-		return err
+		return errors.New("Transaction commit failed. ")
 	}
 
 	zkLogger.Debug(LogTag, "Reached the end of the handler method.")
