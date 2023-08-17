@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"px.dev/pxapi"
+	"sync"
 	"zk-api-server/app/cluster/transformer"
 	"zk-api-server/app/cluster/validation"
 	"zk-api-server/app/tablemux"
@@ -133,51 +134,73 @@ func (cs *clusterService) GetServiceDetailsList(ctx iris.Context, id, st, apiKey
 		return nil, &e
 	}
 
-	protocolMap := make(map[string]string)
+	var wg sync.WaitGroup
 
-	httpSvcList, _ := cs.GetHttpServiceList(ctx, id, st, apiKey)
-	zkLogger.Debug(LogTag, "Http ", httpSvcList.Results)
+	protocolMap := sync.Map{}
 
-	for _, svc := range httpSvcList.Results {
-		name := svc.Name
-		if name != nil {
-			protocolMap[*name] = "http"
+	wg.Add(4)
+	go func() {
+		defer wg.Done()
+		httpSvcList, _ := cs.GetHttpServiceList(ctx, id, st, apiKey)
+		zkLogger.Debug(LogTag, "Http ", httpSvcList.Results)
+
+		for _, svc := range httpSvcList.Results {
+			name := svc.Name
+			if name != nil {
+				protocolMap.Store(*name, "http")
+			}
 		}
-	}
+	}()
 
-	mysqlSvcList, _ := cs.GetMysqlServiceList(ctx, id, st, apiKey)
-	zkLogger.Debug(LogTag, "Mysql ", mysqlSvcList.Results)
+	go func() {
+		defer wg.Done()
+		mysqlSvcList, _ := cs.GetMysqlServiceList(ctx, id, st, apiKey)
+		zkLogger.Debug(LogTag, "Mysql ", mysqlSvcList.Results)
 
-	for _, svc := range mysqlSvcList.Results {
-		name := svc.Name
-		if name != nil {
-			protocolMap[*name] = "mysql"
+		for _, svc := range mysqlSvcList.Results {
+			name := svc.Name
+			if name != nil {
+				protocolMap.Store(*name, "mysql")
+			}
 		}
-	}
+	}()
 
-	pgsqlSvcList, _ := cs.GetPgsqlServiceList(ctx, id, st, apiKey)
-	zkLogger.Debug(LogTag, "Pgsql ", pgsqlSvcList.Results)
+	go func() {
+		defer wg.Done()
+		pgsqlSvcList, _ := cs.GetPgsqlServiceList(ctx, id, st, apiKey)
+		zkLogger.Debug(LogTag, "Pgsql ", pgsqlSvcList.Results)
 
-	for _, svc := range pgsqlSvcList.Results {
-		name := svc.Name
-		if name != nil {
-			protocolMap[*name] = "pgsql"
+		for _, svc := range pgsqlSvcList.Results {
+			name := svc.Name
+			if name != nil {
+				protocolMap.Store(*name, "pgsql")
+			}
 		}
-	}
+	}()
 
-	mux := handlerimplementation.New[handlerimplementation.Service]()
-	tx := tablemux.MethodTemplate{MethodSignature: utils.GetServiceListMethodSignature(st), DataFrameName: "my_first_list"}
-	resultSet, err := cs.pixie.GetPixieData(ctx, mux, tx, id, apiKey, details.Domain)
-	response := transformer.PixieResponseToHTTPResponse(resultSet, mux, err)
+	var response *transformer.PixieHTTPResponse[handlerimplementation.Service]
+	var err *zkerrors.ZkError
+
+	go func() {
+		defer wg.Done()
+		mux := handlerimplementation.New[handlerimplementation.Service]()
+		tx := tablemux.MethodTemplate{MethodSignature: utils.GetServiceListMethodSignature(st), DataFrameName: "my_first_list"}
+		resultSet, err2 := cs.pixie.GetPixieData(ctx, mux, tx, id, apiKey, details.Domain)
+		err = err2
+		response = transformer.PixieResponseToHTTPResponse(resultSet, mux, err)
+	}()
+
+	wg.Wait()
+
 	results := response.Results
-
 	var newResults []handlerimplementation.Service
 	for _, result := range results {
 		name := result.ServiceName
 		if name != nil {
-			protocol, ok := protocolMap[*name]
+			protocol, ok := protocolMap.Load(*name)
 			if ok {
-				result.Protocol = &protocol
+				protocolStr := protocol.(string)
+				result.Protocol = &protocolStr
 			}
 		}
 		newResults = append(newResults, result)
