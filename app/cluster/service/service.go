@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/kataras/iris/v12"
 	zkCommon "github.com/zerok-ai/zk-utils-go/common"
+	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"log"
 	"os"
@@ -15,6 +16,8 @@ import (
 	"zk-api-server/app/utils"
 	"zk-api-server/app/utils/errors"
 )
+
+var LogTag = "Service/Service"
 
 type Details struct {
 	Domain string `json:"Domain"`
@@ -29,7 +32,6 @@ type ClusterService interface {
 	GetPodDetailsTimeSeries(ctx iris.Context, clusterIdx, podName, ns, st, apiKey string) (*transformer.PodDetailsPixieHTTPResponse, *zkerrors.ZkError)
 	GetPxlData(ctx iris.Context, clusterIdx, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.PixieTraceData], *zkerrors.ZkError)
 	GetPodList(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.PodDetails], *zkerrors.ZkError)
-	//CreateScenario(ctx iris.Context, clusterIdx string)
 }
 
 type clusterService struct {
@@ -89,16 +91,99 @@ func (cs *clusterService) GetServiceDetailsMap(ctx iris.Context, id, st, apiKey 
 
 }
 
+func (cs *clusterService) GetMysqlServiceList(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceName], *zkerrors.ZkError) {
+	if !validation.ValidatePxlTime(st) {
+		e := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeFormat, nil)
+		return nil, &e
+	}
+
+	mux := handlerimplementation.New[handlerimplementation.ServiceName]()
+	tx := tablemux.MethodTemplate{MethodSignature: utils.GetMysqlServiceListMethodSignature(st), DataFrameName: "my_first_list"}
+	resultSet, err := cs.pixie.GetPixieData(ctx, mux, tx, id, apiKey, details.Domain)
+	return transformer.PixieResponseToHTTPResponse(resultSet, mux, err), err
+}
+
+func (cs *clusterService) GetPgsqlServiceList(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceName], *zkerrors.ZkError) {
+	if !validation.ValidatePxlTime(st) {
+		e := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeFormat, nil)
+		return nil, &e
+	}
+
+	mux := handlerimplementation.New[handlerimplementation.ServiceName]()
+	tx := tablemux.MethodTemplate{MethodSignature: utils.GetPgsqlServiceListMethodSignature(st), DataFrameName: "my_first_list"}
+	resultSet, err := cs.pixie.GetPixieData(ctx, mux, tx, id, apiKey, details.Domain)
+	return transformer.PixieResponseToHTTPResponse(resultSet, mux, err), err
+}
+
+func (cs *clusterService) GetHttpServiceList(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceName], *zkerrors.ZkError) {
+	if !validation.ValidatePxlTime(st) {
+		e := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeFormat, nil)
+		return nil, &e
+	}
+
+	mux := handlerimplementation.New[handlerimplementation.ServiceName]()
+	tx := tablemux.MethodTemplate{MethodSignature: utils.GetHttpServiceListMethodSignature(st), DataFrameName: "my_first_list"}
+	resultSet, err := cs.pixie.GetPixieData(ctx, mux, tx, id, apiKey, details.Domain)
+	return transformer.PixieResponseToHTTPResponse(resultSet, mux, err), err
+}
+
 func (cs *clusterService) GetServiceDetailsList(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.Service], *zkerrors.ZkError) {
 	if !validation.ValidatePxlTime(st) {
 		e := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestTimeFormat, nil)
 		return nil, &e
 	}
 
+	protocolMap := make(map[string]string)
+
+	httpSvcList, _ := cs.GetHttpServiceList(ctx, id, st, apiKey)
+	zkLogger.Debug(LogTag, "Http ", httpSvcList.Results)
+
+	for _, svc := range httpSvcList.Results {
+		name := svc.Name
+		if name != nil {
+			protocolMap[*name] = "http"
+		}
+	}
+
+	mysqlSvcList, _ := cs.GetMysqlServiceList(ctx, id, st, apiKey)
+	zkLogger.Debug(LogTag, "Mysql ", mysqlSvcList.Results)
+
+	for _, svc := range mysqlSvcList.Results {
+		name := svc.Name
+		if name != nil {
+			protocolMap[*name] = "mysql"
+		}
+	}
+
+	pgsqlSvcList, _ := cs.GetPgsqlServiceList(ctx, id, st, apiKey)
+	zkLogger.Debug(LogTag, "Pgsql ", pgsqlSvcList.Results)
+
+	for _, svc := range pgsqlSvcList.Results {
+		name := svc.Name
+		if name != nil {
+			protocolMap[*name] = "pgsql"
+		}
+	}
+
 	mux := handlerimplementation.New[handlerimplementation.Service]()
 	tx := tablemux.MethodTemplate{MethodSignature: utils.GetServiceListMethodSignature(st), DataFrameName: "my_first_list"}
 	resultSet, err := cs.pixie.GetPixieData(ctx, mux, tx, id, apiKey, details.Domain)
-	return transformer.PixieResponseToHTTPResponse(resultSet, mux, err), err
+	response := transformer.PixieResponseToHTTPResponse(resultSet, mux, err)
+	results := response.Results
+
+	var newResults []handlerimplementation.Service
+	for _, result := range results {
+		name := result.ServiceName
+		if name != nil {
+			protocol, ok := protocolMap[*name]
+			if ok {
+				result.Protocol = &protocol
+			}
+		}
+		newResults = append(newResults, result)
+	}
+	response.Results = newResults
+	return response, err
 }
 
 func (cs *clusterService) GetServiceDetails(ctx iris.Context, clusterIdx, name, ns, st, apiKey string) (*transformer.PixieHTTPResponse[handlerimplementation.ServiceStat], *zkerrors.ZkError) {

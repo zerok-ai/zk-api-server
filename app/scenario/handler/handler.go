@@ -31,7 +31,7 @@ func (r scenarioHandler) CreateScenario(ctx iris.Context) {
 			//Send 500 response.
 		}
 	}()
-	clusterId := ctx.GetHeader(utils.ClusterIdHeader)
+	clusterId := ctx.Params().Get("clusterIdx")
 	zkLogger.Debug(LogTag, "ClusterId is ", clusterId)
 	var request model2.CreateScenarioRequest
 

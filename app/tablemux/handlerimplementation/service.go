@@ -1,5 +1,9 @@
 package handlerimplementation
 
+type ServiceName struct {
+	Name *string `json:"service"`
+}
+
 type Service struct {
 	ServiceName             *string    `json:"service"`
 	PodCount                *int       `json:"pod_count"`
@@ -8,6 +12,7 @@ type Service struct {
 	HttpErrorRateIn         *float64   `json:"http_error_rate_in"`
 	InboundConns            *float64   `json:"inbound_conns"`
 	OutboundConns           *float64   `json:"outbound_conns"`
+	Protocol                *string    `json:"protocol"`
 }
 
 type Latencies struct {

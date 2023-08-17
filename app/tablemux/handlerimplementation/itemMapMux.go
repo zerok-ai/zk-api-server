@@ -8,7 +8,7 @@ import (
 )
 
 type ItemType interface {
-	string | ServiceMap | Service | PodDetails | ServiceStat | PodDetailsErrAndReq | PodDetailsLatency | PodDetailsCpuUsage | PixieTraceData
+	string | ServiceMap | Service | PodDetails | ServiceStat | PodDetailsErrAndReq | PodDetailsLatency | PodDetailsCpuUsage | PixieTraceData | ServiceName
 }
 
 func New[itemType ItemType]() *ItemMapMux[itemType] {
