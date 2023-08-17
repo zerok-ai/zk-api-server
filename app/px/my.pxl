@@ -30,10 +30,11 @@ def get_svc(df):
     srdf = df[df.trace_role == 2]
     cldf = df[df.trace_role == 1]
     cldf = ip_to_svc_name(cldf, 'remote_addr', 'service')
+    cldf = cldf.groupby(['service']).agg()
     srdf['service'] = srdf.ctx['service']
+    srdf = srdf.groupby(['service']).agg()
     srdf = srdf.append(cldf)
     srdf = srdf[['service']]
-    srdf = srdf.groupby(['service']).agg()
     srdf = srdf[srdf.service != '']
     return srdf
 
