@@ -5,13 +5,13 @@ INSERT INTO scenario (scenario_id, cluster_id, scenario_title, scenario_type, is
 VALUES (2, 'Zk_default_cluster_id_for_all_scenarios', 'All Traces', 'SYSTEM', true);
 
 INSERT INTO scenario (scenario_id, cluster_id, scenario_title, scenario_type, is_default)
-VALUES (3, 'Zk_default_cluster_id_for_all_scenarios', 'Client Error', 'SYSTEM', true);
+VALUES (3, 'Zk_default_cluster_id_for_all_scenarios', '4xx Error', 'SYSTEM', true);
 
 INSERT INTO scenario (scenario_id, cluster_id, scenario_title, scenario_type, is_default)
-VALUES (4, 'Zk_default_cluster_id_for_all_scenarios', 'Server Error', 'SYSTEM', true);
+VALUES (4, 'Zk_default_cluster_id_for_all_scenarios', '5xx Error', 'SYSTEM', true);
 
 INSERT INTO scenario (scenario_id, cluster_id, scenario_title, scenario_type, is_default)
-VALUES (5, 'Zk_default_cluster_id_for_all_scenarios', 'Slow Request', 'SYSTEM', true);
+VALUES (5, 'Zk_default_cluster_id_for_all_scenarios', 'Requests with latency > 100ms', 'SYSTEM', true);
 
 INSERT INTO scenario_version (scenario_version_id, scenario_id, scenario_data, schema_version, scenario_version, created_by, created_at)
 VALUES (1, 1, '{"version":"1684149787","scenario_title":"Exception","scenario_type":"SYSTEM","enabled":true,"workloads":{"55661a0e-25cb-5a1c-94cd-fad172b0caa2":{"service":"*/*","trace_role":"server","protocol":"HTTP","rule":{"type":"rule_group","condition":"AND","rules":[{"type":"rule","id":"req_method","field":"req_method","datatype":"string","input":"string","operator":"equal","value":"POST"},{"type":"rule","id":"req_path","field":"req_path","datatype":"string","input":"string","operator":"equal","value":"/exception"}]}}},"scenario_id":"1","filter":{"type":"workload","condition":"AND","workload_ids":["55661a0e-25cb-5a1c-94cd-fad172b0caa2"]},"group_by":[{"workload_id":"55661a0e-25cb-5a1c-94cd-fad172b0caa2","title":"source","hash":"source"},{"workload_id":"55661a0e-25cb-5a1c-94cd-fad172b0caa2","title":"#toJSON(request_payload)#jsonExtract(message)","hash":"#toJSON(request_payload)#jsonExtract(message)"}],"rate_limit":[{"bucket_max_size":5,"bucket_refill_size":5,"tick_duration":"1m"}]}', 'v1', 1687763051, 'vaibhav', 1687763051);
