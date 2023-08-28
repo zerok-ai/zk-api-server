@@ -16,5 +16,5 @@ type ScenarioDbResponse struct {
 	CreatedAt       int64  `json:"created_at"`
 	Disabled        bool   `json:"disabled"`
 	DisabledBy      string `json:"disabled_by"`
-	DisabledAt      int64  `json:"disabled_at"`
+	DisabledAt      *int64 `json:"disabled_at"`
 }

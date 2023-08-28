@@ -16,12 +16,14 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 		clusterAPI.Get("/{clusterIdx}/pod/list", utils.ValidateApiKeyMiddleware, ch.GetPodList)
 		clusterAPI.Get("/{clusterIdx}/pod/details", utils.ValidateApiKeyMiddleware, ch.GetPodDetails)
 		clusterAPI.Get("/traces", utils.ValidateApiKeyMiddleware, ch.GetPxData)
-		clusterAPI.Get("/scenario", rh.GetAllScenario)
+		clusterAPI.Get("/scenario", rh.GetAllScenarioDashboard)
 		clusterAPI.Post("/{clusterIdx}/scenario", rh.CreateScenario)
+		clusterAPI.Put("/{clusterIdx}/scenario", rh.DisableScenario)
+		clusterAPI.Delete("/{clusterIdx}/scenario", rh.DeleteScenario)
 	}
 
 	ruleEngineAPI := app.Party("/o/cluster")
 	{
-		ruleEngineAPI.Get("/scenario", rh.GetAllScenario)
+		ruleEngineAPI.Get("/scenario", rh.GetAllScenarioOperator)
 	}
 }

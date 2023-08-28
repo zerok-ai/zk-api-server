@@ -5,17 +5,23 @@ import (
 )
 
 type ScenarioResponse struct {
-	Scenarios        []model.Scenario `json:"scenarios"`
-	DeletedFilterId  []string         `json:"deleted_scenario_id"`
-	DisabledFilterId []string         `json:"disabled_filter_id"`
+	Scenarios        []ScenarioModelResponse `json:"scenarios"`
+	DeletedFilterId  []string                `json:"deleted_scenario_id,omitempty"`
+	DisabledFilterId []string                `json:"disabled_filter_id,omitempty"`
 }
 
-func FromScenarioArrayToScenarioResponse(sArr *[]model.Scenario, deletedIdArr *[]string, disabledIdArr *[]string) *ScenarioResponse {
+type ScenarioModelResponse struct {
+	Scenario   model.Scenario `json:"scenario"`
+	CreatedAt  int64          `json:"created_at"`
+	DisabledAt *int64         `json:"disabled_at"`
+}
+
+func FromScenarioArrayToScenarioResponse(sArr *[]ScenarioModelResponse, deletedIdArr *[]string, disabledIdArr *[]string) *ScenarioResponse {
 	var resp ScenarioResponse
 	if sArr != nil && len(*sArr) != 0 {
 		resp.Scenarios = append(resp.Scenarios, *sArr...)
 	} else {
-		resp.Scenarios = make([]model.Scenario, 0)
+		resp.Scenarios = make([]ScenarioModelResponse, 0)
 	}
 
 	if deletedIdArr != nil && len(*deletedIdArr) != 0 {

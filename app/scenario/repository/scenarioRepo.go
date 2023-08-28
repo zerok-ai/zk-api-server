@@ -7,14 +7,17 @@ import (
 	"github.com/zerok-ai/zk-utils-go/common"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/storage/sqlDB"
+	"time"
 	scenarioResponseModel "zk-api-server/app/scenario/model"
 )
 
 const (
 	DefaultClusterId                    = "Zk_default_cluster_id_for_all_scenarios"
-	GetAllScenarioSqlStatement          = `SELECT scenario_data, deleted, disabled FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE (scenario_version>$1 OR deleted_at>$2 OR disabled_at>$3) AND (cluster_id=$4 OR cluster_id=$5)`
+	GetAllScenarioSqlStatement          = `SELECT scenario_data, deleted, disabled, created_at, disabled_at FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE (scenario_version>$1 OR deleted_at>$2 OR disabled_at>$3) AND (cluster_id=$4 OR cluster_id=$5)`
 	InsertScenarioTableStatement        = "INSERT INTO scenario (cluster_id, scenario_title, scenario_type) VALUES ($1, $2, $3) RETURNING scenario_id"
 	InsertScenarioVersionTableStatement = "INSERT INTO scenario_version (scenario_id, scenario_data, schema_version, scenario_version, created_by, created_at) VALUES ($1, $2, $3, $4, $5, $6)"
+	DisableScenarioStatement            = "UPDATE scenario set disabled=TRUE, disabled_at=$1 where cluster_id= $2 AND scenario_id=$3"
+	DeleteScenarioStatement             = "UPDATE scenario set deleted=TRUE, deleted_at=$1 where cluster_id= $2 AND scenario_id=$3"
 )
 
 var LogTag = "scenario_repo"
@@ -30,6 +33,8 @@ type ScenarioQueryFilter struct {
 type ScenarioRepo interface {
 	GetAllScenario(filters *ScenarioQueryFilter) (*[]scenarioResponseModel.ScenarioDbResponse, error)
 	CreateNewScenario(clusterId string, request scenarioResponseModel.CreateScenarioRequest) error
+	DisableScenario(clusterId, scenarioId string) (int, error)
+	DeleteScenario(clusterId, scenarioId string) (int, error)
 }
 
 type zkPostgresRepo struct {
@@ -150,7 +155,7 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) (*[]scenarioResponseModel
 	var scenarioResponse scenarioResponseModel.ScenarioDbResponse
 	var scenarioResponseArr []scenarioResponseModel.ScenarioDbResponse
 	for rows.Next() {
-		err := rows.Scan(&scenarioResponse.ScenarioData, &scenarioResponse.Deleted, &scenarioResponse.Disabled)
+		err := rows.Scan(&scenarioResponse.ScenarioData, &scenarioResponse.Deleted, &scenarioResponse.Disabled, &scenarioResponse.CreatedAt, &scenarioResponse.DisabledAt)
 		if err != nil {
 			zkLogger.Error(LogTag, err)
 		}
@@ -164,4 +169,64 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) (*[]scenarioResponseModel
 	}
 
 	return &scenarioResponseArr, nil
+}
+
+func (zkPostgresRepo zkPostgresRepo) DisableScenario(clusterId, scenarioId string) (int, error) {
+	count, err := updateScenario(zkPostgresRepo.dbRepo, DisableScenarioStatement, clusterId, scenarioId, []any{time.Now().Unix(), clusterId, scenarioId})
+	if err != nil {
+		zkLogger.Error(LogTag, "Error in disable scenario ", err)
+	}
+
+	return count, err
+}
+
+func (zkPostgresRepo zkPostgresRepo) DeleteScenario(clusterId, scenarioId string) (int, error) {
+	count, err := updateScenario(zkPostgresRepo.dbRepo, DeleteScenarioStatement, clusterId, scenarioId, []any{time.Now().Unix(), clusterId, scenarioId})
+	if err != nil {
+		zkLogger.Error(LogTag, "Error in delete scenario ", err)
+	}
+
+	return count, err
+}
+
+func updateScenario(repo sqlDB.DatabaseRepo, query, clusterId, scenarioId string, params []any) (int, error) {
+	tx, err := repo.CreateTransaction()
+	if err != nil {
+		zkLogger.Info(LogTag, "Error Creating transaction")
+		return 0, err
+	}
+
+	stmt, err := common.GetStmtRawQuery(tx, query)
+	if err != nil {
+		zkLogger.Info(LogTag, "Error Creating statement for disable/delete scenario", err)
+		return 0, err
+	}
+
+	results, err := repo.Update(stmt, []any{time.Now().Unix(), clusterId, scenarioId})
+	if err != nil {
+		zkLogger.Info(LogTag, "Error in disable scenario ", err)
+		return 0, err
+	}
+
+	rowsAffected, err := results.RowsAffected()
+	if err != nil {
+		zkLogger.Info(LogTag, "Error in disable/delete scenario ", err)
+		return 0, err
+	}
+
+	zkLogger.Info(LogTag, "disable/disable count:", rowsAffected)
+	if rowsAffected > 1 {
+		zkLogger.Error(LogTag, "More than one scenario disabled/deleted, ROLLING BACK")
+		done, err := common.RollbackTransaction(tx, LogTag)
+		if err != nil {
+			zkLogger.Error(LogTag, "Error while rolling back a db transaction in disable/delete Scenario ", err.Error)
+			return 0, errors.New("Error while rolling back a db transaction in disable/delete Scenario ")
+		}
+
+		if done {
+			return 0, nil
+		}
+	}
+
+	return int(rowsAffected), nil
 }

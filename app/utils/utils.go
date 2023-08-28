@@ -39,6 +39,7 @@ const (
 	Offset      = "offset"
 	Limit       = "limit"
 	Deleted     = "deleted"
+	ScenarioId  = "scenario_id"
 	StartTime   = "st"
 	Name        = "name"
 	Namespace   = "ns"

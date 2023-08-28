@@ -15,6 +15,7 @@ var (
 	ZkErrorBadRequestZkApiKeyEmpty           = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Api Key cannot be empty"}
 	ZkErrorBadRequestZkApiKeyMiddlewareEmpty = zkerrors.ZkErrorType{Status: iris.StatusUnauthorized, Type: "BAD_REQUEST", Message: "Api Key cannot be empty"}
 	ZkErrorBadRequestClusterIdEmpty          = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "ClusterId cannot be empty"}
+	ZkErrorBadRequestScenarioIdEmpty         = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Scenario cannot be empty"}
 	ZkErrorBadRequestVersionIsNotInteger     = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Filter Version is not integer"}
 	ZkErrorBadRequestVersionEmpty            = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Filter Version is empty"}
 	ZkErrorBadRequestDeletedIsNotBoolean     = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "deleted is not bool"}

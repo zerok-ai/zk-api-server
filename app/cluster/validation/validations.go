@@ -67,6 +67,26 @@ func ValidateGetResourceDetailsApi(st string, apiKey string) *zkerrors.ZkError {
 	return nil
 }
 
+func ValidateDisableScenarioApi(clusterId, scenarioId string) *zkerrors.ZkError {
+	return validateScenarioIdAndClusterId(clusterId, scenarioId)
+}
+
+func ValidateDeleteScenarioApi(clusterId, scenarioId string) *zkerrors.ZkError {
+	return validateScenarioIdAndClusterId(clusterId, scenarioId)
+}
+
+func validateScenarioIdAndClusterId(clusterId, scenarioId string) *zkerrors.ZkError {
+	if zkCommon.IsEmpty(clusterId) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestClusterIdEmpty, nil)
+		return &zkErr
+	}
+	if zkCommon.IsEmpty(scenarioId) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestScenarioIdEmpty, nil)
+		return &zkErr
+	}
+	return nil
+}
+
 func ValidateGetAllScenarioApi(clusterId, version, deleted, offset, limit string) *zkerrors.ZkError {
 	if zkCommon.IsEmpty(clusterId) {
 		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestClusterIdEmpty, nil)
