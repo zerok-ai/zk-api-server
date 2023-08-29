@@ -4,6 +4,7 @@ import (
 	zkCommon "github.com/zerok-ai/zk-utils-go/common"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"strconv"
+	"zk-api-server/app/scenario/model"
 	"zk-api-server/app/utils"
 	"zk-api-server/app/utils/errors"
 )
@@ -67,7 +68,17 @@ func ValidateGetResourceDetailsApi(st string, apiKey string) *zkerrors.ZkError {
 	return nil
 }
 
-func ValidateDisableScenarioApi(clusterId, scenarioId string) *zkerrors.ZkError {
+func ValidateDisableScenarioApi(clusterId, scenarioId string, request model.ScenarioState) *zkerrors.ZkError {
+	if zkCommon.IsEmpty(request.Action) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestActionEmpty, nil)
+		return &zkErr
+	}
+
+	if request.Action != utils.Disable && request.Action != utils.Enable {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestActionInvalid, nil)
+		return &zkErr
+	}
+
 	return validateScenarioIdAndClusterId(clusterId, scenarioId)
 }
 

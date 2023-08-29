@@ -12,12 +12,14 @@ import (
 )
 
 const (
-	DefaultClusterId                    = "Zk_default_cluster_id_for_all_scenarios"
-	GetAllScenarioSqlStatement          = `SELECT scenario_data, deleted, disabled, created_at, disabled_at FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE (scenario_version>$1 OR deleted_at>$2 OR disabled_at>$3) AND (cluster_id=$4 OR cluster_id=$5)`
-	InsertScenarioTableStatement        = "INSERT INTO scenario (cluster_id, scenario_title, scenario_type) VALUES ($1, $2, $3) RETURNING scenario_id"
+	DefaultClusterId = "Zk_default_cluster_id_for_all_scenarios"
+
+	GetAllScenarioSqlStatement          = `SELECT scenario_data, deleted, disabled, created_at, disabled_at FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE updated_at>$1 AND (cluster_id=$2 OR cluster_id=$3) order by updated_at desc LIMIT $4 OFFSET $5`
+	InsertScenarioTableStatement        = "INSERT INTO scenario (cluster_id, scenario_title, scenario_type, updated_at) VALUES ($1, $2, $3, $4) RETURNING scenario_id"
 	InsertScenarioVersionTableStatement = "INSERT INTO scenario_version (scenario_id, scenario_data, schema_version, scenario_version, created_by, created_at) VALUES ($1, $2, $3, $4, $5, $6)"
-	DisableScenarioStatement            = "UPDATE scenario set disabled=TRUE, disabled_at=$1 where cluster_id= $2 AND scenario_id=$3"
-	DeleteScenarioStatement             = "UPDATE scenario set deleted=TRUE, deleted_at=$1 where cluster_id= $2 AND scenario_id=$3"
+	DisableScenarioStatement            = "UPDATE scenario set disabled=$1, disabled_at=$2, updated_at=$3 where cluster_id= $4 AND scenario_id=$5"
+	DeleteScenarioStatement             = "UPDATE scenario set deleted=TRUE, deleted_at=$1, updated_at=$2 where cluster_id= $3 AND scenario_id=$4"
+	GetTotalRowsCountStatement          = "SELECT COUNT(*) as count FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE deleted=false AND updated_at>$1 AND (cluster_id=$2 OR cluster_id=$3)"
 )
 
 var LogTag = "scenario_repo"
@@ -33,8 +35,9 @@ type ScenarioQueryFilter struct {
 type ScenarioRepo interface {
 	GetAllScenario(filters *ScenarioQueryFilter) (*[]scenarioResponseModel.ScenarioDbResponse, error)
 	CreateNewScenario(clusterId string, request scenarioResponseModel.CreateScenarioRequest) error
-	DisableScenario(clusterId, scenarioId string) (int, error)
-	DeleteScenario(clusterId, scenarioId string) (int, error)
+	DisableScenario(clusterId, scenarioId string, disable bool, disabledAtTime *int64, currentTime int64) (int, error)
+	DeleteScenario(clusterId string, currentTime int64, scenarioId string) (int, error)
+	GetTotalRowsCount(filters *ScenarioQueryFilter) (int, error)
 }
 
 type zkPostgresRepo struct {
@@ -71,7 +74,7 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 		return handleTxError(tx, err)
 	}
 
-	params := []any{clusterId, request.ScenarioTitle, request.ScenarioType}
+	params := []any{clusterId, request.ScenarioTitle, request.ScenarioType, time.Now().Unix()}
 	scenarioId := 1000
 
 	insertErr := zkPostgresRepo.dbRepo.InsertWithReturnRow(scenarioInsertStmt, params, []any{&scenarioId})
@@ -134,7 +137,7 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 }
 
 func (zkPostgresRepo zkPostgresRepo) GetAllScenario(filters *ScenarioQueryFilter) (*[]scenarioResponseModel.ScenarioDbResponse, error) {
-	params := []any{filters.Version, filters.Version, filters.Version, filters.ClusterId, DefaultClusterId}
+	params := []any{filters.Version, filters.ClusterId, DefaultClusterId, filters.Limit, filters.Offset}
 	rows, err, closeRow := zkPostgresRepo.dbRepo.GetAll(GetAllScenarioSqlStatement, params)
 
 	return Processor(rows, err, closeRow)
@@ -171,8 +174,8 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) (*[]scenarioResponseModel
 	return &scenarioResponseArr, nil
 }
 
-func (zkPostgresRepo zkPostgresRepo) DisableScenario(clusterId, scenarioId string) (int, error) {
-	count, err := updateScenario(zkPostgresRepo.dbRepo, DisableScenarioStatement, clusterId, scenarioId, []any{time.Now().Unix(), clusterId, scenarioId})
+func (zkPostgresRepo zkPostgresRepo) DisableScenario(clusterId, scenarioId string, disable bool, disabledAtTime *int64, currentTime int64) (int, error) {
+	count, err := updateScenario(zkPostgresRepo.dbRepo, DisableScenarioStatement, []any{disable, disabledAtTime, currentTime, clusterId, scenarioId})
 	if err != nil {
 		zkLogger.Error(LogTag, "Error in disable scenario ", err)
 	}
@@ -180,8 +183,8 @@ func (zkPostgresRepo zkPostgresRepo) DisableScenario(clusterId, scenarioId strin
 	return count, err
 }
 
-func (zkPostgresRepo zkPostgresRepo) DeleteScenario(clusterId, scenarioId string) (int, error) {
-	count, err := updateScenario(zkPostgresRepo.dbRepo, DeleteScenarioStatement, clusterId, scenarioId, []any{time.Now().Unix(), clusterId, scenarioId})
+func (zkPostgresRepo zkPostgresRepo) DeleteScenario(clusterId string, currentTime int64, scenarioId string) (int, error) {
+	count, err := updateScenario(zkPostgresRepo.dbRepo, DeleteScenarioStatement, []any{currentTime, currentTime, clusterId, scenarioId})
 	if err != nil {
 		zkLogger.Error(LogTag, "Error in delete scenario ", err)
 	}
@@ -189,7 +192,19 @@ func (zkPostgresRepo zkPostgresRepo) DeleteScenario(clusterId, scenarioId string
 	return count, err
 }
 
-func updateScenario(repo sqlDB.DatabaseRepo, query, clusterId, scenarioId string, params []any) (int, error) {
+func (zkPostgresRepo zkPostgresRepo) GetTotalRowsCount(filters *ScenarioQueryFilter) (int, error) {
+	var count int
+	params := []any{filters.Version, filters.ClusterId, DefaultClusterId}
+	err := zkPostgresRepo.dbRepo.Get(GetTotalRowsCountStatement, params, []any{&count})
+	if err != nil {
+		zkLogger.Error(LogTag, "Error in GetTotalRowsCount ", err)
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func updateScenario(repo sqlDB.DatabaseRepo, query string, params []any) (int, error) {
 	tx, err := repo.CreateTransaction()
 	if err != nil {
 		zkLogger.Info(LogTag, "Error Creating transaction")
@@ -202,7 +217,7 @@ func updateScenario(repo sqlDB.DatabaseRepo, query, clusterId, scenarioId string
 		return 0, err
 	}
 
-	results, err := repo.Update(stmt, []any{time.Now().Unix(), clusterId, scenarioId})
+	results, err := repo.Update(stmt, params)
 	if err != nil {
 		zkLogger.Info(LogTag, "Error in disable scenario ", err)
 		return 0, err
@@ -226,6 +241,12 @@ func updateScenario(repo sqlDB.DatabaseRepo, query, clusterId, scenarioId string
 		if done {
 			return 0, nil
 		}
+	}
+
+	_, zkErr := common.CommitTransaction(tx, LogTag)
+	if zkErr != nil {
+		zkLogger.Error(LogTag, "Error while committing a db transaction in disable/delete Scenario ", err.Error)
+		return 0, errors.New("Error while committing a db transaction in disable/delete Scenario ")
 	}
 
 	return int(rowsAffected), nil

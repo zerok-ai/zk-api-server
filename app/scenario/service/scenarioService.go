@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"github.com/zerok-ai/zk-utils-go/common"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/scenario/model"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
+	"time"
 	model2 "zk-api-server/app/scenario/model"
 	"zk-api-server/app/scenario/repository"
 	"zk-api-server/app/scenario/transformer"
@@ -18,8 +20,8 @@ type ScenarioService interface {
 	GetAllScenarioForOperator(clusterId string, version int64, deleted bool, offset, limit int) (*transformer.ScenarioResponse, *zkerrors.ZkError)
 	GetAllScenarioForDashboard(clusterId string, version int64, deleted bool, offset, limit int) (*transformer.ScenarioResponse, *zkerrors.ZkError)
 	CreateScenario(clusterId string, request model2.CreateScenarioRequest) *zkerrors.ZkError
+	DisableScenario(clusterId, scenarioId string, disable bool) *zkerrors.ZkError
 	DeleteScenario(clusterId, scenarioId string) *zkerrors.ZkError
-	DisableScenario(clusterId, scenarioId string) *zkerrors.ZkError
 }
 
 type scenarioService struct {
@@ -40,7 +42,15 @@ func (r scenarioService) CreateScenario(clusterId string, request model2.CreateS
 }
 
 func (r scenarioService) GetAllScenarioForOperator(clusterId string, version int64, deleted bool, offset, limit int) (*transformer.ScenarioResponse, *zkerrors.ZkError) {
-	scenarioList, deletedScenariosList, disabledScenariosList, zkErr := getAllScenarioData(r.repo, clusterId, version, deleted, offset, limit)
+	filter := repository.ScenarioQueryFilter{
+		ClusterId: clusterId,
+		Deleted:   deleted,
+		Version:   version,
+		Limit:     limit,
+		Offset:    offset,
+	}
+
+	scenarioList, deletedScenariosList, disabledScenariosList, zkErr := getAllScenarioData(r.repo, filter)
 	if zkErr != nil {
 		return nil, zkErr
 	}
@@ -55,20 +65,10 @@ func (r scenarioService) GetAllScenarioForOperator(clusterId string, version int
 		disabledScenarioIdList = append(disabledScenarioIdList, s.Scenario.Id)
 	}
 
-	return transformer.FromScenarioArrayToScenarioResponse(&scenarioList, &deletedScenarioIdList, &disabledScenarioIdList), nil
+	return transformer.FromScenarioArrayToScenarioResponse(&scenarioList, &deletedScenarioIdList, &disabledScenarioIdList, 0), nil
 }
 
 func (r scenarioService) GetAllScenarioForDashboard(clusterId string, version int64, deleted bool, offset, limit int) (*transformer.ScenarioResponse, *zkerrors.ZkError) {
-	scenarioList, _, disabledScenariosList, zkErr := getAllScenarioData(r.repo, clusterId, version, deleted, offset, limit)
-	if zkErr != nil {
-		return nil, zkErr
-	}
-
-	scenarioList = append(scenarioList, disabledScenariosList...)
-	return transformer.FromScenarioArrayToScenarioResponse(&scenarioList, nil, nil), nil
-}
-
-func getAllScenarioData(repo repository.ScenarioRepo, clusterId string, version int64, deleted bool, offset, limit int) ([]transformer.ScenarioModelResponse, []transformer.ScenarioModelResponse, []transformer.ScenarioModelResponse, *zkerrors.ZkError) {
 	filter := repository.ScenarioQueryFilter{
 		ClusterId: clusterId,
 		Deleted:   deleted,
@@ -77,6 +77,22 @@ func getAllScenarioData(repo repository.ScenarioRepo, clusterId string, version 
 		Offset:    offset,
 	}
 
+	scenarioList, _, disabledScenariosList, zkErr := getAllScenarioData(r.repo, filter)
+	if zkErr != nil {
+		return nil, zkErr
+	}
+
+	scenarioList = append(scenarioList, disabledScenariosList...)
+	totalRows, err := r.repo.GetTotalRowsCount(&filter)
+	if err != nil {
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorDbError, err)
+		return nil, &zkError
+	}
+
+	return transformer.FromScenarioArrayToScenarioResponse(&scenarioList, nil, nil, totalRows), nil
+}
+
+func getAllScenarioData(repo repository.ScenarioRepo, filter repository.ScenarioQueryFilter) ([]transformer.ScenarioModelResponse, []transformer.ScenarioModelResponse, []transformer.ScenarioModelResponse, *zkerrors.ZkError) {
 	scenarioList, err := repo.GetAllScenario(&filter)
 
 	if err != nil {
@@ -124,8 +140,15 @@ func getAllScenarioData(repo repository.ScenarioRepo, clusterId string, version 
 	return activeScenariosList, deletedScenariosList, disabledScenariosList, nil
 }
 
-func (r scenarioService) DisableScenario(clusterId, scenarioId string) *zkerrors.ZkError {
-	_, err := r.repo.DisableScenario(clusterId, scenarioId)
+func (r scenarioService) DisableScenario(clusterId, scenarioId string, disable bool) *zkerrors.ZkError {
+	var t *int64
+	currTime := time.Now().Unix()
+	if disable {
+		t = common.ToPtr(currTime)
+	} else {
+		t = nil
+	}
+	_, err := r.repo.DisableScenario(clusterId, scenarioId, disable, t, currTime)
 	if err != nil {
 		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
 		return &zkError
@@ -134,7 +157,7 @@ func (r scenarioService) DisableScenario(clusterId, scenarioId string) *zkerrors
 }
 
 func (r scenarioService) DeleteScenario(clusterId, scenarioId string) *zkerrors.ZkError {
-	_, err := r.repo.DeleteScenario(clusterId, scenarioId)
+	_, err := r.repo.DeleteScenario(clusterId, time.Now().Unix(), scenarioId)
 	if err != nil {
 		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
 		return &zkError

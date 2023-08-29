@@ -33,19 +33,22 @@ const (
 	ClusterIdHeader         = "Cluster-Id"
 	HttpUtilsZkApiKeyHeader = "Zk-Api-Key"
 
-	ClusterIdxPathParam = "clusterIdx"
+	ClusterIdxPathParam  = "clusterIdx"
+	ScenarioIdxPathParam = "scenarioIdx"
 
 	LastSyncTS  = "last_sync_ts"
 	Offset      = "offset"
 	Limit       = "limit"
 	Deleted     = "deleted"
-	ScenarioId  = "scenario_id"
 	StartTime   = "st"
 	Name        = "name"
 	Namespace   = "ns"
 	ServiceName = "service_name"
 	PodName     = "pod_name"
 	ClusterId   = "cluster_id"
+
+	Enable  = "enable"
+	Disable = "disable"
 )
 
 func GetDataByIdx(tag string, datatypeName string, r *types.Record) interface{} {

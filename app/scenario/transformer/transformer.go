@@ -8,15 +8,16 @@ type ScenarioResponse struct {
 	Scenarios        []ScenarioModelResponse `json:"scenarios"`
 	DeletedFilterId  []string                `json:"deleted_scenario_id,omitempty"`
 	DisabledFilterId []string                `json:"disabled_filter_id,omitempty"`
+	TotalRows        int                     `json:"total_rows,omitempty"`
 }
 
 type ScenarioModelResponse struct {
 	Scenario   model.Scenario `json:"scenario"`
 	CreatedAt  int64          `json:"created_at"`
-	DisabledAt *int64         `json:"disabled_at"`
+	DisabledAt *int64         `json:"disabled_at,omitempty"`
 }
 
-func FromScenarioArrayToScenarioResponse(sArr *[]ScenarioModelResponse, deletedIdArr *[]string, disabledIdArr *[]string) *ScenarioResponse {
+func FromScenarioArrayToScenarioResponse(sArr *[]ScenarioModelResponse, deletedIdArr *[]string, disabledIdArr *[]string, totalRows int) *ScenarioResponse {
 	var resp ScenarioResponse
 	if sArr != nil && len(*sArr) != 0 {
 		resp.Scenarios = append(resp.Scenarios, *sArr...)
@@ -35,6 +36,8 @@ func FromScenarioArrayToScenarioResponse(sArr *[]ScenarioModelResponse, deletedI
 	} else {
 		resp.DisabledFilterId = make([]string, 0)
 	}
+
+	resp.TotalRows = totalRows
 
 	return &resp
 }

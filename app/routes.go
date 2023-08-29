@@ -18,8 +18,8 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 		clusterAPI.Get("/traces", utils.ValidateApiKeyMiddleware, ch.GetPxData)
 		clusterAPI.Get("/scenario", rh.GetAllScenarioDashboard)
 		clusterAPI.Post("/{clusterIdx}/scenario", rh.CreateScenario)
-		clusterAPI.Put("/{clusterIdx}/scenario", rh.DisableScenario)
-		clusterAPI.Delete("/{clusterIdx}/scenario", rh.DeleteScenario)
+		clusterAPI.Put("/{clusterIdx}/scenario/{scenarioIdx}/status", rh.UpdateScenarioState)
+		clusterAPI.Delete("/{clusterIdx}/scenario/{scenarioIdx}", rh.DeleteScenario)
 	}
 
 	ruleEngineAPI := app.Party("/o/cluster")

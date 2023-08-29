@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS scenario
     is_default     BOOLEAN      DEFAULT false,
     deleted        BOOLEAN      DEFAULT FALSE,
     deleted_by     VARCHAR(255) DEFAULT NULL,
-    deleted_at     BIGINT       DEFAULT NULL
+    deleted_at     BIGINT       DEFAULT NULL,
+    updated_at     BIGINT       NOT NULL
 );
 
 ALTER SEQUENCE scenario_scenario_id_seq RESTART WITH 1000;

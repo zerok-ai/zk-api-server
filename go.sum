@@ -260,6 +260,8 @@ github.com/zerok-ai/zk-utils-go v0.4.7-0.20230816053505-36c94004857b h1:Fs0WWSkS
 github.com/zerok-ai/zk-utils-go v0.4.7-0.20230816053505-36c94004857b/go.mod h1:LNXMma0iQ0V9K4H/bNKbBIOquLp4TLJDjjTyQ4OiEZk=
 github.com/zerok-ai/zk-utils-go v0.4.7-0.20230816053936-2ea9c4b71bad h1:gM9eZjje16MkePx8Kfg7sHKZoNBI+jopX9kx8FrSftg=
 github.com/zerok-ai/zk-utils-go v0.4.7-0.20230816053936-2ea9c4b71bad/go.mod h1:LNXMma0iQ0V9K4H/bNKbBIOquLp4TLJDjjTyQ4OiEZk=
+github.com/zerok-ai/zk-utils-go v0.4.7-0.20230829080001-36b0a3e3bfc5 h1:pHO8wlGt249KsiCL8kROdQLcNiT8Nj6w0yNz3GnJsBQ=
+github.com/zerok-ai/zk-utils-go v0.4.7-0.20230829080001-36b0a3e3bfc5/go.mod h1:LNXMma0iQ0V9K4H/bNKbBIOquLp4TLJDjjTyQ4OiEZk=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
