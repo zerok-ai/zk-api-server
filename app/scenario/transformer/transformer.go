@@ -15,6 +15,7 @@ type ScenarioModelResponse struct {
 	Scenario   model.Scenario `json:"scenario"`
 	CreatedAt  int64          `json:"created_at"`
 	DisabledAt *int64         `json:"disabled_at,omitempty"`
+	UpdatedAt  int64          `json:"updated_at"`
 }
 
 func FromScenarioArrayToScenarioResponse(sArr *[]ScenarioModelResponse, deletedIdArr *[]string, disabledIdArr *[]string, totalRows int) *ScenarioResponse {
