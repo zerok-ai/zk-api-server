@@ -4,9 +4,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/zerok-ai/zk-utils-go/common"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
+	"github.com/zerok-ai/zk-utils-go/scenario/model"
 	"github.com/zerok-ai/zk-utils-go/storage/sqlDB"
+	"strconv"
 	"time"
 	scenarioResponseModel "zk-api-server/app/scenario/model"
 )
@@ -36,6 +39,7 @@ type ScenarioQueryFilter struct {
 type ScenarioRepo interface {
 	GetAllScenario(filters *ScenarioQueryFilter) (*[]scenarioResponseModel.ScenarioDbResponse, error)
 	CreateNewScenario(clusterId string, request scenarioResponseModel.CreateScenarioRequest) error
+	ReplicateSystemScenario(clusterId string) error
 	DisableScenario(clusterId, scenarioId string, disable bool, disabledAtTime *int64, currentTime int64) (int, error)
 	DeleteScenario(clusterId string, currentTime int64, scenarioId string) (int, error)
 	GetTotalRowsCount(filters *ScenarioQueryFilter) (int, error)
@@ -60,33 +64,21 @@ func handleTxError(tx *sql.Tx, err2 error) error {
 	return err2
 }
 
-func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request scenarioResponseModel.CreateScenarioRequest) error {
-	tx, err := zkPostgresRepo.dbRepo.CreateTransaction()
-
-	if err != nil {
-		zkLogger.Error(LogTag, "Error while creating a db transaction in createNewScenario ", err)
-		return handleTxError(tx, err)
-	}
-
+func insertScenario(tx *sql.Tx, zkPostgresRepo zkPostgresRepo, clusterId string, request scenarioResponseModel.CreateScenarioRequest) (int, error) {
 	scenarioInsertStmt, err := common.GetStmtRawQuery(tx, InsertScenarioTableStatement)
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while creating the scenario insert scenarioVersionStmt ", err)
-		return handleTxError(tx, err)
+		return 0, handleTxError(tx, err)
 	}
 
 	params := []any{clusterId, request.ScenarioTitle, request.ScenarioType, time.Now().Unix()}
-	scenarioId := 1000
+	var scenarioId int
 
-	insertErr := zkPostgresRepo.dbRepo.InsertWithReturnRow(scenarioInsertStmt, params, []any{&scenarioId})
+	return scenarioId, zkPostgresRepo.dbRepo.InsertWithReturnRow(scenarioInsertStmt, params, []any{&scenarioId})
+}
 
-	if insertErr != nil {
-		zkLogger.Error(LogTag, "Error while executing the insert query ", err)
-		return handleTxError(tx, err)
-	}
-
-	zkLogger.Debug(LogTag, "New scenarioId is ", scenarioId)
-
+func insertScenarioVersion(tx *sql.Tx, zkPostgresRepo zkPostgresRepo, scenarioId int, request scenarioResponseModel.CreateScenarioRequest) error {
 	scenarioObj := request.CreateScenarioObj(scenarioId)
 	scenarioData, err := json.Marshal(scenarioObj)
 
@@ -116,16 +108,38 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 
 	_, err = zkPostgresRepo.dbRepo.Insert(scenarioVersionStmt, scenarioVersionParams)
 
-	if err != nil {
-		zkLogger.Error(LogTag, "Error while inserting into the scenario version table. ", err)
-		return handleTxError(tx, err)
+	return err
+}
+
+func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request scenarioResponseModel.CreateScenarioRequest) error {
+	tx, txnErr := zkPostgresRepo.dbRepo.CreateTransaction()
+
+	if txnErr != nil {
+		zkLogger.Error(LogTag, "Error while creating a db transaction in createNewScenario ", txnErr)
+		return handleTxError(tx, txnErr)
+	}
+
+	scenarioId, scenarioInsertErr := insertScenario(tx, zkPostgresRepo, clusterId, request)
+
+	if scenarioInsertErr != nil {
+		zkLogger.Error(LogTag, "Error while executing the insert query ", scenarioInsertErr)
+		return handleTxError(tx, scenarioInsertErr)
+	}
+
+	zkLogger.Debug(LogTag, "New scenarioId is ", scenarioId)
+
+	scenarioVersionInsertErr := insertScenarioVersion(tx, zkPostgresRepo, scenarioId, request)
+
+	if scenarioVersionInsertErr != nil {
+		zkLogger.Error(LogTag, "Error while inserting into the scenario version table. ", scenarioVersionInsertErr)
+		return handleTxError(tx, scenarioVersionInsertErr)
 	}
 
 	done, err2 := common.CommitTransaction(tx, LogTag)
 	if err2 != nil {
 		zkLogger.Error(LogTag, "Error while committing a db transaction in createNewScenario ", err2.Error)
-		err = errors.New(err2.Error.Message)
-		return err
+		scenarioVersionInsertErr = errors.New(err2.Error.Message)
+		return scenarioVersionInsertErr
 	}
 
 	if !done {
@@ -211,6 +225,87 @@ func (zkPostgresRepo zkPostgresRepo) GetTotalRowsCount(filters *ScenarioQueryFil
 	}
 
 	return count, nil
+}
+
+func (zkPostgresRepo zkPostgresRepo) ReplicateSystemScenario(clusterId string) error {
+	systemScenarioList, err := zkPostgresRepo.GetAllScenario(&ScenarioQueryFilter{Version: 0, ClusterId: DefaultClusterId, Limit: 1000, Offset: 0})
+	if err != nil {
+		zkLogger.Error(LogTag, "Error in ReplicateSystemScenario ", err)
+		return nil
+	}
+
+	tx, txnErr := zkPostgresRepo.dbRepo.CreateTransaction()
+
+	if txnErr != nil {
+		zkLogger.Error(LogTag, "Error while creating a db transaction in createNewScenario ", txnErr)
+		return handleTxError(tx, txnErr)
+	}
+
+	for _, scenario := range *systemScenarioList {
+		var systemScenario model.Scenario
+		err := json.Unmarshal([]byte(scenario.ScenarioData), &systemScenario)
+		if err != nil {
+			zkLogger.Error(LogTag, "Error while unmarshalling the scenario data. ", err)
+			return handleTxError(tx, err)
+		}
+
+		request := scenarioResponseModel.CreateScenarioRequest{ScenarioTitle: systemScenario.Title, ScenarioType: systemScenario.Type}
+		scenarioId, insertErr := insertScenario(tx, zkPostgresRepo, clusterId, request)
+		if insertErr != nil {
+			zkLogger.Error(LogTag, "Error while inserting into the scenario table. ", insertErr)
+			return handleTxError(tx, insertErr)
+		}
+
+		zkLogger.Info(LogTag, fmt.Sprintf("Inserted Scenario Id: %d, cluster Id: %s", scenarioId, clusterId))
+
+		epochTime := common.CurrentTime().Unix()
+		systemScenario.Id = strconv.Itoa(scenarioId)
+		systemScenario.Version = strconv.FormatInt(epochTime, 10)
+		scenarioData, err := json.Marshal(systemScenario)
+
+		if err != nil {
+			zkLogger.Error(LogTag, "Error while marshalling the scenario data. ", err)
+			return handleTxError(tx, err)
+		}
+
+		scenarioVersionParams := scenarioResponseModel.ScenarioVersionInsertParams{
+			ScenarioId:      scenarioId,
+			ScenarioVersion: epochTime,
+			ScenarioData:    string(scenarioData),
+			SchemaVersion:   "v1",
+			CreatedAt:       epochTime,
+			CreatedBy:       "dashboard",
+		}
+
+		scenarioVersionStmt, err := common.GetStmtRawQuery(tx, InsertScenarioVersionTableStatement)
+
+		if err != nil {
+			zkLogger.Error(LogTag, "Error while creating the scenario version insert scenarioVersionStmt ", err)
+			return handleTxError(tx, err)
+		}
+
+		_, scenarioVersionInsertErr := zkPostgresRepo.dbRepo.Insert(scenarioVersionStmt, scenarioVersionParams)
+		if scenarioVersionInsertErr != nil {
+			zkLogger.Error(LogTag, "Error while inserting into the scenario version table. ", scenarioVersionInsertErr)
+			return handleTxError(tx, scenarioVersionInsertErr)
+		}
+
+	}
+
+	done, commitTxnErr := common.CommitTransaction(tx, LogTag)
+	if commitTxnErr != nil {
+		zkLogger.Error(LogTag, "Error while committing a db transaction in createNewScenario ", commitTxnErr.Error)
+		return errors.New(commitTxnErr.Error.Message)
+	}
+
+	if !done {
+		zkLogger.Error(LogTag, "Transaction commit failed. ")
+		return errors.New("Transaction commit failed. ")
+	}
+
+	zkLogger.Debug(LogTag, "Reached the end of the handler method.")
+	return nil
+
 }
 
 func updateScenario(repo sqlDB.DatabaseRepo, query string, params []any) (int, error) {

@@ -22,6 +22,7 @@ type ScenarioService interface {
 	CreateScenario(clusterId string, request model2.CreateScenarioRequest) *zkerrors.ZkError
 	DisableScenario(clusterId, scenarioId string, disable bool) *zkerrors.ZkError
 	DeleteScenario(clusterId, scenarioId string) *zkerrors.ZkError
+	ReplicateSystemScenario(clusterId string) *zkerrors.ZkError
 }
 
 type scenarioService struct {
@@ -162,6 +163,16 @@ func (r scenarioService) DisableScenario(clusterId, scenarioId string, disable b
 
 func (r scenarioService) DeleteScenario(clusterId, scenarioId string) *zkerrors.ZkError {
 	_, err := r.repo.DeleteScenario(clusterId, time.Now().Unix(), scenarioId)
+	if err != nil {
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		return &zkError
+	}
+
+	return nil
+}
+
+func (r scenarioService) ReplicateSystemScenario(clusterId string) *zkerrors.ZkError {
+	err := r.repo.ReplicateSystemScenario(clusterId)
 	if err != nil {
 		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
 		return &zkError

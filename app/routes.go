@@ -20,6 +20,7 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 		clusterAPI.Post("/{clusterIdx}/scenario", rh.CreateScenario)
 		clusterAPI.Put("/{clusterIdx}/scenario/{scenarioIdx}/status", rh.UpdateScenarioState)
 		clusterAPI.Delete("/{clusterIdx}/scenario/{scenarioIdx}", rh.DeleteScenario)
+		clusterAPI.Post("/{clusterIdx}/scenario/replicate", rh.ReplicateSystemScenario)
 	}
 
 	ruleEngineAPI := app.Party("/o/cluster")

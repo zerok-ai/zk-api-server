@@ -22,6 +22,7 @@ type ScenarioHandler interface {
 	CreateScenario(ctx iris.Context)
 	UpdateScenarioState(ctx iris.Context)
 	DeleteScenario(ctx iris.Context)
+	ReplicateSystemScenario(ctx iris.Context)
 }
 
 type scenarioHandler struct {
@@ -195,4 +196,31 @@ func getAllScenarioHelper(service service.ScenarioService, ctx iris.Context, das
 	zkHttpResponse := zkHttp.ToZkResponse[transformer.ScenarioResponse](200, *resp, resp, zkError)
 	ctx.StatusCode(zkHttpResponse.Status)
 	ctx.JSON(zkHttpResponse)
+}
+
+func (r scenarioHandler) ReplicateSystemScenario(ctx iris.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			zkLogger.Error(LogTag, "Recovered from panic ", r)
+			//Send 500 response.
+		}
+	}()
+	clusterId := ctx.Params().Get(utils.ClusterIdxPathParam)
+
+	if err := validation.ValidateReplicateSystemScenarioApi(clusterId); err != nil {
+		zkLogger.Error(LogTag, "Error validating replicate system scenario api ", err)
+		zkHttpResponse := zkHttp.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
+		ctx.StatusCode(zkHttpResponse.Status)
+		ctx.JSON(zkHttpResponse)
+		return
+	}
+
+	err := r.service.ReplicateSystemScenario(clusterId)
+	if err != nil {
+		ctx.StatusCode(iris.StatusInternalServerError)
+		return
+	}
+
+	ctx.StatusCode(iris.StatusOK)
+	return
 }

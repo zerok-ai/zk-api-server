@@ -86,6 +86,14 @@ func ValidateDeleteScenarioApi(clusterId, scenarioId string) *zkerrors.ZkError {
 	return validateScenarioIdAndClusterId(clusterId, scenarioId)
 }
 
+func ValidateReplicateSystemScenarioApi(clusterId string) *zkerrors.ZkError {
+	if zkCommon.IsEmpty(clusterId) {
+		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestClusterIdEmpty, nil)
+		return &zkErr
+	}
+	return nil
+}
+
 func validateScenarioIdAndClusterId(clusterId, scenarioId string) *zkerrors.ZkError {
 	if zkCommon.IsEmpty(clusterId) {
 		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestClusterIdEmpty, nil)
