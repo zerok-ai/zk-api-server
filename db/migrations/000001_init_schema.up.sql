@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS scenario
     deleted        BOOLEAN      DEFAULT FALSE,
     deleted_by     VARCHAR(255) DEFAULT NULL,
     deleted_at     BIGINT       DEFAULT NULL,
-    updated_at     BIGINT       NOT NULL
+    updated_at     BIGINT       NOT NULL NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())
 );
 
 ALTER SEQUENCE scenario_scenario_id_seq RESTART WITH 1000;
@@ -22,9 +22,9 @@ CREATE TABLE IF NOT EXISTS scenario_version
     scenario_id         INTEGER REFERENCES scenario (scenario_id) ON DELETE CASCADE,
     scenario_data       BYTEA,
     schema_version      VARCHAR(255),
-    scenario_version    BIGINT,
+    scenario_version    BIGINT NOT NULL NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
     created_by          VARCHAR(255),
-    created_at          BIGINT
+    created_at          BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())
 );
 
 ALTER SEQUENCE scenario_version_scenario_version_id_seq RESTART WITH 1000;
