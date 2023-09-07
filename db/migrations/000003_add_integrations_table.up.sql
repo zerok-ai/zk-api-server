@@ -11,3 +11,5 @@ CREATE TABLE IF NOT EXISTS integrations
     deleted        BOOLEAN DEFAULT FALSE,
     disabled       BOOLEAN DEFAULT FALSE
 );
+
+ALTER SEQUENCE integrations_id_seq RESTART WITH 1;
