@@ -3,6 +3,9 @@ package main
 import (
 	zkapp "zk-api-server/app"
 	clusterHandler "zk-api-server/app/cluster/handler"
+	integrationsHandler "zk-api-server/app/integrations/handler"
+	integrationRepo "zk-api-server/app/integrations/repository"
+	integrationService "zk-api-server/app/integrations/service"
 	scenarioHandler "zk-api-server/app/scenario/handler"
 	"zk-api-server/app/scenario/repository"
 	"zk-api-server/app/scenario/service"
@@ -38,9 +41,14 @@ func main() {
 	rr := repository.NewZkPostgresRepo(zkPostgresRepo)
 	rs := service.NewScenarioService(rr)
 	rh := scenarioHandler.NewScenarioHandler(rs)
+
 	ch := clusterHandler.NewClusterHandler()
 
-	app := newApp(rh, ch)
+	ir := integrationRepo.NewZkPostgresRepo(zkPostgresRepo)
+	is := integrationService.NewIntegrationsService(ir)
+	ih := integrationsHandler.NewIntegrationsHandler(is, cfg)
+
+	app := newApp(rh, ch, ih)
 
 	config := iris.WithConfiguration(iris.Configuration{
 		DisablePathCorrection: true,
@@ -49,7 +57,7 @@ func main() {
 	app.Listen(":"+cfg.Server.Port, config)
 }
 
-func newApp(rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler) *iris.Application {
+func newApp(rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler, ih integrationsHandler.IntegrationsHandler) *iris.Application {
 	app := iris.Default()
 
 	crs := func(ctx iris.Context) {
@@ -81,7 +89,7 @@ func newApp(rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler
 	}).Describe("healthcheck")
 
 	v1 := app.Party("/v1")
-	zkapp.Initialize(v1, rh, ch)
+	zkapp.Initialize(v1, rh, ch, ih)
 
 	return app
 }

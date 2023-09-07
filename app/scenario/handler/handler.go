@@ -28,6 +28,10 @@ type scenarioHandler struct {
 	service service.ScenarioService
 }
 
+func NewScenarioHandler(s service.ScenarioService) ScenarioHandler {
+	return &scenarioHandler{service: s}
+}
+
 func (r scenarioHandler) CreateScenario(ctx iris.Context) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -60,10 +64,6 @@ func (r scenarioHandler) CreateScenario(ctx iris.Context) {
 	ctx.StatusCode(zkHttpResponse.Status)
 	ctx.JSON(zkHttpResponse)
 
-}
-
-func NewScenarioHandler(s service.ScenarioService) ScenarioHandler {
-	return &scenarioHandler{service: s}
 }
 
 func (r scenarioHandler) GetAllScenarioOperator(ctx iris.Context) {

@@ -3,11 +3,12 @@ package app
 import (
 	"github.com/kataras/iris/v12/core/router"
 	clusterHandler "zk-api-server/app/cluster/handler"
+	integrationsHandler "zk-api-server/app/integrations/handler"
 	scenarioHandler "zk-api-server/app/scenario/handler"
 	"zk-api-server/app/utils"
 )
 
-func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler) {
+func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler, ih integrationsHandler.IntegrationsHandler) {
 	{
 		clusterAPI := app.Party("/u/cluster")
 		clusterAPI.Get("/{clusterIdx}/service/list", utils.ValidateApiKeyMiddleware, ch.GetServiceDetailsList)
@@ -20,10 +21,17 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 		clusterAPI.Post("/{clusterIdx}/scenario", rh.CreateScenario)
 		clusterAPI.Put("/{clusterIdx}/scenario/{scenarioIdx}/status", rh.UpdateScenarioState)
 		clusterAPI.Delete("/{clusterIdx}/scenario/{scenarioIdx}", rh.DeleteScenario)
+
+		clusterAPI.Post("/{clusterIdx}/integration", ih.UpsertIntegration)
+		clusterAPI.Get("/{clusterIdx}/integration", ih.GetAllIntegrationsDashboard)
+
 	}
 
 	ruleEngineAPI := app.Party("/o/cluster")
 	{
 		ruleEngineAPI.Get("/scenario", rh.GetAllScenarioOperator)
+
+		ruleEngineAPI.Get("/{clusterIdx}/integration", ih.GetAllIntegrationsOperator)
+
 	}
 }
