@@ -12,13 +12,15 @@ const (
 	GetIntegrationById           = "SELECT id, cluster_id, type, url, authentication, level, created_at, updated_at, deleted, disabled FROM integrations WHERE id=$1 AND cluster_id=$2"
 	GetAllActiveIntegrations     = "SELECT id, type, url, authentication, level, created_at, updated_at, deleted, disabled FROM integrations WHERE cluster_id=$1 AND deleted = false AND disabled = false"
 	GetAllNonDeletedIntegrations = "SELECT id, type, url, authentication, level, created_at, updated_at, deleted, disabled FROM integrations WHERE cluster_id=$1 AND deleted = false"
-	UpsertIntegration            = "INSERT INTO integrations (id, cluster_id, type, url, authentication, level, created_at, updated_at, deleted, disabled) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ON CONFLICT (id) DO UPDATE SET type = $3, url = $4, authentication = $5, level = $6, deleted = $9, disabled = $10"
+	InsertIntegration            = "INSERT INTO integrations (cluster_id, type, url, authentication, level, created_at, updated_at, deleted, disabled) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
+	UpdateIntegration            = "UPDATE integrations SET type = $1, url = $2, authentication = $3, level = $4, deleted = $5, disabled = $6, updated_at = $7 WHERE id = $8"
 )
 
 type IntegrationRepo interface {
 	GetAllIntegrations(clusterId string, onlyActive bool) ([]dto.Integration, error)
 	GetIntegrationsById(id int, clusterId string) (*dto.Integration, error)
-	UpsertIntegration(integration dto.Integration) (bool, error)
+	InsertIntegration(integration dto.Integration) (bool, error)
+	UpdateIntegration(integration dto.Integration) (bool, error)
 }
 
 var LogTag = "integrations_repo"
@@ -84,22 +86,52 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) ([]dto.Integration, error
 	return integrationArr, nil
 }
 
-func (z zkPostgresRepo) UpsertIntegration(integration dto.Integration) (bool, error) {
+func (z zkPostgresRepo) InsertIntegration(integration dto.Integration) (bool, error) {
 	tx, err := z.dbRepo.CreateTransaction()
-	integrationUpsertStmt, err := common.GetStmtRawQuery(tx, UpsertIntegration)
+	integrationUpsertStmt, err := common.GetStmtRawQuery(tx, InsertIntegration)
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while creating the integration insert  ", err)
-		return false, err
+		return false, handleTxError(tx, err)
 	}
 
-	result, err := z.dbRepo.Upsert(integrationUpsertStmt, integration)
+	result, err := z.dbRepo.Insert(integrationUpsertStmt, integration)
 	if err != nil {
 		zkLogger.Error(LogTag, err)
-		return false, err
+		return false, handleTxError(tx, err)
 	}
 
-	zkLogger.Info(LogTag, "Integration upsert successfully ", result.RowsAffected)
+	b, txErr := common.CommitTransaction(tx, LogTag)
+	if txErr != nil || !b {
+		zkLogger.Error(LogTag, "Error while committing the transaction ", txErr.Error)
+		return false, handleTxError(tx, err)
+	}
+	zkLogger.Info(LogTag, "Integration insert successfully ", result.RowsAffected)
+
+	return true, nil
+}
+
+func (z zkPostgresRepo) UpdateIntegration(integration dto.Integration) (bool, error) {
+	tx, err := z.dbRepo.CreateTransaction()
+	integrationUpsertStmt, err := common.GetStmtRawQuery(tx, UpdateIntegration)
+
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while creating the integration update  ", err)
+		return false, handleTxError(tx, err)
+	}
+
+	result, err := z.dbRepo.Update(integrationUpsertStmt, []any{integration.Type, integration.URL, integration.Authentication, integration.Level, integration.Deleted, integration.Disabled, integration.UpdatedAt, integration.ID})
+	if err != nil {
+		zkLogger.Error(LogTag, err)
+		return false, handleTxError(tx, err)
+	}
+
+	b, txErr := common.CommitTransaction(tx, LogTag)
+	if txErr != nil || !b {
+		zkLogger.Error(LogTag, "Error while committing the transaction ", txErr.Error)
+		return false, handleTxError(tx, err)
+	}
+	zkLogger.Info(LogTag, "Integration update successfully ", result.RowsAffected)
 
 	return true, nil
 }

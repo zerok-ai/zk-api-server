@@ -27,7 +27,7 @@ func FromIntegrationArrayToIntegrationResponse(iArr []dto.Integration) Integrati
 	responseArr := make([]IntegrationResponseObj, 0)
 	for _, i := range iArr {
 		responseArr = append(responseArr, IntegrationResponseObj{
-			ID:             i.ID,
+			ID:             *i.ID,
 			ClusterId:      i.ClusterId,
 			Type:           i.Type,
 			URL:            i.URL,
@@ -44,14 +44,16 @@ func FromIntegrationArrayToIntegrationResponse(iArr []dto.Integration) Integrati
 }
 
 func FromIntegrationsRequestToIntegrationsDto(iReq dto.IntegrationRequest) dto.Integration {
+	currentTime := time.Now()
 	return dto.Integration{
 		ID:             iReq.ID,
+		ClusterId:      iReq.ClusterId,
 		Type:           iReq.Type,
 		URL:            iReq.URL,
 		Authentication: iReq.Authentication,
 		Level:          iReq.Level,
-		CreatedAt:      iReq.CreatedAt,
-		UpdatedAt:      iReq.UpdatedAt,
+		CreatedAt:      currentTime,
+		UpdatedAt:      currentTime,
 		Deleted:        iReq.Deleted,
 		Disabled:       iReq.Disabled,
 	}

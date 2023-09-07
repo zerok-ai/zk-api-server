@@ -34,21 +34,28 @@ func (i integrationsService) GetAllIntegrations(clusterId string, onlyActive boo
 }
 
 func (i integrationsService) UpsertIntegration(integration dto.Integration) (bool, *zkerrors.ZkError) {
-	row, err := i.repo.GetIntegrationsById(integration.ID, integration.ClusterId)
-	if err != nil {
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
-		return false, &zkError
-	}
+	if integration.ID != nil {
+		if row, err := i.repo.GetIntegrationsById(*integration.ID, integration.ClusterId); err != nil || row == nil {
+			zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+			return false, &zkError
+		} else if row != nil {
+			if valid := validateIntegrationsForUpsert(*row, integration); !valid {
+				zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequest, nil)
+				zkLogger.Error(LogTag, "Integration validation failed")
+				return false, &zkError
+			}
+		}
 
-	if row != nil {
-		if valid := validateIntegrationsForUpsert(*row, integration); !valid {
-			zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequest, nil)
-			zkLogger.Error(LogTag, "Integration validation failed")
+		done, err := i.repo.UpdateIntegration(integration)
+		if err != nil {
+			zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
 			return false, &zkError
 		}
+
+		return done, nil
 	}
 
-	done, err := i.repo.UpsertIntegration(integration)
+	done, err := i.repo.InsertIntegration(integration)
 	if err != nil {
 		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
 		return false, &zkError
@@ -58,7 +65,7 @@ func (i integrationsService) UpsertIntegration(integration dto.Integration) (boo
 }
 
 func validateIntegrationsForUpsert(fromDb, fromRequest dto.Integration) bool {
-	if fromDb.ID != fromRequest.ID {
+	if *fromDb.ID != *fromRequest.ID {
 		zkLogger.Error(LogTag, "Integration validation failed different id")
 		return false
 	}

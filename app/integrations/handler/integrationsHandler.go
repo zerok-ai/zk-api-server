@@ -77,6 +77,13 @@ func getAllIntegrations(i integrationsHandler, onlyActive bool, clusterId string
 }
 
 func (i integrationsHandler) UpsertIntegration(ctx iris.Context) {
+	clusterIdx := ctx.Params().Get(utils.ClusterIdxPathParam)
+	if common.IsEmpty(clusterIdx) {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString("ClusterIdx is required")
+		return
+	}
+
 	var request dto.IntegrationRequest
 	var zkHttpResponse zkHttp.ZkHttpResponse[transformer.IntegrationResponse]
 
@@ -94,6 +101,7 @@ func (i integrationsHandler) UpsertIntegration(ctx iris.Context) {
 		return
 	}
 
+	request.ClusterId = clusterIdx
 	err = validation.ValidateIntegrationsUpsertRequest(request)
 	if err != nil {
 		return
