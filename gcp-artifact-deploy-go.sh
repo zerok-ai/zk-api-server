@@ -2,7 +2,7 @@ LOCATION="us-west1"
 PROJECT_ID="zerok-dev"
 REPOSITORY="api-server"
 IMAGE="zk-api-server"
-TAG="dev"
+TAG="devCloud01"
 ART_Repo_URI="$LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$IMAGE:$TAG"
 
 docker build -t $ART_Repo_URI .

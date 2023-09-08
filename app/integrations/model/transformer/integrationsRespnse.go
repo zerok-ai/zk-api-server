@@ -9,6 +9,7 @@ import (
 type IntegrationResponseObj struct {
 	ID             int             `json:"id"`
 	ClusterId      string          `json:"cluster_id"`
+	Alias          string          `json:"alias"`
 	Type           dto.Type        `json:"type"`
 	URL            string          `json:"url"`
 	Authentication json.RawMessage `json:"authentication"`
@@ -29,6 +30,7 @@ func FromIntegrationArrayToIntegrationResponse(iArr []dto.Integration) Integrati
 		responseArr = append(responseArr, IntegrationResponseObj{
 			ID:             *i.ID,
 			ClusterId:      i.ClusterId,
+			Alias:          i.Alias,
 			Type:           i.Type,
 			URL:            i.URL,
 			Authentication: i.Authentication,
@@ -48,6 +50,7 @@ func FromIntegrationsRequestToIntegrationsDto(iReq dto.IntegrationRequest) dto.I
 	return dto.Integration{
 		ID:             iReq.ID,
 		ClusterId:      iReq.ClusterId,
+		Alias:          iReq.Alias,
 		Type:           iReq.Type,
 		URL:            iReq.URL,
 		Authentication: iReq.Authentication,

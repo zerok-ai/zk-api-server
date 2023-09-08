@@ -19,7 +19,11 @@ func ValidateIntegrationsUpsertRequest(integration dto.IntegrationRequest) error
 	}
 
 	if common.IsEmpty(integration.ClusterId) {
-		return errors.New("invalid 'type' value. Allowed value is 'PROMETHEUS'")
+		return errors.New("clusterId cannot be empty")
+	}
+
+	if common.IsEmpty(integration.Alias) {
+		return errors.New("alias cannot be empty")
 	}
 
 	return nil

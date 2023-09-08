@@ -17,6 +17,7 @@ const (
 type Integration struct {
 	ID             *int            `json:"id"`
 	ClusterId      string          `json:"cluster_id"`
+	Alias          string          `json:"alias"`
 	Type           Type            `json:"type"`
 	URL            string          `json:"url"`
 	Authentication json.RawMessage `json:"authentication"`
@@ -28,12 +29,13 @@ type Integration struct {
 }
 
 func (integration Integration) GetAllColumns() []any {
-	return []any{integration.ClusterId, integration.Type, integration.URL, integration.Authentication, integration.Level, integration.CreatedAt, integration.UpdatedAt, integration.Deleted, integration.Disabled}
+	return []any{integration.ClusterId, integration.Alias, integration.Type, integration.URL, integration.Authentication, integration.Level, integration.CreatedAt, integration.UpdatedAt, integration.Deleted, integration.Disabled}
 }
 
 type IntegrationRequest struct {
 	ID             *int `json:"id"`
 	ClusterId      string
+	Alias          string          `json:"alias"`
 	Type           Type            `json:"type"`
 	URL            string          `json:"url"`
 	Authentication json.RawMessage `json:"authentication"`

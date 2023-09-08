@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	GetIntegrationById           = "SELECT id, cluster_id, type, url, authentication, level, created_at, updated_at, deleted, disabled FROM integrations WHERE id=$1 AND cluster_id=$2"
-	GetAllActiveIntegrations     = "SELECT id, type, url, authentication, level, created_at, updated_at, deleted, disabled FROM integrations WHERE cluster_id=$1 AND deleted = false AND disabled = false"
-	GetAllNonDeletedIntegrations = "SELECT id, type, url, authentication, level, created_at, updated_at, deleted, disabled FROM integrations WHERE cluster_id=$1 AND deleted = false"
-	InsertIntegration            = "INSERT INTO integrations (cluster_id, type, url, authentication, level, created_at, updated_at, deleted, disabled) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
-	UpdateIntegration            = "UPDATE integrations SET type = $1, url = $2, authentication = $3, level = $4, deleted = $5, disabled = $6, updated_at = $7 WHERE id = $8"
+	GetIntegrationById           = "SELECT id, cluster_id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled FROM integrations WHERE id=$1 AND cluster_id=$2"
+	GetAllActiveIntegrations     = "SELECT id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled FROM integrations WHERE cluster_id=$1 AND deleted = false AND disabled = false"
+	GetAllNonDeletedIntegrations = "SELECT id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled FROM integrations WHERE cluster_id=$1 AND deleted = false"
+	InsertIntegration            = "INSERT INTO integrations (cluster_id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)"
+	UpdateIntegration            = "UPDATE integrations SET alias=$1, type = $2, url = $3, authentication = $4, level = $5, deleted = $6, disabled = $7, updated_at = $8 WHERE id = $9"
 )
 
 type IntegrationRepo interface {
@@ -47,7 +47,7 @@ func (z zkPostgresRepo) GetAllIntegrations(clusterId string, onlyActive bool) ([
 
 func (z zkPostgresRepo) GetIntegrationsById(id int, clusterId string) (*dto.Integration, error) {
 	var row dto.Integration
-	err := z.dbRepo.Get(GetIntegrationById, []any{id, clusterId}, []any{&row.ID, &row.ClusterId, &row.Type, &row.URL, &row.Authentication, &row.Level, &row.CreatedAt, &row.UpdatedAt, &row.Deleted, &row.Disabled})
+	err := z.dbRepo.Get(GetIntegrationById, []any{id, clusterId}, []any{&row.ID, &row.ClusterId, &row.Alias, &row.Type, &row.URL, &row.Authentication, &row.Level, &row.CreatedAt, &row.UpdatedAt, &row.Deleted, &row.Disabled})
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while getting the integration by id ", err)
 		return nil, err
@@ -70,7 +70,7 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) ([]dto.Integration, error
 	var integration dto.Integration
 	var integrationArr []dto.Integration
 	for rows.Next() {
-		err := rows.Scan(&integration.ID, &integration.Type, &integration.URL, &integration.Authentication, &integration.Level, &integration.CreatedAt, &integration.UpdatedAt, &integration.Deleted, &integration.Disabled)
+		err := rows.Scan(&integration.ID, &integration.Alias, &integration.Type, &integration.URL, &integration.Authentication, &integration.Level, &integration.CreatedAt, &integration.UpdatedAt, &integration.Deleted, &integration.Disabled)
 		if err != nil {
 			zkLogger.Error(LogTag, err)
 		}
@@ -120,7 +120,7 @@ func (z zkPostgresRepo) UpdateIntegration(integration dto.Integration) (bool, er
 		return false, handleTxError(tx, err)
 	}
 
-	result, err := z.dbRepo.Update(integrationUpsertStmt, []any{integration.Type, integration.URL, integration.Authentication, integration.Level, integration.Deleted, integration.Disabled, integration.UpdatedAt, integration.ID})
+	result, err := z.dbRepo.Update(integrationUpsertStmt, []any{integration.Alias, integration.Type, integration.URL, integration.Authentication, integration.Level, integration.Deleted, integration.Disabled, integration.UpdatedAt, integration.ID})
 	if err != nil {
 		zkLogger.Error(LogTag, err)
 		return false, handleTxError(tx, err)

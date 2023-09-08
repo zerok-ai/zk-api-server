@@ -104,6 +104,8 @@ func (i integrationsHandler) UpsertIntegration(ctx iris.Context) {
 	request.ClusterId = clusterIdx
 	err = validation.ValidateIntegrationsUpsertRequest(request)
 	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString(err.Error())
 		return
 	}
 
