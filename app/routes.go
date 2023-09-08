@@ -31,7 +31,7 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 	{
 		ruleEngineAPI.Get("/scenario", rh.GetAllScenarioOperator)
 
-		ruleEngineAPI.Get("/{clusterIdx}/integration", ih.GetAllIntegrationsOperator)
+		ruleEngineAPI.Get("/integration", ih.GetAllIntegrationsOperator)
 
 	}
 }

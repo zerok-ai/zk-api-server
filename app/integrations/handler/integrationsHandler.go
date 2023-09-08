@@ -32,7 +32,7 @@ func NewIntegrationsHandler(s service.IntegrationsService, cfg model.ZkApiServer
 }
 
 func (i integrationsHandler) GetAllIntegrationsOperator(ctx iris.Context) {
-	clusterIdx := ctx.Params().Get(utils.ClusterIdxPathParam)
+	clusterIdx := ctx.GetHeader(utils.ClusterIdHeader)
 	if common.IsEmpty(clusterIdx) {
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.WriteString("ClusterIdx is required")
