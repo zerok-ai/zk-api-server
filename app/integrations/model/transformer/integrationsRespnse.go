@@ -8,7 +8,7 @@ import (
 
 type IntegrationResponseObj struct {
 	ID             int             `json:"id"`
-	ClusterId      string          `json:"cluster_id"`
+	ClusterId      string          `json:"cluster_id,omitempty"`
 	Alias          string          `json:"alias"`
 	Type           dto.Type        `json:"type"`
 	URL            string          `json:"url"`

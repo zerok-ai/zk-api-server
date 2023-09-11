@@ -49,7 +49,7 @@ func (z zkPostgresRepo) GetIntegrationsById(id int, clusterId string) (*dto.Inte
 	var row dto.Integration
 	err := z.dbRepo.Get(GetIntegrationById, []any{id, clusterId}, []any{&row.ID, &row.ClusterId, &row.Alias, &row.Type, &row.URL, &row.Authentication, &row.Level, &row.CreatedAt, &row.UpdatedAt, &row.Deleted, &row.Disabled})
 	if err != nil {
-		zkLogger.Error(LogTag, "Error while getting the integration by id ", err)
+		zkLogger.Error(LogTag, "Error while getting the integration by id: ", id, err)
 		return nil, err
 	}
 	return &row, err
