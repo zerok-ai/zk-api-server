@@ -12,5 +12,6 @@ CREATE TABLE IF NOT EXISTS integrations
     created_at     TIMESTAMP NOT NULL,
     updated_at     TIMESTAMP NOT NULL,
     deleted        BOOLEAN DEFAULT FALSE,
-    disabled       BOOLEAN DEFAULT FALSE
+    disabled       BOOLEAN DEFAULT FALSE,
+    metric_server BOOLEAN DEFAULT FALSE
 );

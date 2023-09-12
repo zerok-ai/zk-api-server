@@ -5,7 +5,9 @@ import (
 	"github.com/kataras/iris/v12"
 	"github.com/zerok-ai/zk-utils-go/common"
 	zkHttp "github.com/zerok-ai/zk-utils-go/http"
+	zkIntegration "github.com/zerok-ai/zk-utils-go/integration/model"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
+	"strings"
 	"zk-api-server/app/integrations/model/dto"
 	"zk-api-server/app/integrations/model/transformer"
 	"zk-api-server/app/integrations/service"
@@ -102,6 +104,8 @@ func (i integrationsHandler) UpsertIntegration(ctx iris.Context) {
 	}
 
 	request.ClusterId = clusterIdx
+	request.Type = zkIntegration.Type(strings.ToUpper(string(request.Type)))
+	request.Level = zkIntegration.Level(strings.ToUpper(string(request.Level)))
 	err = validation.ValidateIntegrationsUpsertRequest(request)
 	if err != nil {
 		ctx.StatusCode(iris.StatusBadRequest)

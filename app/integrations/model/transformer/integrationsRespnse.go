@@ -1,33 +1,20 @@
 package transformer
 
 import (
-	"encoding/json"
 	"time"
 	"zk-api-server/app/integrations/model/dto"
+
+	zkIntegrationResponse "github.com/zerok-ai/zk-utils-go/integration/model"
 )
 
-type IntegrationResponseObj struct {
-	ID             string          `json:"id"`
-	ClusterId      string          `json:"cluster_id,omitempty"`
-	Alias          string          `json:"alias"`
-	Type           dto.Type        `json:"type"`
-	URL            string          `json:"url"`
-	Authentication json.RawMessage `json:"authentication"`
-	Level          dto.Level       `json:"level"`
-	CreatedAt      time.Time       `json:"created_at"`
-	UpdatedAt      time.Time       `json:"updated_at"`
-	Deleted        bool            `json:"deleted"`
-	Disabled       bool            `json:"disabled"`
-}
-
 type IntegrationResponse struct {
-	Response []IntegrationResponseObj `json:"integrations"`
+	Response []zkIntegrationResponse.IntegrationResponseObj `json:"integrations"`
 }
 
 func FromIntegrationArrayToIntegrationResponse(iArr []dto.Integration) IntegrationResponse {
-	responseArr := make([]IntegrationResponseObj, 0)
+	responseArr := make([]zkIntegrationResponse.IntegrationResponseObj, 0)
 	for _, i := range iArr {
-		responseArr = append(responseArr, IntegrationResponseObj{
+		responseArr = append(responseArr, zkIntegrationResponse.IntegrationResponseObj{
 			ID:             *i.ID,
 			ClusterId:      i.ClusterId,
 			Alias:          i.Alias,
@@ -39,6 +26,7 @@ func FromIntegrationArrayToIntegrationResponse(iArr []dto.Integration) Integrati
 			UpdatedAt:      i.UpdatedAt,
 			Deleted:        i.Deleted,
 			Disabled:       i.Disabled,
+			MetricServer:   i.MetricServer,
 		})
 	}
 
@@ -59,5 +47,6 @@ func FromIntegrationsRequestToIntegrationsDto(iReq dto.IntegrationRequest) dto.I
 		UpdatedAt:      currentTime,
 		Deleted:        iReq.Deleted,
 		Disabled:       iReq.Disabled,
+		MetricServer:   iReq.MetricServer,
 	}
 }
