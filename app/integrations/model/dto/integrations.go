@@ -15,7 +15,7 @@ const (
 )
 
 type Integration struct {
-	ID             *int            `json:"id"`
+	ID             *string         `json:"id"`
 	ClusterId      string          `json:"cluster_id"`
 	Alias          string          `json:"alias"`
 	Type           Type            `json:"type"`
@@ -33,7 +33,7 @@ func (integration Integration) GetAllColumns() []any {
 }
 
 type IntegrationRequest struct {
-	ID             *int `json:"id"`
+	ID             *string `json:"id"`
 	ClusterId      string
 	Alias          string          `json:"alias"`
 	Type           Type            `json:"type"`

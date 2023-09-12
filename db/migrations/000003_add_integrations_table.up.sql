@@ -1,6 +1,8 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE IF NOT EXISTS integrations
 (
-    id             SERIAL PRIMARY KEY,
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     cluster_id     VARCHAR(255) NOT NULL,
     alias         VARCHAR(255) NOT NULL,
     type           VARCHAR(255) NOT NULL,
@@ -12,5 +14,3 @@ CREATE TABLE IF NOT EXISTS integrations
     deleted        BOOLEAN DEFAULT FALSE,
     disabled       BOOLEAN DEFAULT FALSE
 );
-
-ALTER SEQUENCE integrations_id_seq RESTART WITH 1;

@@ -18,7 +18,7 @@ const (
 
 type IntegrationRepo interface {
 	GetAllIntegrations(clusterId string, onlyActive bool) ([]dto.Integration, error)
-	GetIntegrationsById(id int, clusterId string) (*dto.Integration, error)
+	GetIntegrationsById(id string, clusterId string) (*dto.Integration, error)
 	InsertIntegration(integration dto.Integration) (bool, error)
 	UpdateIntegration(integration dto.Integration) (bool, error)
 }
@@ -45,7 +45,7 @@ func (z zkPostgresRepo) GetAllIntegrations(clusterId string, onlyActive bool) ([
 	return Processor(rows, err, closeRow)
 }
 
-func (z zkPostgresRepo) GetIntegrationsById(id int, clusterId string) (*dto.Integration, error) {
+func (z zkPostgresRepo) GetIntegrationsById(id string, clusterId string) (*dto.Integration, error) {
 	var row dto.Integration
 	err := z.dbRepo.Get(GetIntegrationById, []any{id, clusterId}, []any{&row.ID, &row.ClusterId, &row.Alias, &row.Type, &row.URL, &row.Authentication, &row.Level, &row.CreatedAt, &row.UpdatedAt, &row.Deleted, &row.Disabled})
 	if err != nil {

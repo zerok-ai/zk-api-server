@@ -5,8 +5,8 @@ package mocks
 import (
 	context "github.com/kataras/iris/v12/context"
 	mock "github.com/stretchr/testify/mock"
-	tablemux "zk-api-server/app/tablemux"
 	pxapi "px.dev/pxapi"
+	tablemux "zk-api-server/app/tablemux"
 
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 )
