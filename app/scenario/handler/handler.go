@@ -166,7 +166,7 @@ func (r scenarioHandler) DeleteScenario(ctx iris.Context) {
 }
 
 func getAllScenarioHelper(service service.ScenarioService, ctx iris.Context, dashboardCall bool) {
-	clusterId := ctx.GetHeader(utils.ClusterIdHeader)
+	clusterId := ctx.Params().Get(utils.ClusterIdxPathParam)
 	version := ctx.URLParam(utils.LastSyncTS)
 	deleted := ctx.URLParamDefault(utils.Deleted, "false")
 	limit := ctx.URLParamDefault(utils.Limit, "10000")

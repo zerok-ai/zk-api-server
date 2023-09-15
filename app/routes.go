@@ -11,27 +11,27 @@ import (
 func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler, ih integrationsHandler.IntegrationsHandler) {
 	{
 		clusterAPI := app.Party("/u/cluster")
-		clusterAPI.Get("/{clusterIdx}/service/list", utils.ValidateApiKeyMiddleware, ch.GetServiceDetailsList)
-		clusterAPI.Get("/{clusterIdx}/service/map", utils.ValidateApiKeyMiddleware, ch.GetServiceDetailsMap)
-		clusterAPI.Get("/{clusterIdx}/service/details", utils.ValidateApiKeyMiddleware, ch.GetServiceDetails)
-		clusterAPI.Get("/{clusterIdx}/pod/list", utils.ValidateApiKeyMiddleware, ch.GetPodList)
-		clusterAPI.Get("/{clusterIdx}/pod/details", utils.ValidateApiKeyMiddleware, ch.GetPodDetails)
-		clusterAPI.Get("/traces", utils.ValidateApiKeyMiddleware, ch.GetPxData)
-		clusterAPI.Get("/scenario", rh.GetAllScenarioDashboard)
-		clusterAPI.Post("/{clusterIdx}/scenario", rh.CreateScenario)
-		clusterAPI.Put("/{clusterIdx}/scenario/{scenarioIdx}/status", rh.UpdateScenarioState)
-		clusterAPI.Delete("/{clusterIdx}/scenario/{scenarioIdx}", rh.DeleteScenario)
+		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/service/list", utils.ValidateApiKeyMiddleware, ch.GetServiceDetailsList)
+		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/service/map", utils.ValidateApiKeyMiddleware, ch.GetServiceDetailsMap)
+		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/service/details", utils.ValidateApiKeyMiddleware, ch.GetServiceDetails)
+		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/pod/list", utils.ValidateApiKeyMiddleware, ch.GetPodList)
+		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/pod/details", utils.ValidateApiKeyMiddleware, ch.GetPodDetails)
+		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/traces", utils.ValidateApiKeyMiddleware, ch.GetPxData)
+		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/scenario", rh.GetAllScenarioDashboard)
+		clusterAPI.Post("/{"+utils.ClusterIdxPathParam+"}/scenario", rh.CreateScenario)
+		clusterAPI.Put("/{"+utils.ClusterIdxPathParam+"}/scenario/{scenarioIdx}/status", rh.UpdateScenarioState)
+		clusterAPI.Delete("/{"+utils.ClusterIdxPathParam+"}/scenario/{scenarioIdx}", rh.DeleteScenario)
 
-		clusterAPI.Post("/{clusterIdx}/integration", ih.UpsertIntegration)
-		clusterAPI.Get("/{clusterIdx}/integration", ih.GetAllIntegrationsDashboard)
+		clusterAPI.Post("/{"+utils.ClusterIdxPathParam+"}/integration", ih.UpsertIntegration)
+		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/integration", ih.GetAllIntegrationsDashboard)
 
 	}
 
 	ruleEngineAPI := app.Party("/o/cluster")
 	{
-		ruleEngineAPI.Get("/scenario", rh.GetAllScenarioOperator)
+		ruleEngineAPI.Get("/{"+utils.ClusterIdxPathParam+"}/scenario", rh.GetAllScenarioOperator)
 
-		ruleEngineAPI.Get("/integration", ih.GetAllIntegrationsOperator)
+		ruleEngineAPI.Get("/{"+utils.ClusterIdxPathParam+"}/integration", ih.GetAllIntegrationsOperator)
 
 	}
 }

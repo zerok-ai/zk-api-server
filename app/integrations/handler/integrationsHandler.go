@@ -3,7 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"github.com/kataras/iris/v12"
-	"github.com/zerok-ai/zk-utils-go/common"
+	zkCommon "github.com/zerok-ai/zk-utils-go/common"
 	zkHttp "github.com/zerok-ai/zk-utils-go/http"
 	zkIntegration "github.com/zerok-ai/zk-utils-go/integration/model"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
@@ -34,8 +34,8 @@ func NewIntegrationsHandler(s service.IntegrationsService, cfg model.ZkApiServer
 }
 
 func (i integrationsHandler) GetAllIntegrationsOperator(ctx iris.Context) {
-	clusterIdx := ctx.GetHeader(utils.ClusterIdHeader)
-	if common.IsEmpty(clusterIdx) {
+	clusterIdx := ctx.Params().Get(utils.ClusterIdxPathParam)
+	if zkCommon.IsEmpty(clusterIdx) {
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.WriteString("ClusterIdx is required")
 		return
@@ -49,7 +49,7 @@ func (i integrationsHandler) GetAllIntegrationsOperator(ctx iris.Context) {
 
 func (i integrationsHandler) GetAllIntegrationsDashboard(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get(utils.ClusterIdxPathParam)
-	if common.IsEmpty(clusterIdx) {
+	if zkCommon.IsEmpty(clusterIdx) {
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.WriteString("ClusterIdx is required")
 		return
@@ -80,7 +80,7 @@ func getAllIntegrations(i integrationsHandler, onlyActive bool, clusterId string
 
 func (i integrationsHandler) UpsertIntegration(ctx iris.Context) {
 	clusterIdx := ctx.Params().Get(utils.ClusterIdxPathParam)
-	if common.IsEmpty(clusterIdx) {
+	if zkCommon.IsEmpty(clusterIdx) {
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.WriteString("ClusterIdx is required")
 		return
