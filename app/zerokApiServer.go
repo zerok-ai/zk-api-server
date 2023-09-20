@@ -32,7 +32,7 @@ func newApp() *iris.Application {
 	app.AllowMethods(iris.MethodOptions)
 
 	v1 := app.Party("/v1")
-	Initialize(v1, nil, nil, nil)
+	Initialize(v1, nil, nil, nil, nil)
 
 	return app
 }

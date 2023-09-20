@@ -12,6 +12,7 @@ var (
 	ZkErrorBadRequestServicePodEmpty         = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Pod name cannot be empty"}
 	ZkErrorBadRequestNamespaceEmpty          = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Namespace cannot be empty"}
 	ZkErrorBadRequestTimeEmpty               = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Time cannot be empty"}
+	ZkErrorBadRequestFileAttachedError       = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Error is the file attached"}
 	ZkErrorBadRequestZkApiKeyEmpty           = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Api Key cannot be empty"}
 	ZkErrorBadRequestZkApiKeyMiddlewareEmpty = zkerrors.ZkErrorType{Status: iris.StatusUnauthorized, Type: "BAD_REQUEST", Message: "Api Key cannot be empty"}
 	ZkErrorBadRequestClusterIdEmpty          = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "ClusterId cannot be empty"}
@@ -21,6 +22,7 @@ var (
 	ZkErrorBadRequestVersionIsNotInteger     = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Filter Version is not integer"}
 	ZkErrorBadRequestVersionEmpty            = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Filter Version is empty"}
 	ZkErrorBadRequestDeletedIsNotBoolean     = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "deleted is not bool"}
+	ZkErrorBadRequestKeySetEmpty             = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "key_set is empty"}
 )
 
 var (

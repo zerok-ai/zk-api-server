@@ -9,6 +9,7 @@ import (
 	"github.com/zerok-ai/zk-utils-go/storage/sqlDB"
 	"time"
 	scenarioResponseModel "zk-api-server/app/scenario/model"
+	"zk-api-server/utils"
 )
 
 const (
@@ -49,30 +50,19 @@ func NewZkPostgresRepo(db sqlDB.DatabaseRepo) ScenarioRepo {
 	return &zkPostgresRepo{db}
 }
 
-func handleTxError(tx *sql.Tx, err2 error) error {
-	done, err := common.RollbackTransaction(tx, LogTag)
-	if err != nil {
-		zkLogger.Error(LogTag, "Error while rolling back the transaction ", err.Error)
-	}
-	if !done {
-		zkLogger.Error(LogTag, "Rolling back the transaction failed.")
-	}
-	return err2
-}
-
 func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request scenarioResponseModel.CreateScenarioRequest) error {
 	tx, err := zkPostgresRepo.dbRepo.CreateTransaction()
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while creating a db transaction in createNewScenario ", err)
-		return handleTxError(tx, err)
+		return utils.HandleTxError(tx, err, LogTag)
 	}
 
 	scenarioInsertStmt, err := common.GetStmtRawQuery(tx, InsertScenarioTableStatement)
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while creating the scenario insert scenarioVersionStmt ", err)
-		return handleTxError(tx, err)
+		return utils.HandleTxError(tx, err, LogTag)
 	}
 
 	params := []any{clusterId, request.ScenarioTitle, request.ScenarioType, time.Now().Unix()}
@@ -82,7 +72,7 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 
 	if insertErr != nil {
 		zkLogger.Error(LogTag, "Error while executing the insert query ", err)
-		return handleTxError(tx, err)
+		return utils.HandleTxError(tx, err, LogTag)
 	}
 
 	zkLogger.Debug(LogTag, "New scenarioId is ", scenarioId)
@@ -92,7 +82,7 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while serializing scenario data ", err)
-		return handleTxError(tx, err)
+		return utils.HandleTxError(tx, err, LogTag)
 	}
 
 	currentTime := common.CurrentTime()
@@ -111,14 +101,14 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while creating the scenario version insert scenarioVersionStmt ", err)
-		return handleTxError(tx, err)
+		return utils.HandleTxError(tx, err, LogTag)
 	}
 
 	_, err = zkPostgresRepo.dbRepo.Insert(scenarioVersionStmt, scenarioVersionParams)
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while inserting into the scenario version table. ", err)
-		return handleTxError(tx, err)
+		return utils.HandleTxError(tx, err, LogTag)
 	}
 
 	done, err2 := common.CommitTransaction(tx, LogTag)
