@@ -26,9 +26,9 @@ func NewAttributeService(repo repository.AttributeRepo) AttributeService {
 }
 
 func (a attributeService) GetAttributes(version string, keySet []string) (*model.AttributeListResponse, *zkerrors.ZkError) {
-	if version == "" || len(keySet) == 0 {
+	if version == "" {
 		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequest, nil)
-		zkLogger.Error(LogTag, "version or keySet is empty")
+		zkLogger.Error(LogTag, "version is empty")
 		return nil, &zkError
 	}
 
@@ -39,7 +39,7 @@ func (a attributeService) GetAttributes(version string, keySet []string) (*model
 		return nil, &zkError
 
 	}
-	response := model.ConvertAttributeDtoToAttributeResponse(data)
+	response := model.ConvertAttributeDtoToAttributeResponse(data, version)
 	return &response, nil
 }
 
@@ -63,9 +63,9 @@ func (a attributeService) UpsertAttributes(file multipart.File) (bool, *zkerrors
 			RequirementLevel: row[6],
 		})
 	}
-	dtoList = dtoList[1:]
+	dtoListWithoutHeader := dtoList[1:]
 
-	attributeDtoList := model.ConvertAttributeInfoRequestToAttributeDto(dtoList)
+	attributeDtoList := model.ConvertAttributeInfoRequestToAttributeDto(dtoListWithoutHeader)
 
 	if err != nil {
 		log.Println("Error parsing CSV:", err)

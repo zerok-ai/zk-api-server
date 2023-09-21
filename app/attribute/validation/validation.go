@@ -11,10 +11,5 @@ func ValidateGetAttributes(version, keySet string) *zkerrors.ZkError {
 		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestVersionEmpty, nil)
 		return &zkErr
 	}
-
-	if common.IsEmpty(keySet) {
-		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestKeySetEmpty, nil)
-		return &zkErr
-	}
 	return nil
 }

@@ -11,8 +11,8 @@ type AttributeInfo struct {
 }
 
 type AttributeResponse struct {
-	KeySet     string          `json:"key_set,omitempty"`
-	Version    string          `json:"version,omitempty"`
+	KeySet     string          `json:"key_set"`
+	Version    string          `json:"version"`
 	Attributes []AttributeInfo `json:"attribute_list"`
 }
 
@@ -20,12 +20,12 @@ type AttributeListResponse struct {
 	AttributesList []AttributeResponse `json:"attributesList"`
 }
 
-func ConvertAttributeDtoToAttributeResponse(data []AttributeDto) AttributeListResponse {
+func ConvertAttributeDtoToAttributeResponse(data []AttributeDto, version string) AttributeListResponse {
 	var resp AttributeListResponse
 	for _, v := range data {
 		var attr AttributeResponse
 		attr.KeySet = v.KeySet
-		attr.Version = v.Version
+		attr.Version = version
 		json.Unmarshal([]byte(v.Attributes), &attr.Attributes)
 		resp.AttributesList = append(resp.AttributesList, attr)
 	}

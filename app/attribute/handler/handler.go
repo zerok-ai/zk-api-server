@@ -40,8 +40,12 @@ func (a *attributeHandler) GetAttributes(ctx iris.Context) {
 	if zkErr = validation.ValidateGetAttributes(version, keySets); zkErr != nil {
 		zkLogger.Error("Error while validating GetAttributes api, version: %s or keySets: %s is empty", version, keySets)
 	} else {
-		k := strings.Split(keySets, ",")
-		resp, zkErr = a.service.GetAttributes(version, k)
+		if common.IsEmpty(keySets) {
+			resp, zkErr = a.service.GetAttributes(version, nil)
+		} else {
+			k := strings.Split(keySets, ",")
+			resp, zkErr = a.service.GetAttributes(version, k)
+		}
 	}
 
 	if a.cfg.Http.Debug {

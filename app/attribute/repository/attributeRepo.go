@@ -17,8 +17,9 @@ type AttributeRepo interface {
 }
 
 const (
-	UpsertAttributesQuery = "INSERT INTO otel_attributes (version, key_set, attribute_list) VALUES ($1, $2, $3) ON CONFLICT (version, key_set) DO  UPDATE SET attribute_list = $3"
-	SelectAttributesQuery = "SELECT attribute_list FROM otel_attributes WHERE version=$1 AND key_set = ANY($2)"
+	UpsertAttributesQuery                 = "INSERT INTO otel_attributes (version, key_set, attribute_list) VALUES ($1, $2, $3) ON CONFLICT (version, key_set) DO UPDATE SET attribute_list = $3"
+	SelectAttributesWithKeySetFilterQuery = "SELECT key_set, attribute_list FROM otel_attributes WHERE version=$1 AND key_set = ANY($2)"
+	SelectAttributesQuery                 = "SELECT key_set, attribute_list FROM otel_attributes WHERE version=$1"
 )
 
 var LogTag = "attributes_repo"
@@ -84,7 +85,16 @@ func (z zkPostgresRepo) UpsertAttributes(dto model.AttributeDtoList) (bool, erro
 }
 
 func (z zkPostgresRepo) GetAttributes(version string, keySet pq.StringArray) (model.AttributeDtoList, error) {
-	rows, err, closeRow := z.dbRepo.GetAll(SelectAttributesQuery, []any{version, keySet})
+	var query string
+	var params []any
+	if len(keySet) == 0 {
+		query = SelectAttributesQuery
+		params = []any{version}
+	} else {
+		query = SelectAttributesWithKeySetFilterQuery
+		params = []any{version, keySet}
+	}
+	rows, err, closeRow := z.dbRepo.GetAll(query, params)
 	return Processor(rows, err, closeRow)
 }
 
@@ -103,7 +113,7 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) (model.AttributeDtoList, 
 	var attributeDto model.AttributeDto
 	var attributeDtoArr []model.AttributeDto
 	for rows.Next() {
-		err := rows.Scan(&attributeDto.Attributes)
+		err := rows.Scan(&attributeDto.KeySet, &attributeDto.Attributes)
 		if err != nil {
 			zkLogger.Error(LogTag, err)
 		}

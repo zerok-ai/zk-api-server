@@ -28,13 +28,13 @@ func ConvertAttributeInfoRequestToAttributeDto(req []AttributeInfoRequest) Attri
 		keySetName := strings.Trim(v.KeySetName, " ")
 		version := strings.Trim(v.Version, " ")
 		if _, ok := myMap[keySetName]; ok {
-			if _, ok := myMap[v.KeySetName][version]; ok {
+			if _, ok := myMap[keySetName][version]; ok {
 				myMap[keySetName][version] = append(myMap[keySetName][version], element)
 			} else {
 				myMap[keySetName][version] = []AttributeInfo{element}
 			}
 		} else {
-			myMap[v.KeySetName] = map[string][]AttributeInfo{v.Version: {element}}
+			myMap[keySetName] = map[string][]AttributeInfo{version: {element}}
 		}
 	}
 
