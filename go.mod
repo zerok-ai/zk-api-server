@@ -4,9 +4,10 @@ go 1.18
 
 require (
 	github.com/kataras/iris/v12 v12.2.0
+	github.com/lib/pq v1.10.9
 	github.com/stretchr/testify v1.8.3
 	github.com/swaggo/swag v1.16.1
-	github.com/zerok-ai/zk-utils-go v0.4.11-0.20230914063811-1e67b1a4cafa
+	github.com/zerok-ai/zk-utils-go v0.4.11-0.20230922081638-561b7f347b8a
 	px.dev/pxapi v0.4.1
 )
 
@@ -64,7 +65,6 @@ require (
 	github.com/lestrrat-go/jwx v1.2.4 // indirect
 	github.com/lestrrat-go/option v1.0.0 // indirect
 	github.com/lestrrat-go/pdebug/v3 v3.0.1 // indirect
-	github.com/lib/pq v1.10.9 // indirect
 	github.com/mailgun/raymond/v2 v2.0.48 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.23 // indirect

@@ -12,6 +12,7 @@ import (
 	model2 "zk-api-server/app/scenario/model"
 	"zk-api-server/app/scenario/repository"
 	"zk-api-server/app/scenario/transformer"
+	"zk-api-server/app/utils"
 )
 
 var LogTag = "scenario_service"
@@ -33,6 +34,13 @@ func NewScenarioService(repo repository.ScenarioRepo) ScenarioService {
 }
 
 func (r scenarioService) CreateScenario(clusterId string, request model2.CreateScenarioRequest) *zkerrors.ZkError {
+	for _, s := range request.Workloads {
+		if s.Executor != utils.EBPF && s.Executor != utils.OTEL {
+			zkLogger.Error(LogTag, "Executor is not valid, scenario: "+request.ScenarioTitle+" executor: "+s.Executor)
+			ZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequest, errors.New("executor is not valid"))
+			return &ZkErr
+		}
+	}
 	err := r.repo.CreateNewScenario(clusterId, request)
 	if err != nil {
 		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)

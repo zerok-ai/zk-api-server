@@ -6,11 +6,11 @@ import (
 	zkHttp "github.com/zerok-ai/zk-utils-go/http"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
-	"strings"
-	model2 "zk-api-server/app/attribute/model"
+	attributeModel "zk-api-server/app/attribute/model"
 	"zk-api-server/app/attribute/service"
 	"zk-api-server/app/attribute/validation"
 	"zk-api-server/app/integrations/model/transformer"
+	"zk-api-server/app/utils"
 	"zk-api-server/app/utils/errors"
 	"zk-api-server/internal/model"
 )
@@ -30,28 +30,22 @@ func NewAttributeHandler(service service.AttributeService, cfg model.ZkApiServer
 }
 
 func (a *attributeHandler) GetAttributes(ctx iris.Context) {
-	version := ctx.URLParam("version")
-	keySets := ctx.URLParam("key_set")
+	protocol := ctx.URLParam(utils.Protocol)
 
-	var zkHttpResponse zkHttp.ZkHttpResponse[model2.AttributeListResponse]
+	var zkHttpResponse zkHttp.ZkHttpResponse[attributeModel.AttributeListResponse]
 	var zkErr *zkerrors.ZkError
-	var resp *model2.AttributeListResponse
+	var resp *attributeModel.AttributeListResponse
 
-	if zkErr = validation.ValidateGetAttributes(version, keySets); zkErr != nil {
-		zkLogger.Error("Error while validating GetAttributes api, version: %s or keySets: %s is empty", version, keySets)
+	if zkErr = validation.ValidateGetAttributes(protocol); zkErr != nil {
+		zkLogger.Error("Error while validating GetAttributes api, protocol is empty", protocol)
 	} else {
-		if common.IsEmpty(keySets) {
-			resp, zkErr = a.service.GetAttributes(version, nil)
-		} else {
-			k := strings.Split(keySets, ",")
-			resp, zkErr = a.service.GetAttributes(version, k)
-		}
+		resp, zkErr = a.service.GetAttributes(protocol)
 	}
 
 	if a.cfg.Http.Debug {
-		zkHttpResponse = zkHttp.ToZkResponse[model2.AttributeListResponse](200, *resp, resp, zkErr)
+		zkHttpResponse = zkHttp.ToZkResponse[attributeModel.AttributeListResponse](200, *resp, resp, zkErr)
 	} else {
-		zkHttpResponse = zkHttp.ToZkResponse[model2.AttributeListResponse](200, *resp, nil, zkErr)
+		zkHttpResponse = zkHttp.ToZkResponse[attributeModel.AttributeListResponse](200, *resp, nil, zkErr)
 	}
 
 	ctx.StatusCode(zkHttpResponse.Status)
@@ -63,7 +57,7 @@ func (a *attributeHandler) UploadCSVHandler(ctx iris.Context) {
 	var zkErr *zkerrors.ZkError
 	done := false
 
-	if file, _, err := ctx.Request().FormFile("file"); err != nil {
+	if file, _, err := ctx.Request().FormFile(utils.File); err != nil {
 		zkLogger.Error("Error Retrieving the File", err)
 		zkErr = common.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestFileAttachedError, nil))
 		zkHttpResponse = zkHttp.ZkHttpResponseBuilder[any]{}.WithZkErrorType(zkErr.Error).Build()

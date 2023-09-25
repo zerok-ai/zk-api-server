@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"github.com/lib/pq"
 	"github.com/zerok-ai/zk-utils-go/common"
 	"github.com/zerok-ai/zk-utils-go/interfaces"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
@@ -13,13 +12,12 @@ import (
 
 type AttributeRepo interface {
 	UpsertAttributes(dto model.AttributeDtoList) (bool, error)
-	GetAttributes(version string, keySet pq.StringArray) (model.AttributeDtoList, error)
+	GetAttributes(protocol string) (model.AttributeDtoList, error)
 }
 
 const (
-	UpsertAttributesQuery                 = "INSERT INTO otel_attributes (version, key_set, attribute_list) VALUES ($1, $2, $3) ON CONFLICT (version, key_set) DO UPDATE SET attribute_list = $3"
-	SelectAttributesWithKeySetFilterQuery = "SELECT key_set, attribute_list FROM otel_attributes WHERE version=$1 AND key_set = ANY($2)"
-	SelectAttributesQuery                 = "SELECT key_set, attribute_list FROM otel_attributes WHERE version=$1"
+	UpsertAttributesQuery = "INSERT INTO attributes (version, key_set, attribute_list) VALUES ($1, $2, $3) ON CONFLICT (version, key_set) DO UPDATE SET attribute_list = $3"
+	SelectAttributesQuery = "SELECT protocol, key_set, attribute_list FROM attributes INNER JOIN protocol_attributes_mapping pam on attributes.id = otel_attributes_id WHERE protocol=$1"
 )
 
 var LogTag = "attributes_repo"
@@ -84,17 +82,8 @@ func (z zkPostgresRepo) UpsertAttributes(dto model.AttributeDtoList) (bool, erro
 	return true, nil
 }
 
-func (z zkPostgresRepo) GetAttributes(version string, keySet pq.StringArray) (model.AttributeDtoList, error) {
-	var query string
-	var params []any
-	if len(keySet) == 0 {
-		query = SelectAttributesQuery
-		params = []any{version}
-	} else {
-		query = SelectAttributesWithKeySetFilterQuery
-		params = []any{version, keySet}
-	}
-	rows, err, closeRow := z.dbRepo.GetAll(query, params)
+func (z zkPostgresRepo) GetAttributes(protocol string) (model.AttributeDtoList, error) {
+	rows, err, closeRow := z.dbRepo.GetAll(SelectAttributesQuery, []any{protocol})
 	return Processor(rows, err, closeRow)
 }
 
@@ -113,7 +102,7 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) (model.AttributeDtoList, 
 	var attributeDto model.AttributeDto
 	var attributeDtoArr []model.AttributeDto
 	for rows.Next() {
-		err := rows.Scan(&attributeDto.KeySet, &attributeDto.Attributes)
+		err := rows.Scan(&attributeDto.Protocol, &attributeDto.KeySet, &attributeDto.Attributes)
 		if err != nil {
 			zkLogger.Error(LogTag, err)
 		}

@@ -6,8 +6,8 @@ import (
 	"zk-api-server/app/utils/errors"
 )
 
-func ValidateGetAttributes(version, keySet string) *zkerrors.ZkError {
-	if common.IsEmpty(version) {
+func ValidateGetAttributes(protocol string) *zkerrors.ZkError {
+	if common.IsEmpty(protocol) {
 		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestVersionEmpty, nil)
 		return &zkErr
 	}

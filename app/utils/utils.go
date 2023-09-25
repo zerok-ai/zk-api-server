@@ -46,6 +46,11 @@ const (
 	ServiceName = "service_name"
 	PodName     = "pod_name"
 	ClusterId   = "cluster_id"
+	Protocol    = "protocol"
+	File        = "file"
+
+	EBPF = "EBPF"
+	OTEL = "OTEL"
 
 	Enable  = "enable"
 	Disable = "disable"
