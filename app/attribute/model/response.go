@@ -105,10 +105,6 @@ func ConvertAttributeDtoToAttributeResponse(data []AttributeDto) AttributeListRe
 }
 
 type ExecutorAttributesResponse struct {
-	ExecutorAttributesList ExecutorAttributesList `json:"executor_attributes_list"`
-}
-
-type ExecutorAttributesList struct {
 	Attributes []ExecutorAttributes `json:"executor_attributes"`
 	Version    int64                `json:"version"`
 	Update     bool                 `json:"update"`
@@ -143,11 +139,11 @@ func ConvertAttributeDtoToExecutorAttributesResponse(data []AttributeDto) Execut
 			attributesForExecutor := make(map[string]string)
 			for _, attribute := range attributesList {
 				if attribute.SendToFrontEnd == true {
-					commonIdParts := strings.Split(attribute.CommonId, ">")
-					for i, part := range commonIdParts {
-						commonIdParts[i] = strings.TrimSpace(part)
-						commonIdParts[i] = fmt.Sprintf("\"%s\"", commonIdParts[i])
-					}
+					//commonIdParts := strings.Split(attribute.CommonId, ">")
+					//for i, part := range commonIdParts {
+					//	commonIdParts[i] = strings.TrimSpace(part)
+					//	commonIdParts[i] = fmt.Sprintf("\"%s\"", commonIdParts[i])
+					//}
 
 					versionIdParts := strings.Split(attribute.VersionId, ">")
 					for i, part := range versionIdParts {
@@ -155,19 +151,18 @@ func ConvertAttributeDtoToExecutorAttributesResponse(data []AttributeDto) Execut
 						versionIdParts[i] = fmt.Sprintf("\"%s\"", versionIdParts[i])
 					}
 					key := strings.Join([]string{protocol, attribute.Executor, v.Version}, separator)
-					attributesForExecutor[strings.Join(commonIdParts, ".")] = strings.Join(versionIdParts, ".")
+					attributesForExecutor[attribute.CommonId] = strings.Join(versionIdParts, ".")
 					val := finalMap[key]
 					if val == nil {
 						val = make(map[string]string)
 					}
-					val[strings.Join(commonIdParts, ".")] = strings.Join(versionIdParts, ".")
+					val[attribute.CommonId] = strings.Join(versionIdParts, ".")
 					finalMap[key] = val
 				}
 			}
 		}
 	}
 
-	var executorAttributesList ExecutorAttributesList
 	executorList := make([]ExecutorAttributes, 0)
 	for k, v := range finalMap {
 		e := ExecutorAttributes{
@@ -178,9 +173,8 @@ func ConvertAttributeDtoToExecutorAttributesResponse(data []AttributeDto) Execut
 		}
 		executorList = append(executorList, e)
 	}
-	executorAttributesList.Version = maxUpdatedAt
-	executorAttributesList.Attributes = executorList
-	resp.ExecutorAttributesList = executorAttributesList
+	resp.Version = maxUpdatedAt
+	resp.Attributes = executorList
 
 	return resp
 }

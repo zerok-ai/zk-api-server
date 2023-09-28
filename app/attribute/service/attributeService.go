@@ -62,8 +62,8 @@ func (a attributeService) GetAttributesForBackend(updatedAt string) (*model.Exec
 
 	}
 	response := model.ConvertAttributeDtoToExecutorAttributesResponse(data)
-	if response.ExecutorAttributesList.Version > updatedAtInt {
-		response.ExecutorAttributesList.Update = true
+	if response.Version > updatedAtInt {
+		response.Update = true
 	}
 
 	return &response, nil
