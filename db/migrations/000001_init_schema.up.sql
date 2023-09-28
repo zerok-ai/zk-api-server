@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS scenario
     deleted        BOOLEAN      DEFAULT FALSE,
     deleted_by     VARCHAR(255) DEFAULT NULL,
     deleted_at     BIGINT       DEFAULT NULL,
-    updated_at     BIGINT       NOT NULL NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())
+    updated_at     BIGINT       NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())
 );
 
 ALTER SEQUENCE scenario_scenario_id_seq RESTART WITH 1000;

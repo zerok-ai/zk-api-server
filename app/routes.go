@@ -26,8 +26,8 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 		clusterAPI.Post("/{"+utils.ClusterIdxPathParam+"}/integration", ih.UpsertIntegration)
 		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/integration", ih.GetAllIntegrationsDashboard)
 
-		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/attribute", ah.GetAttributes)
-		clusterAPI.Put("/{"+utils.ClusterIdxPathParam+"}/attribute", ah.UploadCSVHandler)
+		clusterAPI.Get("/attribute", ah.GetAttributes)
+		clusterAPI.Put("/attribute", ah.UploadAttributesCSV)
 
 	}
 
@@ -36,6 +36,8 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 		ruleEngineAPI.Get("/{"+utils.ClusterIdxPathParam+"}/scenario", rh.GetAllScenarioOperator)
 
 		ruleEngineAPI.Get("/{"+utils.ClusterIdxPathParam+"}/integration", ih.GetAllIntegrationsOperator)
+
+		ruleEngineAPI.Get("/attribute", ah.GetAttributesForBackend)
 
 	}
 }

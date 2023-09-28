@@ -14,6 +14,7 @@ import (
 
 type AttributeService interface {
 	GetAttributes(protocol string) (*model.AttributeListResponse, *zkerrors.ZkError)
+	GetAttributesForBackend(protocol string) (*model.ExecutorAttributesResponse, *zkerrors.ZkError)
 	UpsertAttributes(multipart.File) (bool, *zkerrors.ZkError)
 }
 
@@ -45,6 +46,29 @@ func (a attributeService) GetAttributes(protocol string) (*model.AttributeListRe
 	return &response, nil
 }
 
+func (a attributeService) GetAttributesForBackend(updatedAt string) (*model.ExecutorAttributesResponse, *zkerrors.ZkError) {
+	updatedAtInt, _ := strconv.ParseInt(updatedAt, 10, 64)
+	if common.IsEmpty(updatedAt) {
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequest, nil)
+		zkLogger.Error(LogTag, "protocol is empty")
+		return nil, &zkError
+	}
+
+	data, err := a.repo.GetAttributesForBackend(updatedAt)
+	if err != nil {
+		zkLogger.Error(LogTag, "failed to get attributes list", err)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorDbError, err)
+		return nil, &zkError
+
+	}
+	response := model.ConvertAttributeDtoToExecutorAttributesResponse(data)
+	if response.ExecutorAttributesList.Version > updatedAtInt {
+		response.ExecutorAttributesList.Update = true
+	}
+
+	return &response, nil
+}
+
 func (a attributeService) UpsertAttributes(file multipart.File) (bool, *zkerrors.ZkError) {
 	if file == nil {
 		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequest, nil)
@@ -54,23 +78,33 @@ func (a attributeService) UpsertAttributes(file multipart.File) (bool, *zkerrors
 
 	csvData, err := utils.ParseCSV(file)
 	dtoList := make([]model.AttributeInfoRequest, 0)
-	for _, row := range csvData {
-		sendToFrontEnd, _ := strconv.ParseBool(row[12])
-		dtoList = append(dtoList, model.AttributeInfoRequest{
+	for i, row := range csvData {
+		sendToFrontEnd, _ := strconv.ParseBool(row[13])
+		row := model.AttributeInfoRequest{
 			Version:          row[0],
-			Id:               row[1],
-			Field:            row[2],
-			DataType:         row[3],
-			Input:            row[4],
-			Values:           row[5],
-			Protocol:         row[6],
-			Examples:         row[7],
-			KeySetName:       row[8],
-			Description:      row[9],
-			RequirementLevel: row[10],
-			Executor:         row[11],
+			CommonId:         row[1],
+			VersionId:        row[2],
+			Field:            row[3],
+			DataType:         row[4],
+			Input:            row[5],
+			Values:           row[6],
+			Protocol:         row[7],
+			Examples:         row[8],
+			KeySetName:       row[9],
+			Description:      row[10],
+			RequirementLevel: row[11],
+			Executor:         row[12],
 			SendToFrontEnd:   sendToFrontEnd,
-		})
+		}
+
+		if common.IsEmpty(row.VersionId) || common.IsEmpty(row.CommonId) || common.IsEmpty(row.Field) ||
+			common.IsEmpty(row.DataType) || common.IsEmpty(row.Input) || common.IsEmpty(row.Protocol) {
+			zkLogger.Error(LogTag, "missing required fields in csv file, line num: %d", i)
+			zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequest, nil)
+			return false, &zkError
+		}
+
+		dtoList = append(dtoList, row)
 	}
 	dtoListWithoutHeader := dtoList[1:]
 

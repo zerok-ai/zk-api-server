@@ -47,6 +47,7 @@ const (
 	PodName     = "pod_name"
 	ClusterId   = "cluster_id"
 	Protocol    = "protocol"
+	Version     = "version"
 	File        = "file"
 
 	EBPF = "EBPF"

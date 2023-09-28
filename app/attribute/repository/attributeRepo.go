@@ -13,11 +13,13 @@ import (
 type AttributeRepo interface {
 	UpsertAttributes(dto model.AttributeDtoList) (bool, error)
 	GetAttributes(protocol string) (model.AttributeDtoList, error)
+	GetAttributesForBackend(version string) (model.AttributeDtoList, error)
 }
 
 const (
-	UpsertAttributesQuery = "INSERT INTO attributes (version, key_set, attribute_list) VALUES ($1, $2, $3) ON CONFLICT (version, key_set) DO UPDATE SET attribute_list = $3"
-	SelectAttributesQuery = "SELECT protocol, key_set, attribute_list FROM attributes INNER JOIN protocol_attributes_mapping pam on attributes.id = otel_attributes_id WHERE protocol=$1"
+	UpsertAttributesQuery    = "INSERT INTO attributes (version, key_set, protocol, executor, attribute_list) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (version, key_set) DO UPDATE SET attribute_list = $5"
+	SelectAttributesQuery    = "SELECT protocol, key_set, version, updated_at, attribute_list FROM attributes WHERE protocol=$1 AND version='common'"
+	SelectAllAttributesQuery = "SELECT protocol, key_set, version, updated_at, attribute_list FROM attributes WHERE updated_at>$1  AND version!='common'"
 )
 
 var LogTag = "attributes_repo"
@@ -87,6 +89,11 @@ func (z zkPostgresRepo) GetAttributes(protocol string) (model.AttributeDtoList, 
 	return Processor(rows, err, closeRow)
 }
 
+func (z zkPostgresRepo) GetAttributesForBackend(updateAt string) (model.AttributeDtoList, error) {
+	rows, err, closeRow := z.dbRepo.GetAll(SelectAllAttributesQuery, []any{updateAt})
+	return Processor(rows, err, closeRow)
+}
+
 func Processor(rows *sql.Rows, sqlErr error, f func()) (model.AttributeDtoList, error) {
 	defer f()
 
@@ -102,7 +109,7 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) (model.AttributeDtoList, 
 	var attributeDto model.AttributeDto
 	var attributeDtoArr []model.AttributeDto
 	for rows.Next() {
-		err := rows.Scan(&attributeDto.Protocol, &attributeDto.KeySet, &attributeDto.Attributes)
+		err := rows.Scan(&attributeDto.Protocol, &attributeDto.KeySet, &attributeDto.Version, &attributeDto.UpdatedAt, &attributeDto.Attributes)
 		if err != nil {
 			zkLogger.Error(LogTag, err)
 		}

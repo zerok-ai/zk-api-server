@@ -17,7 +17,8 @@ import (
 
 type AttributeHandler interface {
 	GetAttributes(ctx iris.Context)
-	UploadCSVHandler(ctx iris.Context)
+	GetAttributesForBackend(ctx iris.Context)
+	UploadAttributesCSV(ctx iris.Context)
 }
 
 type attributeHandler struct {
@@ -52,7 +53,35 @@ func (a *attributeHandler) GetAttributes(ctx iris.Context) {
 	ctx.JSON(zkHttpResponse)
 }
 
-func (a *attributeHandler) UploadCSVHandler(ctx iris.Context) {
+func (a *attributeHandler) GetAttributesForBackend(ctx iris.Context) {
+	version := ctx.URLParam(utils.Version)
+
+	var zkHttpResponse zkHttp.ZkHttpResponse[attributeModel.ExecutorAttributesResponse]
+	var zkErr *zkerrors.ZkError
+	var resp *attributeModel.ExecutorAttributesResponse
+
+	if zkErr = validation.ValidateGetAttributes(version); zkErr != nil {
+		zkLogger.Error("Error while validating GetAttributes api, version is empty", version)
+		zkErr = common.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestVersionEmpty, nil))
+	} else {
+		resp, zkErr = a.service.GetAttributesForBackend(version)
+	}
+
+	if resp == nil {
+		resp = &attributeModel.ExecutorAttributesResponse{}
+	}
+
+	if a.cfg.Http.Debug {
+		zkHttpResponse = zkHttp.ToZkResponse[attributeModel.ExecutorAttributesResponse](200, *resp, resp, zkErr)
+	} else {
+		zkHttpResponse = zkHttp.ToZkResponse[attributeModel.ExecutorAttributesResponse](200, *resp, nil, zkErr)
+	}
+
+	ctx.StatusCode(zkHttpResponse.Status)
+	ctx.JSON(zkHttpResponse)
+}
+
+func (a *attributeHandler) UploadAttributesCSV(ctx iris.Context) {
 	var zkHttpResponse zkHttp.ZkHttpResponse[any]
 	var zkErr *zkerrors.ZkError
 	done := false

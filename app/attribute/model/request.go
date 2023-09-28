@@ -2,7 +2,8 @@ package model
 
 type AttributeInfoRequest struct {
 	Version          string `csv:"version" json:"version"`
-	Id               string `csv:"id" json:"attribute"`
+	CommonId         string `csv:"common_id" json:"common_id"`
+	VersionId        string `csv:"version_id" json:"version_id"`
 	Field            string `csv:"field" json:"field"`
 	Input            string `csv:"input" json:"input"`
 	Values           string `csv:"values" json:"values"`
