@@ -6,6 +6,7 @@ import (
 	zkHttp "github.com/zerok-ai/zk-utils-go/http"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
+	"strings"
 	attributeModel "zk-api-server/app/attribute/model"
 	"zk-api-server/app/attribute/service"
 	"zk-api-server/app/attribute/validation"
@@ -40,7 +41,8 @@ func (a *attributeHandler) GetAttributes(ctx iris.Context) {
 	if zkErr = validation.ValidateGetAttributes(protocol); zkErr != nil {
 		zkLogger.Error("Error while validating GetAttributes api, protocol is empty", protocol)
 	} else {
-		resp, zkErr = a.service.GetAttributes(protocol)
+		protocols := strings.Split(protocol, ",")
+		resp, zkErr = a.service.GetAttributes(protocols)
 	}
 
 	if a.cfg.Http.Debug {

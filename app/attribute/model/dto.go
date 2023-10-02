@@ -7,7 +7,6 @@ import (
 
 type AttributeDto struct {
 	Version    string `json:"version"`
-	KeySet     string `json:"key_set"`
 	Protocol   string `json:"protocol"`
 	Executor   string `json:"executor"`
 	UpdatedAt  string `json:"updated_at"`
@@ -17,87 +16,57 @@ type AttributeDto struct {
 type AttributeDtoList []AttributeDto
 
 func ConvertAttributeInfoRequestToAttributeDto(req []AttributeInfoRequest) AttributeDtoList {
-	keySetNameToAttributesInfoMap := make(map[string]map[string][]AttributeInfo)
-	attributeDtoList := make(AttributeDtoList, 0)
-	for _, v := range req {
-		element := AttributeInfo{
-			CommonId:         v.CommonId,
-			VersionId:        v.VersionId,
-			Field:            v.Field,
-			Input:            v.Input,
-			Values:           v.Values,
-			DataType:         v.DataType,
-			Description:      v.Description,
-			Examples:         v.Examples,
-			RequirementLevel: v.RequirementLevel,
-			Protocol:         v.Protocol,
-			Executor:         v.Executor,
-			SendToFrontEnd:   v.SendToFrontEnd,
+	version := strings.Trim(req[0].Version, " ")
+	executor := strings.Trim(req[0].Executor, " ")
+	if version != "common" {
+		for _, v := range req {
+			v.JsonField = nil
+			v.Field = nil
+			v.DataType = nil
+			v.Input = nil
+			v.Values = nil
+			v.Examples = nil
+			v.KeySetName = nil
+			v.Description = nil
+			v.KeySetName = nil
 		}
-
-		keySetName := strings.Trim(v.KeySetName, " ")
-		version := strings.Trim(v.Version, " ")
-		if _, ok := keySetNameToAttributesInfoMap[keySetName]; ok {
-			if _, ok := keySetNameToAttributesInfoMap[keySetName][version]; ok {
-				keySetNameToAttributesInfoMap[keySetName][version] = append(keySetNameToAttributesInfoMap[keySetName][version], element)
-			} else {
-				keySetNameToAttributesInfoMap[keySetName][version] = []AttributeInfo{element}
-			}
-		} else {
-			keySetNameToAttributesInfoMap[keySetName] = map[string][]AttributeInfo{version: {element}}
+	} else {
+		for _, v := range req {
+			v.AttributePath = ""
 		}
 	}
 
-	for k, value := range keySetNameToAttributesInfoMap {
-		for version, v := range value {
-			executor := getExecutor(v)
-			protocol := getProtocol(v)
-			if executor == "" || protocol == "" {
-				return nil
-			}
-			attrStr, _ := json.Marshal(v)
-			attributeDto := AttributeDto{
-				Protocol:   protocol,
-				Executor:   executor,
-				KeySet:     k,
-				Version:    version,
-				Attributes: string(attrStr),
-			}
-			attributeDtoList = append(attributeDtoList, attributeDto)
+	protocolToAttributesInfoRequestListMap := getProtocolToAttributesMap(req)
+	attributeDtoList := make(AttributeDtoList, 0)
+	for protocol, attributesInfoRequestList := range protocolToAttributesInfoRequestListMap {
+		attrStr, _ := json.Marshal(attributesInfoRequestList)
+		attributeDto := AttributeDto{
+			Protocol:   protocol,
+			Executor:   executor,
+			Version:    version,
+			Attributes: string(attrStr),
 		}
+
+		attributeDtoList = append(attributeDtoList, attributeDto)
 	}
 
 	return attributeDtoList
 }
 
-func getProtocol(attributes []AttributeInfo) string {
-	if len(attributes) == 0 {
-		return ""
-	}
-
-	protocol := attributes[0].Protocol
-	for _, v := range attributes {
-		if v.Protocol != protocol {
-			return ""
+func getProtocolToAttributesMap(reqInfoList []AttributeInfoRequest) map[string][]AttributeInfoRequest {
+	protocolToAttributesInfoRequestListMap := make(map[string][]AttributeInfoRequest)
+	for _, v := range reqInfoList {
+		protocol := strings.Trim(v.Protocol, " ")
+		if _, ok := protocolToAttributesInfoRequestListMap[protocol]; ok {
+			protocolToAttributesInfoRequestListMap[protocol] = append(protocolToAttributesInfoRequestListMap[protocol], v)
+		} else {
+			protocolToAttributesInfoRequestListMap[protocol] = []AttributeInfoRequest{v}
 		}
 	}
-	return protocol
-}
 
-func getExecutor(attributes []AttributeInfo) string {
-	if len(attributes) == 0 {
-		return ""
-	}
-
-	executor := attributes[0].Executor
-	for _, v := range attributes {
-		if v.Executor != executor {
-			return ""
-		}
-	}
-	return executor
+	return protocolToAttributesInfoRequestListMap
 }
 
 func (t AttributeDto) GetAllColumns() []any {
-	return []any{t.Version, t.KeySet, t.Protocol, t.Executor, t.Attributes}
+	return []any{t.Version, t.Protocol, t.Executor, t.Attributes}
 }

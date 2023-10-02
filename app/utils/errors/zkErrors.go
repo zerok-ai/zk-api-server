@@ -22,7 +22,22 @@ var (
 	ZkErrorBadRequestVersionIsNotInteger     = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Filter Version is not integer"}
 	ZkErrorBadRequestVersionEmpty            = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Filter Version is empty"}
 	ZkErrorBadRequestDeletedIsNotBoolean     = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "deleted is not bool"}
-	ZkErrorBadRequestKeySetEmpty             = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "key_set is empty"}
+
+	ZkErrorBadRequestDifferentVersions      = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Different versions in sheet"}
+	ZkErrorBadRequestEmptyOrInvalidVersions = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Empty or Invalid versions in sheet"}
+	ZkErrorBadRequestEmptyAttributeId       = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Empty attribute id in sheet"}
+	ZkErrorBadRequestEmptyAttributePath     = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Empty attribute path in sheet"}
+	ZkErrorBadRequestEmptyDataType          = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Empty data type in sheet"}
+	ZkErrorBadRequestEmptyValue             = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Empty value in sheet"}
+	ZkErrorBadRequestEmptyInput             = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Empty input in sheet"}
+	ZkErrorBadRequestEmptyField             = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Empty field in sheet"}
+	ZkErrorBadRequestEmptyProtocol          = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Empty protocol in sheet"}
+	ZkErrorBadRequestEmptyKeySetName        = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Empty key set name in sheet"}
+	ZkErrorBadRequestEmptyExecutor          = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Empty executor in sheet"}
+	ZkErrorBadRequestSendToFrontend         = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Invalid value for send_to_frontend in sheet"}
+	ZkErrorBadRequestJSON                   = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Invalid value for JSON in sheet"}
+	ZkErrorBadRequestErrorInReadingFile     = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Error in reading file"}
+	ZkErrorBadRequestFileNotFound           = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "File not found"}
 )
 
 var (

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"github.com/lib/pq"
 	"github.com/zerok-ai/zk-utils-go/common"
 	"github.com/zerok-ai/zk-utils-go/interfaces"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
@@ -12,14 +13,14 @@ import (
 
 type AttributeRepo interface {
 	UpsertAttributes(dto model.AttributeDtoList) (bool, error)
-	GetAttributes(protocol string) (model.AttributeDtoList, error)
+	GetAttributes(protocols pq.StringArray) (model.AttributeDtoList, error)
 	GetAttributesForBackend(version string) (model.AttributeDtoList, error)
 }
 
 const (
-	UpsertAttributesQuery    = "INSERT INTO attributes (version, key_set, protocol, executor, attribute_list) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (version, key_set) DO UPDATE SET attribute_list = $5"
-	SelectAttributesQuery    = "SELECT protocol, key_set, version, updated_at, attribute_list FROM attributes WHERE protocol=$1 AND version='common'"
-	SelectAllAttributesQuery = "SELECT protocol, key_set, version, updated_at, attribute_list FROM attributes WHERE updated_at>$1  AND version!='common'"
+	UpsertAttributesQuery    = "INSERT INTO attributes (version, protocol, executor, attribute_list) VALUES ($1, $2, $3, $4) ON CONFLICT (version, protocol, executor) DO UPDATE SET attribute_list = $4"
+	SelectAttributesQuery    = "SELECT protocol, version, executor, updated_at, attribute_list FROM attributes WHERE protocol=ANY($1) AND version='common'"
+	SelectAllAttributesQuery = "SELECT protocol, version, executor, updated_at, attribute_list FROM attributes WHERE updated_at>$1  AND version!='common'"
 )
 
 var LogTag = "attributes_repo"
@@ -84,8 +85,8 @@ func (z zkPostgresRepo) UpsertAttributes(dto model.AttributeDtoList) (bool, erro
 	return true, nil
 }
 
-func (z zkPostgresRepo) GetAttributes(protocol string) (model.AttributeDtoList, error) {
-	rows, err, closeRow := z.dbRepo.GetAll(SelectAttributesQuery, []any{protocol})
+func (z zkPostgresRepo) GetAttributes(protocols pq.StringArray) (model.AttributeDtoList, error) {
+	rows, err, closeRow := z.dbRepo.GetAll(SelectAttributesQuery, []any{protocols})
 	return Processor(rows, err, closeRow)
 }
 
@@ -109,7 +110,7 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) (model.AttributeDtoList, 
 	var attributeDto model.AttributeDto
 	var attributeDtoArr []model.AttributeDto
 	for rows.Next() {
-		err := rows.Scan(&attributeDto.Protocol, &attributeDto.KeySet, &attributeDto.Version, &attributeDto.UpdatedAt, &attributeDto.Attributes)
+		err := rows.Scan(&attributeDto.Protocol, &attributeDto.Version, &attributeDto.Executor, &attributeDto.UpdatedAt, &attributeDto.Attributes)
 		if err != nil {
 			zkLogger.Error(LogTag, err)
 		}
