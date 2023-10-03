@@ -8,31 +8,31 @@ import (
 )
 
 type AttributeInfo struct {
-	AttributeId      string `json:"attr_id"`
-	AttributePath    string `json:"attr_path"`
-	KeySetName       string `json:"key_set_name"`
-	JsonField        bool   `json:"json_field"`
-	Field            string `json:"field"`
-	Input            string `json:"input"`
-	Values           string `json:"values"`
-	DataType         string `json:"data_type"`
-	Description      string `json:"description,omitempty"`
-	Examples         string `json:"examples,omitempty"`
-	RequirementLevel string `json:"requirement_level,omitempty"`
-	Executor         string `json:"executor,omitempty"`
-	Protocol         string `json:"protocol,omitempty"`
-	SendToFrontEnd   bool   `json:"send_to_front_end,omitempty"`
+	AttributeId      string    `json:"attr_id"`
+	AttributePath    string    `json:"attr_path"`
+	KeySetName       string    `json:"key_set_name"`
+	JsonField        bool      `json:"json_field"`
+	Field            string    `json:"field"`
+	Input            string    `json:"input"`
+	Values           string    `json:"values"`
+	DataType         string    `json:"data_type"`
+	Description      string    `json:"description,omitempty"`
+	Examples         string    `json:"examples,omitempty"`
+	Executor         string    `json:"executor,omitempty"`
+	Protocol         string    `json:"protocol,omitempty"`
+	SendToFrontEnd   bool      `json:"send_to_front_end,omitempty"`
+	SupportedFormats *[]string `json:"supported_formats,omitempty"`
 }
 
 type AttributeInfoResp struct {
-	Id               string `json:"id"`
-	Field            string `json:"field"`
-	Input            string `json:"input"`
-	Values           string `json:"values,omitempty"`
-	DataType         string `json:"data_type"`
-	Description      string `json:"description,omitempty"`
-	Examples         string `json:"examples,omitempty"`
-	RequirementLevel string `json:"requirement_level,omitempty"`
+	Id               string    `json:"id"`
+	Field            string    `json:"field"`
+	Input            string    `json:"input"`
+	Values           string    `json:"values,omitempty"`
+	DataType         string    `json:"data_type"`
+	Description      string    `json:"description,omitempty"`
+	Examples         string    `json:"examples,omitempty"`
+	SupportedFormats *[]string `json:"supported_formats,omitempty"`
 }
 
 type AttributeDetails struct {
@@ -80,6 +80,9 @@ func getResp(attributesList []AttributeDto) []AttributeDetails {
 				idParts[i] = strings.TrimSpace(part)
 				idParts[i] = fmt.Sprintf("\"%s\"", idParts[i])
 			}
+			if attribute.SupportedFormats == nil || len(*attribute.SupportedFormats) == 0 {
+				attribute.SupportedFormats = nil
+			}
 			a := AttributeInfoResp{
 				Id:               strings.Join(idParts, "."),
 				Field:            attribute.Field,
@@ -88,7 +91,7 @@ func getResp(attributesList []AttributeDto) []AttributeDetails {
 				DataType:         attribute.DataType,
 				Description:      attribute.Description,
 				Examples:         attribute.Examples,
-				RequirementLevel: attribute.RequirementLevel,
+				SupportedFormats: attribute.SupportedFormats,
 			}
 			attributesListForFrontend = append(attributesListForFrontend, a)
 		}

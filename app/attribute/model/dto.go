@@ -20,7 +20,7 @@ func ConvertAttributeInfoRequestToAttributeDto(req []AttributeInfoRequest) Attri
 	executor := strings.Trim(req[0].Executor, " ")
 	if version != "common" {
 		for _, v := range req {
-			v.JsonField = nil
+			v.SupportedFormats = nil
 			v.Field = nil
 			v.DataType = nil
 			v.Input = nil

@@ -121,30 +121,28 @@ func readCSVAndReturnData(file multipart.File) ([]model.AttributeInfoRequest, *z
 			continue
 		}
 
-		jsonField := false
-		if !common.IsEmpty(row[headersMap["JSON"]]) {
-			jsonField, err = strconv.ParseBool(row[headersMap["JSON"]])
-			if err != nil {
-				zkLogger.ErrorF(LogTag, "Error parsing CSV: %v at JSON, at line: %v", err, rowCount)
-				zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestJSON, nil)
-				return dtoList, &zkError
-			}
+		var supportedFormatsValue *[]string
+		supportedFormatsStr := row[headersMap["supported_formats"]]
+		if common.IsEmpty(supportedFormatsStr) {
+			supportedFormatsValue = nil
+		} else {
+			supportedFormatsValue = common.ToPtr(strings.Split(supportedFormatsStr, ","))
 		}
 
 		dataRow := model.AttributeInfoRequest{
-			Version:       row[headersMap["version"]],
-			AttributeId:   row[headersMap["attr_id"]],
-			AttributePath: row[headersMap["attr_path"]],
-			JsonField:     common.ToPtr(jsonField),
-			Field:         common.ToPtr(row[headersMap["field"]]),
-			DataType:      common.ToPtr(row[headersMap["data_type"]]),
-			Input:         common.ToPtr(row[headersMap["input"]]),
-			Values:        common.ToPtr(row[headersMap["values"]]),
-			Protocol:      row[headersMap["protocol"]],
-			Examples:      common.ToPtr(row[headersMap["example"]]),
-			KeySetName:    common.ToPtr(row[headersMap["key_set_name"]]),
-			Description:   common.ToPtr(row[headersMap["description"]]),
-			Executor:      row[headersMap["executor"]],
+			Version:          row[headersMap["version"]],
+			AttributeId:      row[headersMap["attr_id"]],
+			AttributePath:    row[headersMap["attr_path"]],
+			SupportedFormats: supportedFormatsValue,
+			Field:            common.ToPtr(row[headersMap["field"]]),
+			DataType:         common.ToPtr(row[headersMap["data_type"]]),
+			Input:            common.ToPtr(row[headersMap["input"]]),
+			Values:           common.ToPtr(row[headersMap["values"]]),
+			Protocol:         row[headersMap["protocol"]],
+			Examples:         common.ToPtr(row[headersMap["example"]]),
+			KeySetName:       common.ToPtr(row[headersMap["key_set_name"]]),
+			Description:      common.ToPtr(row[headersMap["description"]]),
+			Executor:         row[headersMap["executor"]],
 		}
 
 		dtoList = append(dtoList, dataRow)
