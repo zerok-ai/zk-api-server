@@ -76,16 +76,11 @@ func getResp(attributesList []AttributeDto) []AttributeDetails {
 		keySetName := splitsArr[1]
 		attributesListForFrontend := make([]AttributeInfoResp, 0)
 		for _, attribute := range attributesList {
-			idParts := strings.Split(attribute.AttributeId, ">")
-			for i, part := range idParts {
-				idParts[i] = strings.TrimSpace(part)
-				idParts[i] = fmt.Sprintf("\"%s\"", idParts[i])
-			}
 			if attribute.SupportedFormats == nil || len(*attribute.SupportedFormats) == 0 {
 				attribute.SupportedFormats = nil
 			}
 			a := AttributeInfoResp{
-				Id:               strings.Join(idParts, "."),
+				Id:               attribute.AttributeId,
 				Field:            attribute.Field,
 				Input:            attribute.Input,
 				Values:           attribute.Values,
@@ -171,18 +166,18 @@ func ConvertAttributeDtoToExecutorAttributesResponse(data []AttributeDto) Execut
 			_ = json.Unmarshal([]byte(v.Attributes), &attributesList)
 			attributesForExecutor := make(map[string]string)
 			for _, attribute := range attributesList {
-				versionIdParts := strings.Split(attribute.AttributePath, ">")
-				for i, part := range versionIdParts {
-					versionIdParts[i] = strings.TrimSpace(part)
-					versionIdParts[i] = fmt.Sprintf("\"%s\"", versionIdParts[i])
+				pathParts := strings.Split(attribute.AttributePath, ">")
+				for i, part := range pathParts {
+					pathParts[i] = strings.TrimSpace(part)
+					pathParts[i] = fmt.Sprintf("\"%s\"", pathParts[i])
 				}
 				key := strings.Join([]string{protocol, string(attribute.Executor), v.Version}, separator)
-				attributesForExecutor[attribute.AttributeId] = strings.Join(versionIdParts, ".")
+				attributesForExecutor[attribute.AttributeId] = strings.Join(pathParts, ".")
 				val := finalMap[key]
 				if val == nil {
 					val = make(map[string]string)
 				}
-				val[attribute.AttributeId] = strings.Join(versionIdParts, ".")
+				val[attribute.AttributeId] = strings.Join(pathParts, ".")
 				finalMap[key] = val
 			}
 		}
