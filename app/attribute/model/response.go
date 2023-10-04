@@ -3,25 +3,26 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/zerok-ai/zk-utils-go/scenario/model"
 	"strconv"
 	"strings"
 )
 
 type AttributeInfo struct {
-	AttributeId      string    `json:"attr_id"`
-	AttributePath    string    `json:"attr_path"`
-	KeySetName       string    `json:"key_set_name"`
-	JsonField        bool      `json:"json_field"`
-	Field            string    `json:"field"`
-	Input            string    `json:"input"`
-	Values           string    `json:"values"`
-	DataType         string    `json:"data_type"`
-	Description      string    `json:"description,omitempty"`
-	Examples         string    `json:"examples,omitempty"`
-	Executor         string    `json:"executor,omitempty"`
-	Protocol         string    `json:"protocol,omitempty"`
-	SendToFrontEnd   bool      `json:"send_to_front_end,omitempty"`
-	SupportedFormats *[]string `json:"supported_formats,omitempty"`
+	AttributeId      string         `json:"attr_id"`
+	AttributePath    string         `json:"attr_path"`
+	KeySetName       string         `json:"key_set_name"`
+	JsonField        bool           `json:"json_field"`
+	Field            string         `json:"field"`
+	Input            string         `json:"input"`
+	Values           string         `json:"values"`
+	DataType         string         `json:"data_type"`
+	Description      string         `json:"description,omitempty"`
+	Examples         string         `json:"examples,omitempty"`
+	Executor         model.Executor `json:"executor,omitempty"`
+	Protocol         model.Protocol `json:"protocol,omitempty"`
+	SendToFrontEnd   bool           `json:"send_to_front_end,omitempty"`
+	SupportedFormats *[]string      `json:"supported_formats,omitempty"`
 }
 
 type AttributeInfoResp struct {
@@ -37,7 +38,7 @@ type AttributeInfoResp struct {
 
 type AttributeDetails struct {
 	KeySetName     string              `json:"key_set_name"`
-	Executor       string              `json:"executor"`
+	Executor       model.Executor      `json:"executor"`
 	Version        string              `json:"version,omitempty"`
 	AttributesList []AttributeInfoResp `json:"attribute_list"`
 }
@@ -60,7 +61,7 @@ func getResp(attributesList []AttributeDto) []AttributeDetails {
 		_ = json.Unmarshal([]byte(v.Attributes), &attributesList)
 
 		for _, x := range attributesList {
-			key := strings.Join([]string{v.Executor, x.KeySetName}, separator)
+			key := strings.Join([]string{string(v.Executor), x.KeySetName}, separator)
 			if _, ok := keySetExecutorToAttributesListStringMap[key]; !ok {
 				keySetExecutorToAttributesListStringMap[key] = make([]AttributeInfo, 0)
 			}
@@ -97,7 +98,7 @@ func getResp(attributesList []AttributeDto) []AttributeDetails {
 		}
 		var attributeDetails AttributeDetails
 		attributeDetails.KeySetName = keySetName
-		attributeDetails.Executor = executor
+		attributeDetails.Executor = model.Executor(executor)
 		attributeDetails.AttributesList = attributesListForFrontend
 		attributesInfoList = append(attributesInfoList, attributeDetails)
 	}
@@ -114,10 +115,11 @@ func ConvertAttributeDtoToAttributeResponse(data []AttributeDto) AttributeListRe
 
 	mapProtocolToAttributeDtoList := make(map[string][]AttributeDto)
 	for _, v := range data {
-		if _, ok := mapProtocolToAttributeDtoList[v.Protocol]; !ok {
-			mapProtocolToAttributeDtoList[v.Protocol] = make([]AttributeDto, 0)
+		key := string(v.Protocol)
+		if _, ok := mapProtocolToAttributeDtoList[key]; !ok {
+			mapProtocolToAttributeDtoList[key] = make([]AttributeDto, 0)
 		}
-		mapProtocolToAttributeDtoList[v.Protocol] = append(mapProtocolToAttributeDtoList[v.Protocol], v)
+		mapProtocolToAttributeDtoList[key] = append(mapProtocolToAttributeDtoList[key], v)
 	}
 
 	for protocol, attributeDtoList := range mapProtocolToAttributeDtoList {
@@ -149,10 +151,11 @@ func ConvertAttributeDtoToExecutorAttributesResponse(data []AttributeDto) Execut
 	var protocolToKeySetToAttributeListMap = make(map[string][]AttributeDto)
 	var maxUpdatedAt int64
 	for _, v := range data {
-		if _, ok := protocolToKeySetToAttributeListMap[v.Protocol]; !ok {
-			protocolToKeySetToAttributeListMap[v.Protocol] = make([]AttributeDto, 0)
+		key := string(v.Protocol)
+		if _, ok := protocolToKeySetToAttributeListMap[key]; !ok {
+			protocolToKeySetToAttributeListMap[key] = make([]AttributeDto, 0)
 		}
-		protocolToKeySetToAttributeListMap[v.Protocol] = append(protocolToKeySetToAttributeListMap[v.Protocol], v)
+		protocolToKeySetToAttributeListMap[key] = append(protocolToKeySetToAttributeListMap[key], v)
 		v, _ := strconv.ParseInt(v.UpdatedAt, 10, 64)
 		if v > maxUpdatedAt {
 			maxUpdatedAt = v
@@ -173,7 +176,7 @@ func ConvertAttributeDtoToExecutorAttributesResponse(data []AttributeDto) Execut
 					versionIdParts[i] = strings.TrimSpace(part)
 					versionIdParts[i] = fmt.Sprintf("\"%s\"", versionIdParts[i])
 				}
-				key := strings.Join([]string{protocol, attribute.Executor, v.Version}, separator)
+				key := strings.Join([]string{protocol, string(attribute.Executor), v.Version}, separator)
 				attributesForExecutor[attribute.AttributeId] = strings.Join(versionIdParts, ".")
 				val := finalMap[key]
 				if val == nil {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/zerok-ai/zk-utils-go/common"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
+	scenarioModel "github.com/zerok-ai/zk-utils-go/scenario/model"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"mime/multipart"
 	"strconv"
@@ -143,11 +144,11 @@ func readCSVAndReturnData(file multipart.File) ([]model.AttributeInfoRequest, *z
 			DataType:         common.ToPtr(row[headersMap["data_type"]]),
 			Input:            common.ToPtr(row[headersMap["input"]]),
 			Values:           common.ToPtr(row[headersMap["values"]]),
-			Protocol:         row[headersMap["protocol"]],
+			Protocol:         scenarioModel.Protocol(row[headersMap["protocol"]]),
 			Examples:         common.ToPtr(row[headersMap["example"]]),
 			KeySetName:       common.ToPtr(row[headersMap["key_set_name"]]),
 			Description:      common.ToPtr(row[headersMap["description"]]),
-			Executor:         row[headersMap["executor"]],
+			Executor:         scenarioModel.Executor(row[headersMap["executor"]]),
 		}
 
 		dtoList = append(dtoList, dataRow)
@@ -164,10 +165,11 @@ func (a attributeService) UpsertAttributes(file multipart.File) (bool, *zkerrors
 	attributeDtoList := make(model.AttributeDtoList, 0)
 	mapExecutorToDtoList := make(map[string][]model.AttributeInfoRequest)
 	for _, v := range dtoList {
-		if _, ok := mapExecutorToDtoList[v.Executor]; !ok {
-			mapExecutorToDtoList[v.Executor] = make([]model.AttributeInfoRequest, 0)
+		key := string(v.Executor)
+		if _, ok := mapExecutorToDtoList[key]; !ok {
+			mapExecutorToDtoList[key] = make([]model.AttributeInfoRequest, 0)
 		}
-		mapExecutorToDtoList[v.Executor] = append(mapExecutorToDtoList[v.Executor], v)
+		mapExecutorToDtoList[key] = append(mapExecutorToDtoList[key], v)
 	}
 
 	for _, dtoList := range mapExecutorToDtoList {

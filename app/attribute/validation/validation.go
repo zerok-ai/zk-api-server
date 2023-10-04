@@ -4,6 +4,7 @@ import (
 	"github.com/zerok-ai/zk-utils-go/common"
 	"github.com/zerok-ai/zk-utils-go/logs"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
+	scenarioModel "github.com/zerok-ai/zk-utils-go/scenario/model"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"zk-api-server/app/attribute/model"
 	"zk-api-server/app/utils"
@@ -94,7 +95,7 @@ func ValidateCommonAttributesList(attributesList []model.AttributeInfoRequest) (
 			return false, &zkError
 		}
 
-		if common.IsEmpty(v.Protocol) || (v.Protocol != "HTTP" && v.Protocol != "GENERAL") {
+		if common.IsEmpty(string(v.Protocol)) || (v.Protocol != "HTTP" && v.Protocol != "GENERAL") {
 			zkLogger.Error(LogTag, "protocol is empty or invalid at line: ", i)
 			zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestEmptyProtocol, nil)
 			return false, &zkError
@@ -106,7 +107,7 @@ func ValidateCommonAttributesList(attributesList []model.AttributeInfoRequest) (
 			return false, &zkError
 		}
 
-		if common.IsEmpty(v.Executor) || (v.Executor != utils.OTEL && v.Executor != utils.EBPF) {
+		if common.IsEmpty(string(v.Executor)) || (v.Executor != scenarioModel.ExecutorEbpf && v.Executor != scenarioModel.ExecutorOTel) {
 			zkLogger.Error(LogTag, "executor is empty or invalid at line: ", i)
 			zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestEmptyExecutor, nil)
 			return false, &zkError
@@ -136,13 +137,13 @@ func ValidateVersionSpecificAttributesList(attributesList []model.AttributeInfoR
 			return false, &zkError
 		}
 
-		if common.IsEmpty(v.Protocol) || (v.Protocol != "HTTP" && v.Protocol != "GENERAL") {
+		if common.IsEmpty(string(v.Protocol)) || (v.Protocol != "HTTP" && v.Protocol != "GENERAL") {
 			zkLogger.Error(LogTag, "protocol is empty or invalid at line: ", i)
 			zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestEmptyProtocol, nil)
 			return false, &zkError
 		}
 
-		if common.IsEmpty(v.Executor) || (v.Executor != utils.OTEL && v.Executor != utils.EBPF) {
+		if common.IsEmpty(string(v.Executor)) || (v.Executor != utils.OTEL && v.Executor != utils.EBPF) {
 			zkLogger.Error(LogTag, "executor is empty or invalid at line: ", i)
 			zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestEmptyExecutor, nil)
 			return false, &zkError

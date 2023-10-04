@@ -2,22 +2,23 @@ package model
 
 import (
 	"encoding/json"
+	"github.com/zerok-ai/zk-utils-go/scenario/model"
 	"strings"
 )
 
 type AttributeDto struct {
-	Version    string `json:"version"`
-	Protocol   string `json:"protocol"`
-	Executor   string `json:"executor"`
-	UpdatedAt  string `json:"updated_at"`
-	Attributes string `json:"attribute_list"`
+	Version    string         `json:"version"`
+	Protocol   model.Protocol `json:"protocol"`
+	Executor   model.Executor `json:"executor"`
+	UpdatedAt  string         `json:"updated_at"`
+	Attributes string         `json:"attribute_list"`
 }
 
 type AttributeDtoList []AttributeDto
 
 func ConvertAttributeInfoRequestToAttributeDto(req []AttributeInfoRequest) AttributeDtoList {
 	version := strings.Trim(req[0].Version, " ")
-	executor := strings.Trim(req[0].Executor, " ")
+	executor := strings.Trim(string(req[0].Executor), " ")
 	if version != "common" {
 		for _, v := range req {
 			v.SupportedFormats = nil
@@ -41,8 +42,8 @@ func ConvertAttributeInfoRequestToAttributeDto(req []AttributeInfoRequest) Attri
 	for protocol, attributesInfoRequestList := range protocolToAttributesInfoRequestListMap {
 		attrStr, _ := json.Marshal(attributesInfoRequestList)
 		attributeDto := AttributeDto{
-			Protocol:   protocol,
-			Executor:   executor,
+			Protocol:   model.Protocol(protocol),
+			Executor:   model.Executor(executor),
 			Version:    version,
 			Attributes: string(attrStr),
 		}
@@ -56,7 +57,7 @@ func ConvertAttributeInfoRequestToAttributeDto(req []AttributeInfoRequest) Attri
 func getProtocolToAttributesMap(reqInfoList []AttributeInfoRequest) map[string][]AttributeInfoRequest {
 	protocolToAttributesInfoRequestListMap := make(map[string][]AttributeInfoRequest)
 	for _, v := range reqInfoList {
-		protocol := strings.Trim(v.Protocol, " ")
+		protocol := strings.Trim(string(v.Protocol), " ")
 		if _, ok := protocolToAttributesInfoRequestListMap[protocol]; ok {
 			protocolToAttributesInfoRequestListMap[protocol] = append(protocolToAttributesInfoRequestListMap[protocol], v)
 		} else {
