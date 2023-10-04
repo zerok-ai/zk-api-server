@@ -126,7 +126,12 @@ func readCSVAndReturnData(file multipart.File) ([]model.AttributeInfoRequest, *z
 		if common.IsEmpty(supportedFormatsStr) {
 			supportedFormatsValue = nil
 		} else {
-			supportedFormatsValue = common.ToPtr(strings.Split(supportedFormatsStr, ","))
+			supportedFormatsStr = strings.Trim(supportedFormatsStr, " ")
+			formatsArr := strings.Split(supportedFormatsStr, ",")
+			for i, format := range formatsArr {
+				formatsArr[i] = strings.Trim(format, " ")
+			}
+			supportedFormatsValue = common.ToPtr(formatsArr)
 		}
 
 		dataRow := model.AttributeInfoRequest{
