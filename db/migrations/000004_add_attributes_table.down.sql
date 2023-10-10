@@ -1,5 +1,3 @@
-DROP TRIGGER IF EXISTS update_attributes_updated_at ON attributes;
+DROP TRIGGER IF EXISTS zk_update_attributes_updated_at ON zk_attributes;
 
-DROP FUNCTION IF EXISTS update_updated_at();
-
-drop TABLE attributes;
+drop TABLE zk_attributes;

@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS integrations;
+DROP TABLE IF EXISTS zk_integrations;

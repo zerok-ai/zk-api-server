@@ -18,9 +18,9 @@ type AttributeRepo interface {
 }
 
 const (
-	UpsertAttributesQuery    = "INSERT INTO attributes (version, protocol, executor, attribute_list) VALUES ($1, $2, $3, $4) ON CONFLICT (version, protocol, executor) DO UPDATE SET attribute_list = $4"
-	SelectAttributesQuery    = "SELECT protocol, version, executor, updated_at, attribute_list FROM attributes WHERE protocol=ANY($1) AND version='common'"
-	SelectAllAttributesQuery = "SELECT protocol, version, executor, updated_at, attribute_list FROM attributes WHERE updated_at>$1  AND version!='common'"
+	UpsertAttributesQuery    = "INSERT INTO zk_attributes (version, protocol, executor, attribute_list) VALUES ($1, $2, $3, $4) ON CONFLICT (version, protocol, executor) DO UPDATE SET attribute_list = $4"
+	SelectAttributesQuery    = "SELECT protocol, version, executor, updated_at, attribute_list FROM zk_attributes WHERE protocol=ANY($1) AND version='common'"
+	SelectAllAttributesQuery = "SELECT protocol, version, executor, updated_at, attribute_list FROM zk_attributes WHERE updated_at>$1  AND version!='common'"
 )
 
 var LogTag = "attributes_repo"

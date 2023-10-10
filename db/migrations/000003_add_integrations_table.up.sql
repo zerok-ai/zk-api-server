@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE IF NOT EXISTS integrations
+CREATE TABLE IF NOT EXISTS zk_integrations
 (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     cluster_id     VARCHAR(255) NOT NULL,
