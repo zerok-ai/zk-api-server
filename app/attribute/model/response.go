@@ -3,26 +3,29 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/zerok-ai/zk-utils-go/scenario/model"
+	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
+	scenarioModel "github.com/zerok-ai/zk-utils-go/scenario/model"
 	"strconv"
 	"strings"
 )
 
+var LogTag = "attribute_model_response"
+
 type AttributeInfo struct {
-	AttributeId      string         `json:"attr_id"`
-	AttributePath    string         `json:"attr_path"`
-	KeySetName       string         `json:"key_set_name"`
-	JsonField        bool           `json:"json_field"`
-	Field            string         `json:"field"`
-	Input            string         `json:"input"`
-	Values           string         `json:"values"`
-	DataType         string         `json:"data_type"`
-	Description      string         `json:"description,omitempty"`
-	Examples         string         `json:"examples,omitempty"`
-	Executor         model.Executor `json:"executor,omitempty"`
-	Protocol         model.Protocol `json:"protocol,omitempty"`
-	SendToFrontEnd   bool           `json:"send_to_front_end,omitempty"`
-	SupportedFormats *[]string      `json:"supported_formats,omitempty"`
+	AttributeId      string                 `json:"attr_id"`
+	AttributePath    string                 `json:"attr_path"`
+	KeySetName       string                 `json:"key_set_name"`
+	JsonField        bool                   `json:"json_field"`
+	Field            string                 `json:"field"`
+	Input            string                 `json:"input"`
+	Values           string                 `json:"values"`
+	DataType         string                 `json:"data_type"`
+	Description      string                 `json:"description,omitempty"`
+	Examples         string                 `json:"examples,omitempty"`
+	Executor         scenarioModel.Executor `json:"executor,omitempty"`
+	Protocol         scenarioModel.Protocol `json:"protocol,omitempty"`
+	SendToFrontEnd   bool                   `json:"send_to_front_end,omitempty"`
+	SupportedFormats *[]string              `json:"supported_formats,omitempty"`
 }
 
 type AttributeInfoResp struct {
@@ -37,10 +40,10 @@ type AttributeInfoResp struct {
 }
 
 type AttributeDetails struct {
-	KeySetName     string              `json:"key_set_name"`
-	Executor       model.Executor      `json:"executor"`
-	Version        string              `json:"version,omitempty"`
-	AttributesList []AttributeInfoResp `json:"attribute_list"`
+	KeySetName     string                 `json:"key_set_name"`
+	Executor       scenarioModel.Executor `json:"executor"`
+	Version        string                 `json:"version,omitempty"`
+	AttributesList []AttributeInfoResp    `json:"attribute_list"`
 }
 
 type AttributeResponse struct {
@@ -93,7 +96,7 @@ func getResp(attributesList []AttributeDto) []AttributeDetails {
 		}
 		var attributeDetails AttributeDetails
 		attributeDetails.KeySetName = keySetName
-		attributeDetails.Executor = model.Executor(executor)
+		attributeDetails.Executor = scenarioModel.Executor(executor)
 		attributeDetails.AttributesList = attributesListForFrontend
 		attributesInfoList = append(attributesInfoList, attributeDetails)
 	}
@@ -168,8 +171,7 @@ func ConvertAttributeDtoToExecutorAttributesResponse(data []AttributeDto) Execut
 			for _, attribute := range attributesList {
 				pathParts := strings.Split(attribute.AttributePath, ">")
 				for i, part := range pathParts {
-					pathParts[i] = strings.TrimSpace(part)
-					pathParts[i] = fmt.Sprintf("\"%s\"", pathParts[i])
+					pathParts[i] = formatAttribute(part)
 				}
 				key := strings.Join([]string{protocol, string(attribute.Executor), v.Version}, separator)
 				attributesForExecutor[attribute.AttributeId] = strings.Join(pathParts, ".")
@@ -197,4 +199,20 @@ func ConvertAttributeDtoToExecutorAttributesResponse(data []AttributeDto) Execut
 	resp.Attributes = executorList
 
 	return resp
+}
+
+func formatAttribute(s string) string {
+	s = strings.TrimSpace(s)
+	if strings.Contains(s, "[") && strings.HasSuffix(s, "]") {
+		start := strings.Index(s, "[")
+		end := strings.Index(s, "]")
+		index := s[start+1 : end]
+		arrayName := s[:start]
+		if _, err := strconv.Atoi(index); err == nil {
+			return fmt.Sprintf("\"%s\"[%s]", arrayName, index)
+		} else {
+			zkLogger.Error(LogTag, "Error while converting index to int", err)
+		}
+	}
+	return fmt.Sprintf("\"%s\"", s)
 }
