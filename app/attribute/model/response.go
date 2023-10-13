@@ -5,6 +5,7 @@ import (
 	"fmt"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	scenarioModel "github.com/zerok-ai/zk-utils-go/scenario/model"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -126,6 +127,22 @@ func ConvertAttributeDtoToAttributeResponse(data []AttributeDto) AttributeListRe
 		attributeResponse.Protocol = protocol
 		attributeResponse.AttributeDetailsList = attributesInfoList
 		resp.AttributesList = append(resp.AttributesList, attributeResponse)
+	}
+
+	// sorting the attributeResponseList on protocol,attributeDetailsList on keyset name and attributeInfoResponse then on Field
+	sort.Slice(resp.AttributesList, func(i, j int) bool {
+		return resp.AttributesList[i].Protocol < resp.AttributesList[j].Protocol
+	})
+
+	for i := range resp.AttributesList {
+		sort.Slice(resp.AttributesList[i].AttributeDetailsList, func(j, k int) bool {
+			return resp.AttributesList[i].AttributeDetailsList[j].KeySetName < resp.AttributesList[i].AttributeDetailsList[k].KeySetName
+		})
+		for j := range resp.AttributesList[i].AttributeDetailsList {
+			sort.Slice(resp.AttributesList[i].AttributeDetailsList[j].AttributesList, func(k, l int) bool {
+				return resp.AttributesList[i].AttributeDetailsList[j].AttributesList[k].Field < resp.AttributesList[i].AttributeDetailsList[j].AttributesList[l].Field
+			})
+		}
 	}
 
 	return resp
