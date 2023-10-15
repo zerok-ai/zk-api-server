@@ -118,10 +118,6 @@ func readCSVAndReturnData(file multipart.File) ([]model.AttributeInfoRequest, *z
 			return dtoList, &zkError
 		}
 
-		if !sendToFrontEnd {
-			continue
-		}
-
 		var supportedFormatsValue *[]string
 		supportedFormatsStr := row[headersMap["supported_formats"]]
 		if common.IsEmpty(supportedFormatsStr) {
@@ -149,6 +145,7 @@ func readCSVAndReturnData(file multipart.File) ([]model.AttributeInfoRequest, *z
 			KeySetName:       common.ToPtr(row[headersMap["key_set_name"]]),
 			Description:      common.ToPtr(row[headersMap["description"]]),
 			Executor:         scenarioModel.Executor(row[headersMap["executor"]]),
+			SendToFrontEnd:   sendToFrontEnd,
 		}
 
 		dtoList = append(dtoList, dataRow)

@@ -25,8 +25,8 @@ type AttributeInfo struct {
 	Examples         string                 `json:"examples,omitempty"`
 	Executor         scenarioModel.Executor `json:"executor,omitempty"`
 	Protocol         scenarioModel.Protocol `json:"protocol,omitempty"`
-	SendToFrontEnd   bool                   `json:"send_to_front_end,omitempty"`
 	SupportedFormats *[]string              `json:"supported_formats,omitempty"`
+	SendToFrontEnd   *bool                  `json:"send_to_front_end,omitempty"`
 }
 
 type AttributeInfoResp struct {
@@ -65,6 +65,15 @@ func getResp(attributesList []AttributeDto) []AttributeDetails {
 		_ = json.Unmarshal([]byte(v.Attributes), &attributesList)
 
 		for _, x := range attributesList {
+			// send only the attributes where sendToFrontend is true
+			if x.SendToFrontEnd != nil {
+				if *x.SendToFrontEnd == false {
+					continue
+				} else {
+					x.SendToFrontEnd = nil
+				}
+			}
+
 			key := strings.Join([]string{string(v.Executor), x.KeySetName}, separator)
 			if _, ok := keySetExecutorToAttributesListStringMap[key]; !ok {
 				keySetExecutorToAttributesListStringMap[key] = make([]AttributeInfo, 0)

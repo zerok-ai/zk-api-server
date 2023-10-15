@@ -19,7 +19,11 @@ type AttributeDtoList []AttributeDto
 func ConvertAttributeInfoRequestToAttributeDto(req []AttributeInfoRequest) AttributeDtoList {
 	version := strings.Trim(req[0].Version, " ")
 	executor := strings.Trim(string(req[0].Executor), " ")
-	if version != "common" {
+	if version == "common" {
+		for _, v := range req {
+			v.AttributePath = ""
+		}
+	} else {
 		for _, v := range req {
 			v.SupportedFormats = nil
 			v.Field = nil
@@ -30,10 +34,6 @@ func ConvertAttributeInfoRequestToAttributeDto(req []AttributeInfoRequest) Attri
 			v.KeySetName = nil
 			v.Description = nil
 			v.KeySetName = nil
-		}
-	} else {
-		for _, v := range req {
-			v.AttributePath = ""
 		}
 	}
 
