@@ -184,19 +184,13 @@ func ConvertAttributeDtoToExecutorAttributesResponse(data []AttributeDto) Execut
 		for _, v := range keySetToAttributeListMap {
 			attributesList := make([]AttributeInfo, 0)
 			_ = json.Unmarshal([]byte(v.Attributes), &attributesList)
-			attributesForExecutor := make(map[string]string)
 			for _, attribute := range attributesList {
-				pathParts := strings.Split(attribute.AttributePath, ">")
-				for i, part := range pathParts {
-					pathParts[i] = formatAttribute(part)
-				}
 				key := strings.Join([]string{protocol, string(attribute.Executor), v.Version}, separator)
-				attributesForExecutor[attribute.AttributeId] = strings.Join(pathParts, ".")
 				val := finalMap[key]
 				if val == nil {
 					val = make(map[string]string)
 				}
-				val[attribute.AttributeId] = strings.Join(pathParts, ".")
+				val[attribute.AttributeId] = attribute.AttributePath
 				finalMap[key] = val
 			}
 		}
