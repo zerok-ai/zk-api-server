@@ -157,7 +157,7 @@ func readCSVAndReturnData(file multipart.File) ([]model.AttributeInfoRequest, *z
 func (a attributeService) UpsertAttributes(file multipart.File) (bool, *zkerrors.ZkError) {
 	dtoList, zkError := readCSVAndReturnData(file)
 	if zkError != nil {
-		return false, nil
+		return false, zkError
 	}
 	attributeDtoList := make(model.AttributeDtoList, 0)
 	mapExecutorToDtoList := make(map[string][]model.AttributeInfoRequest)
