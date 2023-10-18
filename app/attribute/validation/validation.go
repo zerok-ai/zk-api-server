@@ -13,6 +13,8 @@ import (
 
 var LogTag = "attribute_validation"
 
+var protocols = []string{"HTTP", "GENERAL", "GRPC"}
+
 func ValidateGetAttributes(protocol string) *zkerrors.ZkError {
 	if common.IsEmpty(protocol) {
 		zkErr := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestVersionEmpty, nil)
@@ -95,7 +97,7 @@ func ValidateCommonAttributesList(attributesList []model.AttributeInfoRequest) (
 			return false, &zkError
 		}
 
-		if common.IsEmpty(string(v.Protocol)) || (v.Protocol != "HTTP" && v.Protocol != "GENERAL") {
+		if common.IsEmpty(string(v.Protocol)) || !utils.ContainsValue(protocols, string(v.Protocol)) {
 			zkLogger.Error(LogTag, "protocol is empty or invalid at line: ", i)
 			zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestEmptyProtocol, nil)
 			return false, &zkError
@@ -137,7 +139,7 @@ func ValidateVersionSpecificAttributesList(attributesList []model.AttributeInfoR
 			return false, &zkError
 		}
 
-		if common.IsEmpty(string(v.Protocol)) || (v.Protocol != "HTTP" && v.Protocol != "GENERAL") {
+		if common.IsEmpty(string(v.Protocol)) || !utils.ContainsValue(protocols, string(v.Protocol)) {
 			zkLogger.Error(LogTag, "protocol is empty or invalid at line: ", i)
 			zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestEmptyProtocol, nil)
 			return false, &zkError
