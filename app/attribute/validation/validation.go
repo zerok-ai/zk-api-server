@@ -13,7 +13,7 @@ import (
 
 var LogTag = "attribute_validation"
 
-var protocols = []string{"HTTP", "GENERAL", "GRPC"}
+var protocols = []string{"HTTP", "GENERAL", "GRPC", "IDENTIFIER"}
 
 func ValidateGetAttributes(protocol string) *zkerrors.ZkError {
 	if common.IsEmpty(protocol) {
