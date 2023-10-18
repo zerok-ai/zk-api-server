@@ -16,4 +16,5 @@ type AttributeInfoRequest struct {
 	KeySetName       *string        `csv:"key_set_name" json:"key_set_name,omitempty"`
 	Description      *string        `csv:"description" json:"description,omitempty"`
 	Executor         model.Executor `csv:"executor" json:"executor"`
+	SendToFrontEnd   bool           `csv:"send_to_front_end" json:"send_to_front_end"`
 }
