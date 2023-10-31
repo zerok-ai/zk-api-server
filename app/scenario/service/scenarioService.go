@@ -33,6 +33,13 @@ func NewScenarioService(repo repository.ScenarioRepo) ScenarioService {
 }
 
 func (r scenarioService) CreateScenario(clusterId string, request model2.CreateScenarioRequest) *zkerrors.ZkError {
+	for _, s := range request.Workloads {
+		if s.Executor != model.ExecutorEbpf && s.Executor != model.ExecutorOTel {
+			zkLogger.ErrorF(LogTag, "Executor is not valid, scenario: %v executor: %v", request.ScenarioTitle, s.Executor)
+			ZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequest, errors.New("executor is not valid"))
+			return &ZkErr
+		}
+	}
 	err := r.repo.CreateNewScenario(clusterId, request)
 	if err != nil {
 		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)

@@ -2,13 +2,14 @@ package app
 
 import (
 	"github.com/kataras/iris/v12/core/router"
+	"zk-api-server/app/attribute/handler"
 	clusterHandler "zk-api-server/app/cluster/handler"
 	integrationsHandler "zk-api-server/app/integrations/handler"
 	scenarioHandler "zk-api-server/app/scenario/handler"
 	"zk-api-server/app/utils"
 )
 
-func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler, ih integrationsHandler.IntegrationsHandler) {
+func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler, ih integrationsHandler.IntegrationsHandler, ah handler.AttributeHandler) {
 	{
 		clusterAPI := app.Party("/u/cluster")
 		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/service/list", utils.ValidateApiKeyMiddleware, ch.GetServiceDetailsList)
@@ -25,6 +26,9 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 		clusterAPI.Post("/{"+utils.ClusterIdxPathParam+"}/integration", ih.UpsertIntegration)
 		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/integration", ih.GetAllIntegrationsDashboard)
 
+		clusterAPI.Get("/attribute", ah.GetAttributes)
+		clusterAPI.Put("/attribute", ah.UploadAttributesCSV)
+
 	}
 
 	ruleEngineAPI := app.Party("/o/cluster")
@@ -32,6 +36,8 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 		ruleEngineAPI.Get("/{"+utils.ClusterIdxPathParam+"}/scenario", rh.GetAllScenarioOperator)
 
 		ruleEngineAPI.Get("/{"+utils.ClusterIdxPathParam+"}/integration", ih.GetAllIntegrationsOperator)
+
+		ruleEngineAPI.Get("/attribute", ah.GetAttributesForBackend)
 
 	}
 }

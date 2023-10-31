@@ -1,7 +1,7 @@
 package validation
 
 import (
-	"github.com/zerok-ai/zk-utils-go/common"
+	zkcommon "github.com/zerok-ai/zk-utils-go/common"
 	"testing"
 	"zk-api-server/app/utils/errors"
 

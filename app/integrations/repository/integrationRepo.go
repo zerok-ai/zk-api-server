@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	GetIntegrationById           = "SELECT id, cluster_id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server FROM integrations WHERE id=$1 AND cluster_id=$2"
-	GetAllActiveIntegrations     = "SELECT id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server FROM integrations WHERE cluster_id=$1 AND deleted = false AND disabled = false"
-	GetAllNonDeletedIntegrations = "SELECT id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server FROM integrations WHERE cluster_id=$1 AND deleted = false"
-	InsertIntegration            = "INSERT INTO integrations (cluster_id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"
-	UpdateIntegration            = "UPDATE integrations SET alias=$1, type = $2, url = $3, authentication = $4, level = $5, deleted = $6, disabled = $7, updated_at = $8, metric_server = $9 WHERE id = $10"
+	GetIntegrationById           = "SELECT id, cluster_id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server FROM zk_integrations WHERE id=$1 AND cluster_id=$2"
+	GetAllActiveIntegrations     = "SELECT id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server FROM zk_integrations WHERE cluster_id=$1 AND deleted = false AND disabled = false"
+	GetAllNonDeletedIntegrations = "SELECT id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server FROM zk_integrations WHERE cluster_id=$1 AND deleted = false"
+	InsertIntegration            = "INSERT INTO zk_integrations (cluster_id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"
+	UpdateIntegration            = "UPDATE zk_integrations SET alias=$1, type = $2, url = $3, authentication = $4, level = $5, deleted = $6, disabled = $7, updated_at = $8, metric_server = $9 WHERE id = $10"
 )
 
 type IntegrationRepo interface {

@@ -46,6 +46,12 @@ const (
 	ServiceName = "service_name"
 	PodName     = "pod_name"
 	ClusterId   = "cluster_id"
+	Protocol    = "protocol"
+	Version     = "version"
+	File        = "file"
+
+	EBPF = "EBPF"
+	OTEL = "OTEL"
 
 	Enable  = "enable"
 	Disable = "disable"
@@ -201,4 +207,13 @@ func IsValidPxlTime(s string) bool {
 	}
 
 	return true
+}
+
+func ContainsValue(slice []string, value string) bool {
+	for _, item := range slice {
+		if item == value {
+			return true
+		}
+	}
+	return false
 }

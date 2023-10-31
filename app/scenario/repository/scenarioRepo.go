@@ -9,18 +9,19 @@ import (
 	"github.com/zerok-ai/zk-utils-go/storage/sqlDB"
 	"time"
 	scenarioResponseModel "zk-api-server/app/scenario/model"
+	"zk-api-server/utils"
 )
 
 const (
 	DefaultClusterId = "Zk_default_cluster_id_for_all_scenarios"
 
-	GetAllScenarioSqlStatement             = "SELECT scenario_data, deleted, disabled, created_at, disabled_at, updated_at FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE updated_at>$1 AND (cluster_id=$2 OR cluster_id=$3) order by created_at desc LIMIT $4 OFFSET $5"
-	GetAllScenarioForDashboardSqlStatement = "SELECT scenario_data, deleted, disabled, created_at, disabled_at, updated_at FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE updated_at>$1 AND deleted = $2 AND (cluster_id=$3 OR cluster_id=$4) order by created_at desc LIMIT $5 OFFSET $6"
-	InsertScenarioTableStatement           = "INSERT INTO scenario (cluster_id, scenario_title, scenario_type, updated_at) VALUES ($1, $2, $3, $4) RETURNING scenario_id"
-	InsertScenarioVersionTableStatement    = "INSERT INTO scenario_version (scenario_id, scenario_data, schema_version, scenario_version, created_by, created_at) VALUES ($1, $2, $3, $4, $5, $6)"
-	DisableScenarioStatement               = "UPDATE scenario set disabled=$1, disabled_at=$2, updated_at=$3 where cluster_id= $4 AND scenario_id=$5"
-	DeleteScenarioStatement                = "UPDATE scenario set deleted=TRUE, deleted_at=$1, updated_at=$2 where cluster_id= $3 AND scenario_id=$4"
-	GetTotalRowsCountStatement             = "SELECT COUNT(*) as count FROM scenario s INNER JOIN scenario_version sv USING(scenario_id) WHERE deleted=false AND updated_at>$1 AND (cluster_id=$2 OR cluster_id=$3)"
+	GetAllScenarioSqlStatement             = "SELECT scenario_data, deleted, disabled, created_at, disabled_at, updated_at FROM zk_scenario s INNER JOIN zk_scenario_version sv USING(scenario_id) WHERE updated_at>$1 AND (cluster_id=$2 OR cluster_id=$3) order by created_at desc LIMIT $4 OFFSET $5"
+	GetAllScenarioForDashboardSqlStatement = "SELECT scenario_data, deleted, disabled, created_at, disabled_at, updated_at FROM zk_scenario s INNER JOIN zk_scenario_version sv USING(scenario_id) WHERE updated_at>$1 AND deleted = $2 AND (cluster_id=$3 OR cluster_id=$4) order by created_at desc LIMIT $5 OFFSET $6"
+	InsertScenarioTableStatement           = "INSERT INTO zk_scenario (cluster_id, scenario_title, scenario_type, updated_at) VALUES ($1, $2, $3, $4) RETURNING scenario_id"
+	InsertScenarioVersionTableStatement    = "INSERT INTO zk_scenario_version (scenario_id, scenario_data, schema_version, scenario_version, created_by, created_at) VALUES ($1, $2, $3, $4, $5, $6)"
+	DisableScenarioStatement               = "UPDATE zk_scenario set disabled=$1, disabled_at=$2, updated_at=$3 where cluster_id= $4 AND scenario_id=$5"
+	DeleteScenarioStatement                = "UPDATE zk_scenario set deleted=TRUE, deleted_at=$1, updated_at=$2 where cluster_id= $3 AND scenario_id=$4"
+	GetTotalRowsCountStatement             = "SELECT COUNT(*) as count FROM zk_scenario s INNER JOIN zk_scenario_version sv USING(scenario_id) WHERE deleted=false AND updated_at>$1 AND (cluster_id=$2 OR cluster_id=$3)"
 )
 
 var LogTag = "scenario_repo"
@@ -49,30 +50,19 @@ func NewZkPostgresRepo(db sqlDB.DatabaseRepo) ScenarioRepo {
 	return &zkPostgresRepo{db}
 }
 
-func handleTxError(tx *sql.Tx, err2 error) error {
-	done, err := common.RollbackTransaction(tx, LogTag)
-	if err != nil {
-		zkLogger.Error(LogTag, "Error while rolling back the transaction ", err.Error)
-	}
-	if !done {
-		zkLogger.Error(LogTag, "Rolling back the transaction failed.")
-	}
-	return err2
-}
-
 func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request scenarioResponseModel.CreateScenarioRequest) error {
 	tx, err := zkPostgresRepo.dbRepo.CreateTransaction()
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while creating a db transaction in createNewScenario ", err)
-		return handleTxError(tx, err)
+		return utils.HandleTxError(tx, err, LogTag)
 	}
 
 	scenarioInsertStmt, err := common.GetStmtRawQuery(tx, InsertScenarioTableStatement)
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while creating the scenario insert scenarioVersionStmt ", err)
-		return handleTxError(tx, err)
+		return utils.HandleTxError(tx, err, LogTag)
 	}
 
 	params := []any{clusterId, request.ScenarioTitle, request.ScenarioType, time.Now().Unix()}
@@ -82,7 +72,7 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 
 	if insertErr != nil {
 		zkLogger.Error(LogTag, "Error while executing the insert query ", err)
-		return handleTxError(tx, err)
+		return utils.HandleTxError(tx, err, LogTag)
 	}
 
 	zkLogger.Debug(LogTag, "New scenarioId is ", scenarioId)
@@ -92,7 +82,7 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while serializing scenario data ", err)
-		return handleTxError(tx, err)
+		return utils.HandleTxError(tx, err, LogTag)
 	}
 
 	currentTime := common.CurrentTime()
@@ -111,14 +101,14 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while creating the scenario version insert scenarioVersionStmt ", err)
-		return handleTxError(tx, err)
+		return utils.HandleTxError(tx, err, LogTag)
 	}
 
 	_, err = zkPostgresRepo.dbRepo.Insert(scenarioVersionStmt, scenarioVersionParams)
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while inserting into the scenario version table. ", err)
-		return handleTxError(tx, err)
+		return utils.HandleTxError(tx, err, LogTag)
 	}
 
 	done, err2 := common.CommitTransaction(tx, LogTag)
