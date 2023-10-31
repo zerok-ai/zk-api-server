@@ -19,25 +19,30 @@ type AttributeDtoList []AttributeDto
 func ConvertAttributeInfoRequestToAttributeDto(req []AttributeInfoRequest) AttributeDtoList {
 	version := strings.Trim(req[0].Version, " ")
 	executor := strings.Trim(string(req[0].Executor), " ")
+	sanitizedRequest := make([]AttributeInfoRequest, 0)
 	if version == "common" {
 		for _, v := range req {
-			v.AttributePath = ""
+			r := v
+			r.AttributePath = ""
+			sanitizedRequest = append(sanitizedRequest, r)
 		}
 	} else {
 		for _, v := range req {
-			v.SupportedFormats = nil
-			v.Field = nil
-			v.DataType = nil
-			v.Input = nil
-			v.Values = nil
-			v.Examples = nil
-			v.KeySetName = nil
-			v.Description = nil
-			v.KeySetName = nil
+			r := v
+			r.SupportedFormats = nil
+			r.Field = nil
+			r.DataType = nil
+			r.Input = nil
+			r.Values = nil
+			r.Examples = nil
+			r.KeySetName = nil
+			r.Description = nil
+			r.KeySetName = nil
+			sanitizedRequest = append(sanitizedRequest, r)
 		}
 	}
 
-	protocolToAttributesInfoRequestListMap := getProtocolToAttributesMap(req)
+	protocolToAttributesInfoRequestListMap := getProtocolToAttributesMap(sanitizedRequest)
 	attributeDtoList := make(AttributeDtoList, 0)
 	for protocol, attributesInfoRequestList := range protocolToAttributesInfoRequestListMap {
 		attrStr, _ := json.Marshal(attributesInfoRequestList)
