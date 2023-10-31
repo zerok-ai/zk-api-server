@@ -12,6 +12,7 @@ import (
 	"zk-api-server/app/scenario/service"
 	"zk-api-server/app/scenario/transformer"
 	"zk-api-server/app/utils"
+	"zk-api-server/internal/model"
 )
 
 var LogTag = "scenario_handler"
@@ -19,6 +20,7 @@ var LogTag = "scenario_handler"
 type ScenarioHandler interface {
 	GetAllScenarioOperator(ctx iris.Context)
 	GetAllScenarioDashboard(ctx iris.Context)
+	GetScenarioByIdDashboard(ctx iris.Context)
 	CreateScenario(ctx iris.Context)
 	UpdateScenarioState(ctx iris.Context)
 	DeleteScenario(ctx iris.Context)
@@ -26,10 +28,11 @@ type ScenarioHandler interface {
 
 type scenarioHandler struct {
 	service service.ScenarioService
+	cfg     model.ZkApiServerConfig
 }
 
-func NewScenarioHandler(s service.ScenarioService) ScenarioHandler {
-	return &scenarioHandler{service: s}
+func NewScenarioHandler(s service.ScenarioService, cfg model.ZkApiServerConfig) ScenarioHandler {
+	return &scenarioHandler{service: s, cfg: cfg}
 }
 
 func (r scenarioHandler) CreateScenario(ctx iris.Context) {
@@ -58,12 +61,21 @@ func (r scenarioHandler) CreateScenario(ctx iris.Context) {
 		ctx.WriteString("Error decoding JSON")
 		return
 	}
-	zkError := r.service.CreateScenario(clusterId, request)
-	resp := scenarioModel.CreateScenarioResponse{}
-	zkHttpResponse := zkHttp.ToZkResponse[scenarioModel.CreateScenarioResponse](200, resp, nil, zkError)
+
+	var zkHttpResponse zkHttp.ZkHttpResponse[scenarioModel.CreateScenarioResponse]
+	var zkErr *zkerrors.ZkError
+	var resp scenarioModel.CreateScenarioResponse
+
+	zkErr = r.service.CreateScenario(clusterId, request)
+
+	if r.cfg.Http.Debug {
+		zkHttpResponse = zkHttp.ToZkResponse[scenarioModel.CreateScenarioResponse](200, resp, resp, zkErr)
+	} else {
+		zkHttpResponse = zkHttp.ToZkResponse[scenarioModel.CreateScenarioResponse](200, resp, nil, zkErr)
+	}
+
 	ctx.StatusCode(zkHttpResponse.Status)
 	ctx.JSON(zkHttpResponse)
-
 }
 
 func (r scenarioHandler) GetAllScenarioOperator(ctx iris.Context) {
@@ -73,7 +85,7 @@ func (r scenarioHandler) GetAllScenarioOperator(ctx iris.Context) {
 			//Send 500 response.
 		}
 	}()
-	getAllScenarioHelper(r.service, ctx, false)
+	getAllScenarioHelper(r.service, ctx, false, r.cfg.Http.Debug)
 
 }
 
@@ -85,8 +97,31 @@ func (r scenarioHandler) GetAllScenarioDashboard(ctx iris.Context) {
 	//		//Send 500 response.
 	//	}
 	//}()
-	getAllScenarioHelper(r.service, ctx, true)
+	getAllScenarioHelper(r.service, ctx, true, r.cfg.Http.Debug)
+}
 
+func (r scenarioHandler) GetScenarioByIdDashboard(ctx iris.Context) {
+	clusterId := ctx.Params().Get(utils.ClusterIdxPathParam)
+	scenarioId := ctx.Params().Get(utils.ScenarioIdxPathParam)
+
+	var zkHttpResponse zkHttp.ZkHttpResponse[transformer.ScenarioModelResponse]
+	var zkErr *zkerrors.ZkError
+	var resp transformer.ScenarioModelResponse
+
+	if zkErr = validation.ValidateGetScenarioByIdApi(clusterId, scenarioId); zkErr != nil {
+		zkLogger.Error(LogTag, "Error validating get scenario by Id api ", zkErr)
+	} else {
+		resp, zkErr = r.service.GetScenarioByIdForDashboard(clusterId, scenarioId)
+	}
+
+	if r.cfg.Http.Debug {
+		zkHttpResponse = zkHttp.ToZkResponse[transformer.ScenarioModelResponse](200, resp, resp, zkErr)
+	} else {
+		zkHttpResponse = zkHttp.ToZkResponse[transformer.ScenarioModelResponse](200, resp, nil, zkErr)
+	}
+
+	ctx.StatusCode(zkHttpResponse.Status)
+	ctx.JSON(zkHttpResponse)
 }
 
 func (r scenarioHandler) UpdateScenarioState(ctx iris.Context) {
@@ -115,20 +150,19 @@ func (r scenarioHandler) UpdateScenarioState(ctx iris.Context) {
 		return
 	}
 
-	if err := validation.ValidateDisableScenarioApi(clusterId, scenarioId, request); err != nil {
-		zkLogger.Error(LogTag, "Error validating disable scenario api ", err)
-		zkHttpResponse := zkHttp.ZkHttpResponseBuilder[any]{}.WithZkErrorType(err.Error).Build()
-		ctx.StatusCode(zkHttpResponse.Status)
-		ctx.JSON(zkHttpResponse)
-		return
-	}
+	var zkErr *zkerrors.ZkError
 
 	disable := true
 	if request.Action == utils.Enable {
 		disable = false
 	}
 
-	zkErr := r.service.DisableScenario(clusterId, scenarioId, disable)
+	if zkErr = validation.ValidateDisableScenarioApi(clusterId, scenarioId, request); zkErr != nil {
+		zkLogger.Error(LogTag, "Error validating disable scenario api ", zkErr)
+	} else {
+		zkErr = r.service.DisableScenario(clusterId, scenarioId, disable)
+	}
+
 	if zkErr != nil {
 		ctx.StatusCode(iris.StatusInternalServerError)
 		return
@@ -165,7 +199,7 @@ func (r scenarioHandler) DeleteScenario(ctx iris.Context) {
 	return
 }
 
-func getAllScenarioHelper(service service.ScenarioService, ctx iris.Context, dashboardCall bool) {
+func getAllScenarioHelper(service service.ScenarioService, ctx iris.Context, dashboardCall, debug bool) {
 	clusterId := ctx.Params().Get(utils.ClusterIdxPathParam)
 	version := ctx.URLParam(utils.LastSyncTS)
 	deleted := ctx.URLParamDefault(utils.Deleted, "false")
@@ -183,16 +217,22 @@ func getAllScenarioHelper(service service.ScenarioService, ctx iris.Context, das
 	l, _ := strconv.Atoi(limit)
 	o, _ := strconv.Atoi(offset)
 
-	var resp *transformer.ScenarioResponse
-	var zkError *zkerrors.ZkError
+	var resp transformer.ScenarioResponse
+	var zkErr *zkerrors.ZkError
+	var zkHttpResponse zkHttp.ZkHttpResponse[transformer.ScenarioResponse]
 
 	if dashboardCall {
-		resp, zkError = service.GetAllScenarioForDashboard(clusterId, v, d, o, l)
+		resp, zkErr = service.GetAllScenarioForDashboard(clusterId, v, d, o, l)
 	} else {
-		resp, zkError = service.GetAllScenarioForOperator(clusterId, v, d, o, l)
+		resp, zkErr = service.GetAllScenarioForOperator(clusterId, v, d, o, l)
 	}
 
-	zkHttpResponse := zkHttp.ToZkResponse[transformer.ScenarioResponse](200, *resp, resp, zkError)
+	if debug {
+		zkHttpResponse = zkHttp.ToZkResponse[transformer.ScenarioResponse](200, resp, resp, zkErr)
+	} else {
+		zkHttpResponse = zkHttp.ToZkResponse[transformer.ScenarioResponse](200, resp, nil, zkErr)
+	}
+
 	ctx.StatusCode(zkHttpResponse.Status)
 	ctx.JSON(zkHttpResponse)
 }

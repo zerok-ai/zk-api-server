@@ -43,7 +43,7 @@ func main() {
 
 	rr := repository.NewZkPostgresRepo(zkPostgresRepo)
 	rs := service.NewScenarioService(rr)
-	rh := scenarioHandler.NewScenarioHandler(rs)
+	rh := scenarioHandler.NewScenarioHandler(rs, cfg)
 
 	ch := clusterHandler.NewClusterHandler()
 
