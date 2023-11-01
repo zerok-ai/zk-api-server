@@ -14,4 +14,4 @@ COPY /internal/config/config.yaml internal/config/
 
 EXPOSE 80
 
-CMD [ "/deploy/cmd/zk-api-server/zk-api-server", "-c", "internal/config/config.yaml"]
+CMD [ "cmd/zk-api-server/zk-api-server", "-c", "internal/config/config.yaml"]
