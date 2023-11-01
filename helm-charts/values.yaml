@@ -13,7 +13,7 @@ app:
 
 image:
   repo: "zk-api-server"
-  migrationRepo: "zk-api-server-migration"
+  migrationRepo: "migrate-zk-api-server"
   migrationTag: "latest"
   migrationRestartPolicy: Never
   pullPolicy: Always
