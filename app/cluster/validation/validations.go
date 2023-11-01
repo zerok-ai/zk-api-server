@@ -82,6 +82,10 @@ func ValidateDisableScenarioApi(clusterId, scenarioId string, request model.Scen
 	return validateScenarioIdAndClusterId(clusterId, scenarioId)
 }
 
+func ValidateGetScenarioByIdApi(clusterId, scenarioId string) *zkerrors.ZkError {
+	return validateScenarioIdAndClusterId(clusterId, scenarioId)
+}
+
 func ValidateDeleteScenarioApi(clusterId, scenarioId string) *zkerrors.ZkError {
 	return validateScenarioIdAndClusterId(clusterId, scenarioId)
 }
