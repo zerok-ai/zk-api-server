@@ -31,7 +31,7 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.global.dockerBase }}/{{ .Values.image.repo }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
           - secretRef:
@@ -53,10 +53,21 @@ spec:
           volumeMounts:
             - name: cluster-details
               mountPath: /opt
+          env: # Setting Enviornmental Variables
+            - name: PL_POSTGRES_USERNAME  # Setting Database username from Secret
+              valueFrom:
+                secretKeyRef:
+                  name: pl-db-secrets
+                  key: PL_POSTGRES_USERNAME
+            - name: PL_POSTGRES_PASSWORD # Setting Database password from Secret
+              valueFrom:
+                secretKeyRef:
+                  name: pl-db-secrets
+                  key: PL_POSTGRES_PASSWORD
       volumes:
         - name: cluster-details
           configMap:
-            name: cluster-details-config-file
+            name: zk-api-server-config
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
