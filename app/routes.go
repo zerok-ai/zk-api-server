@@ -20,8 +20,9 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/traces", utils.ValidateApiKeyMiddleware, ch.GetPxData)
 		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/scenario", rh.GetAllScenarioDashboard)
 		clusterAPI.Post("/{"+utils.ClusterIdxPathParam+"}/scenario", rh.CreateScenario)
-		clusterAPI.Put("/{"+utils.ClusterIdxPathParam+"}/scenario/{scenarioIdx}/status", rh.UpdateScenarioState)
-		clusterAPI.Delete("/{"+utils.ClusterIdxPathParam+"}/scenario/{scenarioIdx}", rh.DeleteScenario)
+		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/scenario/{"+utils.ScenarioIdxPathParam+"}", rh.GetScenarioByIdDashboard)
+		clusterAPI.Put("/{"+utils.ClusterIdxPathParam+"}/scenario/{"+utils.ScenarioIdxPathParam+"}/status", rh.UpdateScenarioState)
+		clusterAPI.Delete("/{"+utils.ClusterIdxPathParam+"}/scenario/{"+utils.ScenarioIdxPathParam+"}", rh.DeleteScenario)
 
 		clusterAPI.Post("/{"+utils.ClusterIdxPathParam+"}/integration", ih.UpsertIntegration)
 		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/integration", ih.GetAllIntegrationsDashboard)

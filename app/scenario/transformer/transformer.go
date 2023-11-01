@@ -18,7 +18,7 @@ type ScenarioModelResponse struct {
 	UpdatedAt  int64          `json:"updated_at"`
 }
 
-func FromScenarioArrayToScenarioResponse(sArr *[]ScenarioModelResponse, deletedIdArr *[]string, disabledIdArr *[]string, totalRows int) *ScenarioResponse {
+func FromScenarioArrayToScenarioResponse(sArr *[]ScenarioModelResponse, deletedIdArr *[]string, disabledIdArr *[]string, totalRows int) ScenarioResponse {
 	var resp ScenarioResponse
 	if sArr != nil && len(*sArr) != 0 {
 		resp.Scenarios = append(resp.Scenarios, *sArr...)
@@ -40,5 +40,5 @@ func FromScenarioArrayToScenarioResponse(sArr *[]ScenarioModelResponse, deletedI
 
 	resp.TotalRows = totalRows
 
-	return &resp
+	return resp
 }

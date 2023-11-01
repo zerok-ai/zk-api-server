@@ -16,6 +16,7 @@ const (
 	DefaultClusterId = "Zk_default_cluster_id_for_all_scenarios"
 
 	GetAllScenarioSqlStatement             = "SELECT scenario_data, deleted, disabled, created_at, disabled_at, updated_at FROM zk_scenario s INNER JOIN zk_scenario_version sv USING(scenario_id) WHERE updated_at>$1 AND (cluster_id=$2 OR cluster_id=$3) order by created_at desc LIMIT $4 OFFSET $5"
+	GetScenarioByIdSqlStatement            = "SELECT scenario_data, deleted, disabled, created_at, disabled_at, updated_at FROM zk_scenario s INNER JOIN zk_scenario_version sv USING(scenario_id) WHERE scenario_id=$1 AND (cluster_id=$2 OR cluster_id=$3)"
 	GetAllScenarioForDashboardSqlStatement = "SELECT scenario_data, deleted, disabled, created_at, disabled_at, updated_at FROM zk_scenario s INNER JOIN zk_scenario_version sv USING(scenario_id) WHERE updated_at>$1 AND deleted = $2 AND (cluster_id=$3 OR cluster_id=$4) order by created_at desc LIMIT $5 OFFSET $6"
 	InsertScenarioTableStatement           = "INSERT INTO zk_scenario (cluster_id, scenario_title, scenario_type, updated_at) VALUES ($1, $2, $3, $4) RETURNING scenario_id"
 	InsertScenarioVersionTableStatement    = "INSERT INTO zk_scenario_version (scenario_id, scenario_data, schema_version, scenario_version, created_by, created_at) VALUES ($1, $2, $3, $4, $5, $6)"
@@ -36,6 +37,7 @@ type ScenarioQueryFilter struct {
 
 type ScenarioRepo interface {
 	GetAllScenario(filters *ScenarioQueryFilter) (*[]scenarioResponseModel.ScenarioDbResponse, error)
+	GetScenarioById(clusterId, scenarioId string) (*[]scenarioResponseModel.ScenarioDbResponse, error)
 	CreateNewScenario(clusterId string, request scenarioResponseModel.CreateScenarioRequest) error
 	DisableScenario(clusterId, scenarioId string, disable bool, disabledAtTime *int64, currentTime int64) (int, error)
 	DeleteScenario(clusterId string, currentTime int64, scenarioId string) (int, error)
@@ -125,6 +127,11 @@ func (zkPostgresRepo zkPostgresRepo) CreateNewScenario(clusterId string, request
 
 	zkLogger.Debug(LogTag, "Reached the end of the handler method.")
 	return nil
+}
+
+func (zkPostgresRepo zkPostgresRepo) GetScenarioById(clusterId, scenarioId string) (*[]scenarioResponseModel.ScenarioDbResponse, error) {
+	rows, err, closeRow := zkPostgresRepo.dbRepo.GetAll(GetScenarioByIdSqlStatement, []any{scenarioId, clusterId, DefaultClusterId})
+	return Processor(rows, err, closeRow)
 }
 
 func (zkPostgresRepo zkPostgresRepo) GetAllScenario(filters *ScenarioQueryFilter) (*[]scenarioResponseModel.ScenarioDbResponse, error) {
