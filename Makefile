@@ -17,7 +17,7 @@ coverage_html:
 
 # ------- CI-CD ------------
 ci-cd-build:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/zk-api-server cmd/zk-api-server/
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/zk-api-server ./cmd/zk-api-server/
 ci-cd-build-migration:
 
 create-migration-file:

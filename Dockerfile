@@ -1,19 +1,12 @@
 FROM --platform=linux/amd64 golang:1.18-alpine
 
 RUN mkdir -p /deploy/cmd/zk-api-server
-RUN mkdir -p /deploy/app/px
-RUN mkdir -p /internal/config
+COPY build/zk-api-server /deploy/cmd/zk-api-server/
+RUN ls -la /deploy/cmd/zk-api-server/
 
-WORKDIR /deploy
+#WORKDIR /deploy
 
-COPY app/px/* app/px/
-COPY build/zk-api-server cmd/zk-api-server/
-RUN ls -la app/px/
-RUN ls -la cmd/zk-api-server/
-
-
-COPY /internal/config/config.yaml internal/config/
 
 EXPOSE 80
 
-CMD [ "cmd/zk-api-server/zk-api-server", "-c", "internal/config/config.yaml"]
+CMD [ "/deploy/cmd/zk-api-server/zk-api-server"]
