@@ -9,6 +9,8 @@ WORKDIR /deploy
 COPY app/px/* app/px/
 COPY build/zk-api-server cmd/zk-api-server/
 RUN ls -la app/px/
+RUN ls -la cmd/zk-api-server/
+
 
 COPY /internal/config/config.yaml internal/config/
 
