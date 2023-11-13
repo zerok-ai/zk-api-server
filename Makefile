@@ -15,6 +15,11 @@ coverage_html:
 	go test -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out
 
+# ------- CI-CD ------------
+ci-cd-build:
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o build/zk-api-server ./cmd/zk-api-server/
+ci-cd-build-migration:
+
 create-migration-file:
 	migrate create -ext sql -dir db/migrations -seq $(name)
 

@@ -10,16 +10,18 @@ import (
 const (
 	GetIntegrationById           = "SELECT id, cluster_id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server FROM zk_integrations WHERE id=$1 AND cluster_id=$2"
 	GetAllActiveIntegrations     = "SELECT id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server FROM zk_integrations WHERE cluster_id=$1 AND deleted = false AND disabled = false"
+	GetAnIntegrationDetails      = "SELECT id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server FROM zk_integrations WHERE id=$1 AND deleted = false"
 	GetAllNonDeletedIntegrations = "SELECT id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server FROM zk_integrations WHERE cluster_id=$1 AND deleted = false"
-	InsertIntegration            = "INSERT INTO zk_integrations (cluster_id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"
+	InsertIntegration            = "INSERT INTO zk_integrations (cluster_id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id"
 	UpdateIntegration            = "UPDATE zk_integrations SET alias=$1, type = $2, url = $3, authentication = $4, level = $5, deleted = $6, disabled = $7, updated_at = $8, metric_server = $9 WHERE id = $10"
 )
 
 type IntegrationRepo interface {
 	GetAllIntegrations(clusterId string, onlyActive bool) ([]dto.Integration, error)
 	GetIntegrationsById(id string, clusterId string) (*dto.Integration, error)
-	InsertIntegration(integration dto.Integration) (bool, error)
+	InsertIntegration(integration dto.Integration) (bool, int, error)
 	UpdateIntegration(integration dto.Integration) (bool, error)
+	GetAnIntegrationDetails(integrationId string) ([]dto.Integration, error)
 }
 
 var LogTag = "integrations_repo"
@@ -41,6 +43,12 @@ func (z zkPostgresRepo) GetAllIntegrations(clusterId string, onlyActive bool) ([
 	}
 
 	rows, err, closeRow := z.dbRepo.GetAll(query, []any{clusterId})
+	return Processor(rows, err, closeRow)
+}
+
+func (z zkPostgresRepo) GetAnIntegrationDetails(integrationId string) ([]dto.Integration, error) {
+	query := GetAnIntegrationDetails
+	rows, err, closeRow := z.dbRepo.GetAll(query, []any{integrationId})
 	return Processor(rows, err, closeRow)
 }
 
@@ -85,18 +93,19 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) ([]dto.Integration, error
 	return integrationArr, nil
 }
 
-func (z zkPostgresRepo) InsertIntegration(integration dto.Integration) (bool, error) {
+func (z zkPostgresRepo) InsertIntegration(integration dto.Integration) (bool, int, error) {
+	integrationId := -1
 	integrationUpsertStmt := z.dbRepo.CreateStatement(InsertIntegration)
 
-	result, err := z.dbRepo.Insert(integrationUpsertStmt, integration)
+	err := z.dbRepo.InsertWithReturnRow(integrationUpsertStmt, []any{integration}, []any{&integrationId})
 	if err != nil {
 		zkLogger.Error(LogTag, err)
-		return false, err
+		return false, integrationId, err
 	}
 
-	zkLogger.Info(LogTag, "Integration insert successfully ", result.RowsAffected)
+	zkLogger.Info(LogTag, "Integration insert successfully.")
 
-	return true, nil
+	return true, integrationId, nil
 }
 
 func (z zkPostgresRepo) UpdateIntegration(integration dto.Integration) (bool, error) {

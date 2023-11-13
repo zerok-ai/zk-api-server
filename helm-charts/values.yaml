@@ -1,14 +1,30 @@
 # Default values for zk-api-server.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+global:
+  dockerBase: "us-west1-docker.pkg.dev/zerok-dev/zkcloud"
+  zkcloud:
+    host: ""
 
 replicaCount: 1
 
+app:
+  url: "http://zk-auth.zkcloud.svc.cluster.local"
+
 image:
-  repository: nginx
+  repo: "zk-api-server"
+  migrationRepo: "zk-api-server-migration"
+  migrationTag: "latest"
+  migrationRestartPolicy: Never
   pullPolicy: Always
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "latest"
+
+postgres:
+  host: "postgres.plc.svc.cluster.local"
+  port: 5432
+  user:  "pl"
+  password:  ""
+  database: "pl"
 
 imagePullSecrets: []
 nameOverride: ""

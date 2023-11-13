@@ -33,14 +33,16 @@ const (
 	ClusterIdHeader         = "Cluster-Id"
 	HttpUtilsZkApiKeyHeader = "Zk-Api-Key"
 
-	ClusterIdxPathParam  = "clusterIdx"
-	ScenarioIdxPathParam = "scenarioIdx"
+	ClusterIdxPathParam     = "clusterIdx"
+	IntegrationIdxPathParam = "integrationId"
+	ScenarioIdxPathParam    = "scenarioIdx"
 
 	LastSyncTS  = "last_sync_ts"
 	Offset      = "offset"
 	Limit       = "limit"
 	Deleted     = "deleted"
 	StartTime   = "st"
+	Url         = "url"
 	Name        = "name"
 	Namespace   = "ns"
 	ServiceName = "service_name"

@@ -7,11 +7,11 @@ import (
 )
 
 type AttributeDto struct {
-	Version    string         `json:"version"`
-	Protocol   model.Protocol `json:"protocol"`
-	Executor   model.Executor `json:"executor"`
-	UpdatedAt  string         `json:"updated_at"`
-	Attributes string         `json:"attribute_list"`
+	Version    string             `json:"version"`
+	Protocol   model.ProtocolName `json:"protocol"`
+	Executor   model.ExecutorName `json:"executor"`
+	UpdatedAt  string             `json:"updated_at"`
+	Attributes string             `json:"attribute_list"`
 }
 
 type AttributeDtoList []AttributeDto
@@ -47,8 +47,8 @@ func ConvertAttributeInfoRequestToAttributeDto(req []AttributeInfoRequest) Attri
 	for protocol, attributesInfoRequestList := range protocolToAttributesInfoRequestListMap {
 		attrStr, _ := json.Marshal(attributesInfoRequestList)
 		attributeDto := AttributeDto{
-			Protocol:   model.Protocol(protocol),
-			Executor:   model.Executor(executor),
+			Protocol:   model.ProtocolName(protocol),
+			Executor:   model.ExecutorName(executor),
 			Version:    version,
 			Attributes: string(attrStr),
 		}

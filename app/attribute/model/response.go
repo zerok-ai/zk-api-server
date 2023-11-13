@@ -13,20 +13,20 @@ import (
 var LogTag = "attribute_model_response"
 
 type AttributeInfo struct {
-	AttributeId      string                 `json:"attr_id"`
-	AttributePath    string                 `json:"attr_path"`
-	KeySetName       string                 `json:"key_set_name"`
-	JsonField        bool                   `json:"json_field"`
-	Field            string                 `json:"field"`
-	Input            string                 `json:"input"`
-	Values           string                 `json:"values"`
-	DataType         string                 `json:"data_type"`
-	Description      string                 `json:"description,omitempty"`
-	Examples         string                 `json:"examples,omitempty"`
-	Executor         scenarioModel.Executor `json:"executor,omitempty"`
-	Protocol         scenarioModel.Protocol `json:"protocol,omitempty"`
-	SupportedFormats *[]string              `json:"supported_formats,omitempty"`
-	SendToFrontEnd   *bool                  `json:"send_to_front_end,omitempty"`
+	AttributeId      string                     `json:"attr_id"`
+	AttributePath    string                     `json:"attr_path"`
+	KeySetName       string                     `json:"key_set_name"`
+	JsonField        bool                       `json:"json_field"`
+	Field            string                     `json:"field"`
+	Input            string                     `json:"input"`
+	Values           string                     `json:"values"`
+	DataType         string                     `json:"data_type"`
+	Description      string                     `json:"description,omitempty"`
+	Examples         string                     `json:"examples,omitempty"`
+	Executor         scenarioModel.ExecutorName `json:"executor,omitempty"`
+	Protocol         scenarioModel.ProtocolName `json:"protocol,omitempty"`
+	SupportedFormats *[]string                  `json:"supported_formats,omitempty"`
+	SendToFrontEnd   *bool                      `json:"send_to_front_end,omitempty"`
 }
 
 type AttributeInfoResp struct {
@@ -41,10 +41,10 @@ type AttributeInfoResp struct {
 }
 
 type AttributeDetails struct {
-	KeySetName     string                 `json:"key_set_name"`
-	Executor       scenarioModel.Executor `json:"executor"`
-	Version        string                 `json:"version,omitempty"`
-	AttributesList []AttributeInfoResp    `json:"attribute_list"`
+	KeySetName     string                     `json:"key_set_name"`
+	Executor       scenarioModel.ExecutorName `json:"executor"`
+	Version        string                     `json:"version,omitempty"`
+	AttributesList []AttributeInfoResp        `json:"attribute_list"`
 }
 
 type AttributeResponse struct {
@@ -106,7 +106,7 @@ func getResp(attributesList []AttributeDto) []AttributeDetails {
 		}
 		var attributeDetails AttributeDetails
 		attributeDetails.KeySetName = keySetName
-		attributeDetails.Executor = scenarioModel.Executor(executor)
+		attributeDetails.Executor = scenarioModel.ExecutorName(executor)
 		attributeDetails.AttributesList = attributesListForFrontend
 		attributesInfoList = append(attributesInfoList, attributeDetails)
 	}

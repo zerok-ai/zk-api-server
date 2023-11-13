@@ -2,9 +2,9 @@ apiVersion: v1
 data:
   cluster.conf: |-
     {
-        "Domain": "{{ .Values.app.DOMAIN }}",
-        "Url": "{{ .Values.app.URL }}"
+        "Domain": "px.{{ .Values.global.zkcloud.host }}:443",
+        "Url": "{{ .Values.app.url }}"
     }
 kind: ConfigMap
 metadata:
-  name: cluster-details-config-file
+  name: zk-api-server-config
