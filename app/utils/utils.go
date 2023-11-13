@@ -35,6 +35,7 @@ const (
 
 	ClusterIdxPathParam     = "clusterIdx"
 	IntegrationIdxPathParam = "integrationId"
+	ObfuscationIdxPathParam = "obfuscationId"
 	ScenarioIdxPathParam    = "scenarioIdx"
 
 	LastSyncTS  = "last_sync_ts"
