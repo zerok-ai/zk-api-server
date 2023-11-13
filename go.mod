@@ -7,7 +7,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/stretchr/testify v1.8.3
 	github.com/swaggo/swag v1.16.1
-	github.com/zerok-ai/zk-utils-go v0.4.11-0.20231004061117-e13aee183bc7
+	github.com/zerok-ai/zk-utils-go v0.5.17
 	px.dev/pxapi v0.4.1
 )
 
@@ -67,7 +67,7 @@ require (
 	github.com/lestrrat-go/pdebug/v3 v3.0.1 // indirect
 	github.com/mailgun/raymond/v2 v2.0.48 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/microcosm-cc/bluemonday v1.0.25 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.26 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -90,10 +90,10 @@ require (
 	github.com/yosssi/ace v0.0.5 // indirect
 	github.com/yudai/gojsondiff v1.0.0 // indirect
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
-	golang.org/x/crypto v0.11.0 // indirect
-	golang.org/x/net v0.12.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect

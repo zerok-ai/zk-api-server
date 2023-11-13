@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"github.com/zerok-ai/zk-utils-go/common"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/storage/sqlDB"
 	"zk-api-server/app/integrations/model/dto"
@@ -87,62 +86,29 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) ([]dto.Integration, error
 }
 
 func (z zkPostgresRepo) InsertIntegration(integration dto.Integration) (bool, error) {
-	tx, err := z.dbRepo.CreateTransaction()
-	integrationUpsertStmt, err := common.GetStmtRawQuery(tx, InsertIntegration)
-
-	if err != nil {
-		zkLogger.Error(LogTag, "Error while creating the integration insert  ", err)
-		return false, handleTxError(tx, err)
-	}
+	integrationUpsertStmt := z.dbRepo.CreateStatement(InsertIntegration)
 
 	result, err := z.dbRepo.Insert(integrationUpsertStmt, integration)
 	if err != nil {
 		zkLogger.Error(LogTag, err)
-		return false, handleTxError(tx, err)
+		return false, err
 	}
 
-	b, txErr := common.CommitTransaction(tx, LogTag)
-	if txErr != nil || !b {
-		zkLogger.Error(LogTag, "Error while committing the transaction ", txErr.Error)
-		return false, handleTxError(tx, err)
-	}
 	zkLogger.Info(LogTag, "Integration insert successfully ", result.RowsAffected)
 
 	return true, nil
 }
 
 func (z zkPostgresRepo) UpdateIntegration(integration dto.Integration) (bool, error) {
-	tx, err := z.dbRepo.CreateTransaction()
-	integrationUpsertStmt, err := common.GetStmtRawQuery(tx, UpdateIntegration)
-
-	if err != nil {
-		zkLogger.Error(LogTag, "Error while creating the integration update  ", err)
-		return false, handleTxError(tx, err)
-	}
+	integrationUpsertStmt := z.dbRepo.CreateStatement(UpdateIntegration)
 
 	result, err := z.dbRepo.Update(integrationUpsertStmt, []any{integration.Alias, integration.Type, integration.URL, integration.Authentication, integration.Level, integration.Deleted, integration.Disabled, integration.UpdatedAt, integration.MetricServer, integration.ID})
 	if err != nil {
 		zkLogger.Error(LogTag, err)
-		return false, handleTxError(tx, err)
+		return false, err
 	}
 
-	b, txErr := common.CommitTransaction(tx, LogTag)
-	if txErr != nil || !b {
-		zkLogger.Error(LogTag, "Error while committing the transaction ", txErr.Error)
-		return false, handleTxError(tx, err)
-	}
 	zkLogger.Info(LogTag, "Integration update successfully ", result.RowsAffected)
 
 	return true, nil
-}
-
-func handleTxError(tx *sql.Tx, err2 error) error {
-	done, err := common.RollbackTransaction(tx, LogTag)
-	if err != nil {
-		zkLogger.Error(LogTag, "Error while rolling back the transaction ", err.Error)
-	}
-	if !done {
-		zkLogger.Error(LogTag, "Rolling back the transaction failed.")
-	}
-	return err2
 }
