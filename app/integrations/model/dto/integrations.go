@@ -43,3 +43,8 @@ type Auth struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
+
+type UpsertIntegrationResponse struct {
+	IntegrationId string `json:"integration_id"`
+	Status        int    `json:"status"`
+}

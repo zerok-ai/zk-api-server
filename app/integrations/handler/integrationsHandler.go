@@ -6,6 +6,7 @@ import (
 	zkCommon "github.com/zerok-ai/zk-utils-go/common"
 	zkHttp "github.com/zerok-ai/zk-utils-go/http"
 	zkIntegration "github.com/zerok-ai/zk-utils-go/integration/model"
+	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"strings"
 	"zk-api-server/app/integrations/model/dto"
@@ -29,6 +30,8 @@ type integrationsHandler struct {
 	service service.IntegrationsService
 	cfg     model.ZkApiServerConfig
 }
+
+var LogTag = "integrations_handler"
 
 func NewIntegrationsHandler(s service.IntegrationsService, cfg model.ZkApiServerConfig) IntegrationsHandler {
 	return &integrationsHandler{service: s, cfg: cfg}
@@ -110,7 +113,7 @@ func (i integrationsHandler) UpsertIntegration(ctx iris.Context) {
 	}
 
 	var request dto.IntegrationRequest
-	var zkHttpResponse zkHttp.ZkHttpResponse[transformer.IntegrationResponse]
+	var zkHttpResponse zkHttp.ZkHttpResponse[dto.UpsertIntegrationResponse]
 
 	body, err := ctx.GetBody()
 	if err != nil {
@@ -137,14 +140,21 @@ func (i integrationsHandler) UpsertIntegration(ctx iris.Context) {
 	}
 
 	done, insertId, zkError := i.service.UpsertIntegration(transformer.FromIntegrationsRequestToIntegrationsDto(request))
+
 	if done {
-		i.service.GetAnIntegrationDetails(*insertId)
+		zkHttpResponse.Data.IntegrationId = *insertId
+		status, zkError := i.service.GetAnIntegrationDetails(*insertId)
+		if zkError != nil {
+			zkLogger.Error(LogTag, "Error while getting the integration status: ", zkError)
+		} else {
+			zkHttpResponse.Data.Status = status
+		}
 	}
 
 	if i.cfg.Http.Debug {
-		zkHttpResponse = zkHttp.ToZkResponse[transformer.IntegrationResponse](200, transformer.IntegrationResponse{}, done, zkError)
+		zkHttpResponse = zkHttp.ToZkResponse[dto.UpsertIntegrationResponse](200, zkHttpResponse.Data, done, zkError)
 	} else {
-		zkHttpResponse = zkHttp.ToZkResponse[transformer.IntegrationResponse](200, transformer.IntegrationResponse{}, nil, zkError)
+		zkHttpResponse = zkHttp.ToZkResponse[dto.UpsertIntegrationResponse](200, zkHttpResponse.Data, nil, zkError)
 	}
 
 	ctx.StatusCode(zkHttpResponse.Status)
