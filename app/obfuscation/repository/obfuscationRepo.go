@@ -13,6 +13,7 @@ const (
 	GetAllObfuscations = "SELECT id, org_id, rule_name, rule_type, rule_def, created_at, updated_at, deleted, disabled FROM zk_obfuscation WHERE org_id=$1 AND deleted = false ORDER BY updated_at LIMIT $2 OFFSET $3"
 	InsertObfuscation  = "INSERT INTO zk_obfuscation (org_id, rule_name, rule_type, rule_def, created_at, updated_at, deleted, disabled) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
 	UpdateObfuscation  = "UPDATE zk_obfuscation SET rule_name=$1, rule_type=$2, rule_def=$3, updated_at=$4, deleted=$5, disabled=$6 WHERE id=$7 AND org_id=$8"
+	DeleteObfuscation  = "UPDATE zk_obfuscation SET deleted = true WHERE id=$1 AND org_id=$2"
 )
 
 var LogTag = "obfuscations_repo"
@@ -22,6 +23,7 @@ type ObfuscationRepo interface {
 	GetObfuscationById(id string, orgId string) (*dto.Obfuscation, error)
 	InsertObfuscation(obfuscation dto.Obfuscation) (bool, error)
 	UpdateObfuscation(obfuscation dto.Obfuscation) (bool, error)
+	DeleteObfuscation(orgId string, id string) (bool, error)
 }
 
 // ObfuscationRepo implementation
@@ -78,6 +80,22 @@ func (z zkPostgresObfuscationRepo) UpdateObfuscation(obfuscation dto.Obfuscation
 	}
 
 	zkLogger.Info(LogTag, "Obfuscation updated successfully ", result.RowsAffected)
+
+	return true, nil
+}
+
+func (z zkPostgresObfuscationRepo) DeleteObfuscation(orgId string, id string) (bool, error) {
+	obfuscationUpdateStmt := z.dbRepo.CreateStatement(DeleteObfuscation)
+
+	values := []any{id, orgId}
+
+	result, err := z.dbRepo.Update(obfuscationUpdateStmt, values)
+	if err != nil {
+		zkLogger.Error(LogTag, err)
+		return false, err
+	}
+
+	zkLogger.Info(LogTag, "Obfuscation Deleted successfully ", result.RowsAffected)
 
 	return true, nil
 }
