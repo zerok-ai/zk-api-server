@@ -26,6 +26,7 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 
 		clusterAPI.Post("/{"+utils.ClusterIdxPathParam+"}/integration", ih.UpsertIntegration)
 		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/integration", ih.GetAllIntegrationsDashboard)
+		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/integration/{"+utils.IntegrationIdxPathParam+"}/status", ih.GetIntegrationStatus)
 
 		clusterAPI.Get("/attribute", ah.GetAttributes)
 		clusterAPI.Put("/attribute", ah.UploadAttributesCSV)

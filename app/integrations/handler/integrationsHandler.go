@@ -22,6 +22,7 @@ type IntegrationsHandler interface {
 	GetAllIntegrationsOperator(ctx iris.Context)
 	GetAllIntegrationsDashboard(ctx iris.Context)
 	UpsertIntegration(ctx iris.Context)
+	GetIntegrationStatus(ctx iris.Context)
 }
 
 type integrationsHandler struct {
@@ -56,6 +57,28 @@ func (i integrationsHandler) GetAllIntegrationsDashboard(ctx iris.Context) {
 	}
 
 	zkHttpResponse := getAllIntegrations(i, false, clusterIdx)
+
+	ctx.StatusCode(zkHttpResponse.Status)
+	ctx.JSON(zkHttpResponse)
+}
+
+func (i integrationsHandler) GetIntegrationStatus(ctx iris.Context) {
+	integrationId := ctx.Params().Get(utils.IntegrationIdxPathParam)
+	if zkCommon.IsEmpty(integrationId) {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString("IntegrationId is required")
+		return
+	}
+
+	var zkHttpResponse zkHttp.ZkHttpResponse[any]
+	var zkErr *zkerrors.ZkError
+	statusCode, zkErr := i.service.GetAnIntegrationDetails(integrationId)
+
+	if i.cfg.Http.Debug {
+		zkHttpResponse = zkHttp.ToZkResponse[any](statusCode, nil, nil, zkErr)
+	} else {
+		zkHttpResponse = zkHttp.ToZkResponse[any](statusCode, nil, nil, zkErr)
+	}
 
 	ctx.StatusCode(zkHttpResponse.Status)
 	ctx.JSON(zkHttpResponse)
@@ -113,7 +136,11 @@ func (i integrationsHandler) UpsertIntegration(ctx iris.Context) {
 		return
 	}
 
-	done, zkError := i.service.UpsertIntegration(transformer.FromIntegrationsRequestToIntegrationsDto(request))
+	done, insertId, zkError := i.service.UpsertIntegration(transformer.FromIntegrationsRequestToIntegrationsDto(request))
+	if done {
+		i.service.GetAnIntegrationDetails(*insertId)
+	}
+
 	if i.cfg.Http.Debug {
 		zkHttpResponse = zkHttp.ToZkResponse[transformer.IntegrationResponse](200, transformer.IntegrationResponse{}, done, zkError)
 	} else {

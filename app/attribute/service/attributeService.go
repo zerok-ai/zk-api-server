@@ -140,11 +140,11 @@ func readCSVAndReturnData(file multipart.File) ([]model.AttributeInfoRequest, *z
 			DataType:         common.ToPtr(row[headersMap["data_type"]]),
 			Input:            common.ToPtr(row[headersMap["input"]]),
 			Values:           common.ToPtr(row[headersMap["values"]]),
-			Protocol:         scenarioModel.Protocol(row[headersMap["protocol"]]),
+			Protocol:         scenarioModel.ProtocolName(row[headersMap["protocol"]]),
 			Examples:         common.ToPtr(row[headersMap["example"]]),
 			KeySetName:       common.ToPtr(row[headersMap["key_set_name"]]),
 			Description:      common.ToPtr(row[headersMap["description"]]),
-			Executor:         scenarioModel.Executor(row[headersMap["executor"]]),
+			Executor:         scenarioModel.ExecutorName(row[headersMap["executor"]]),
 			SendToFrontEnd:   sendToFrontEnd,
 		}
 

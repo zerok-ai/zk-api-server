@@ -38,3 +38,8 @@ type IntegrationRequest struct {
 	Disabled       bool                `json:"disabled"`
 	MetricServer   bool                `json:"metric_server"`
 }
+
+type Auth struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
