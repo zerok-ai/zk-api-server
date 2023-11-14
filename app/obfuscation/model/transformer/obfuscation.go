@@ -15,7 +15,7 @@ type ObfuscationListResponse struct {
 }
 
 type ObfuscationResponse struct {
-	Response zkObfuscation.Rule `json:"obfuscation"`
+	Response *zkObfuscation.Rule `json:"obfuscation"`
 }
 
 func ToObfuscationListResponse(oArr []dto.Obfuscation) ObfuscationListResponse {
@@ -26,7 +26,7 @@ func ToObfuscationListResponse(oArr []dto.Obfuscation) ObfuscationListResponse {
 			zkLogger.Error(LogTag, "Error while converting dto.obfuscation the obfuscation response model: ", err)
 			continue
 		}
-		obfuscations = append(obfuscations, rule.Response)
+		obfuscations = append(obfuscations, *rule.Response)
 	}
 	return ObfuscationListResponse{Response: obfuscations}
 }
@@ -39,7 +39,7 @@ func ToObfuscationResponse(obj dto.Obfuscation) (ObfuscationResponse, error) {
 		return ObfuscationResponse{}, err
 	}
 	rule.Id = obj.ID
-	return ObfuscationResponse{Response: rule}, nil
+	return ObfuscationResponse{Response: &rule}, nil
 }
 
 func FromObfuscationRequestToObfuscationDto(oReq zkObfuscation.Rule, orgId string, id string) *dto.Obfuscation {

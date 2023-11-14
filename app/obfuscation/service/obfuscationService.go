@@ -42,13 +42,13 @@ func (o obfuscationService) GetObfuscationById(id string, orgId string) (transfo
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while getting obfuscation by ID: ", id, err)
 		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
-		return transformer.ObfuscationResponse{}, &zkError
+		return transformer.ObfuscationResponse{Response: nil}, &zkError
 	}
 
-	if obfuscation == nil {
+	if obfuscation == nil || obfuscation.Deleted {
 		zkLogger.Error(LogTag, "Getting obfuscation nil for by ID: ", id, err)
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, nil)
-		return transformer.ObfuscationResponse{}, &zkError
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, "Obfuscation rule not found for the given id.")
+		return transformer.ObfuscationResponse{Response: nil}, &zkError
 	}
 
 	response, err := transformer.ToObfuscationResponse(*obfuscation)
@@ -56,7 +56,7 @@ func (o obfuscationService) GetObfuscationById(id string, orgId string) (transfo
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while converting obfuscation to response: ", err)
 		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
-		return transformer.ObfuscationResponse{}, &zkError
+		return transformer.ObfuscationResponse{Response: nil}, &zkError
 	}
 
 	return response, nil

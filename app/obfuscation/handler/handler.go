@@ -70,10 +70,8 @@ func (o obfuscationHandler) GetObfuscationById(ctx iris.Context) {
 	}
 
 	var zkHttpResponse zkHttp.ZkHttpResponse[transformer.ObfuscationResponse]
-	var zkErr *zkerrors.ZkError
-	var resp transformer.ObfuscationResponse
 
-	resp, zkErr = o.service.GetObfuscationById(id, orgId)
+	resp, zkErr := o.service.GetObfuscationById(id, orgId)
 
 	if o.cfg.Http.Debug {
 		zkHttpResponse = zkHttp.ToZkResponse[transformer.ObfuscationResponse](200, resp, resp, zkErr)
