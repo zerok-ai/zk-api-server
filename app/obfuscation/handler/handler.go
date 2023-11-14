@@ -116,7 +116,7 @@ func (o obfuscationHandler) UpsertObfuscation(ctx iris.Context, isInsert bool) {
 		return
 	}
 
-	//TODO: Add validation for request here. Especially for regex.
+	//TODO: Add validation for request here. Especially for regex, request type and operation.
 
 	var done bool
 	var zkError *zkerrors.ZkError
