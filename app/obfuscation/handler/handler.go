@@ -48,7 +48,10 @@ func (o obfuscationHandler) GetAllRulesDashboard(ctx iris.Context) {
 	var zkErr *zkerrors.ZkError
 	var resp transformer.ObfuscationListResponse
 
-	resp, zkErr = o.service.GetAllObfuscations(orgId, 0, 10) // You can specify offset and limit as needed
+	limit := ctx.URLParamDefault(utils.Limit, "20")
+	offset := ctx.URLParamDefault(utils.Offset, "0")
+
+	resp, zkErr = o.service.GetAllObfuscations(orgId, offset, limit) // You can specify offset and limit as needed
 
 	if o.cfg.Http.Debug {
 		zkHttpResponse = zkHttp.ToZkResponse[transformer.ObfuscationListResponse](200, resp, resp, zkErr)

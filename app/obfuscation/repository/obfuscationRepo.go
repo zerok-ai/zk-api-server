@@ -19,7 +19,7 @@ const (
 var LogTag = "obfuscations_repo"
 
 type ObfuscationRepo interface {
-	GetAllObfuscations(orgId string, offset int, limit int) ([]dto.Obfuscation, error)
+	GetAllObfuscations(orgId string, offset, limit string) ([]dto.Obfuscation, error)
 	GetObfuscationById(id string, orgId string) (*dto.Obfuscation, error)
 	InsertObfuscation(obfuscation dto.Obfuscation) (bool, error)
 	UpdateObfuscation(obfuscation dto.Obfuscation) (bool, error)
@@ -35,7 +35,7 @@ func NewZkPostgresObfuscationRepo(db sqlDB.DatabaseRepo) ObfuscationRepo {
 	return &zkPostgresObfuscationRepo{db}
 }
 
-func (z zkPostgresObfuscationRepo) GetAllObfuscations(orgId string, offset int, limit int) ([]dto.Obfuscation, error) {
+func (z zkPostgresObfuscationRepo) GetAllObfuscations(orgId string, offset, limit string) ([]dto.Obfuscation, error) {
 	rows, err, closeRow := z.dbRepo.GetAll(GetAllObfuscations, []any{orgId, limit, offset})
 	return ObfuscationProcessor(rows, err, closeRow)
 }

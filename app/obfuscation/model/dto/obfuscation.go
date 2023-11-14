@@ -5,7 +5,7 @@ import (
 )
 
 type Obfuscation struct {
-	ID        *string   `db:"id"`
+	ID        string    `db:"id"`
 	OrgID     string    `db:"org_id"`
 	RuleName  string    `db:"rule_name"`
 	RuleType  string    `db:"rule_type"`

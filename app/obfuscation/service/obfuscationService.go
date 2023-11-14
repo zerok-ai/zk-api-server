@@ -9,7 +9,7 @@ import (
 )
 
 type ObfuscationService interface {
-	GetAllObfuscations(orgId string, offset int, limit int) (transformer.ObfuscationListResponse, *zkerrors.ZkError)
+	GetAllObfuscations(orgId string, offset, limit string) (transformer.ObfuscationListResponse, *zkerrors.ZkError)
 	GetObfuscationById(id string, orgId string) (transformer.ObfuscationResponse, *zkerrors.ZkError)
 	InsertObfuscation(obfuscation dto.Obfuscation) (bool, *zkerrors.ZkError)
 	UpdateObfuscation(obfuscation dto.Obfuscation) (bool, *zkerrors.ZkError)
@@ -26,7 +26,7 @@ func NewObfuscationService(repo repository.ObfuscationRepo) ObfuscationService {
 	return &obfuscationService{repo: repo}
 }
 
-func (o obfuscationService) GetAllObfuscations(orgId string, offset int, limit int) (transformer.ObfuscationListResponse, *zkerrors.ZkError) {
+func (o obfuscationService) GetAllObfuscations(orgId string, offset, limit string) (transformer.ObfuscationListResponse, *zkerrors.ZkError) {
 	obfuscations, err := o.repo.GetAllObfuscations(orgId, offset, limit)
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while getting all obfuscations: ", err)
