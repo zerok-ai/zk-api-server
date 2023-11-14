@@ -19,6 +19,10 @@ import (
 	httpConfig "github.com/zerok-ai/zk-utils-go/http/config"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	zkPostgres "github.com/zerok-ai/zk-utils-go/storage/sqlDB/postgres"
+
+	obfuscationHandler "zk-api-server/app/obfuscation/handler"
+	obfuscationRepo "zk-api-server/app/obfuscation/repository"
+	obfuscationService "zk-api-server/app/obfuscation/service"
 )
 
 var LogTag = "main"
@@ -55,7 +59,11 @@ func main() {
 	as := attributeService.NewAttributeService(ar)
 	ah := attributeHandler.NewAttributeHandler(as, cfg)
 
-	app := newApp(rh, ch, ih, ah)
+	or := obfuscationRepo.NewZkPostgresObfuscationRepo(zkPostgresRepo)
+	os := obfuscationService.NewObfuscationService(or)
+	oh := obfuscationHandler.NewObfuscationHandler(os, cfg)
+
+	app := newApp(rh, ch, ih, ah, oh)
 
 	config := iris.WithConfiguration(iris.Configuration{
 		DisablePathCorrection: true,
@@ -64,7 +72,7 @@ func main() {
 	app.Listen(":"+cfg.Server.Port, config)
 }
 
-func newApp(rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler, ih integrationsHandler.IntegrationsHandler, ah attributeHandler.AttributeHandler) *iris.Application {
+func newApp(rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler, ih integrationsHandler.IntegrationsHandler, ah attributeHandler.AttributeHandler, oh obfuscationHandler.ObfuscationHandler) *iris.Application {
 	app := iris.Default()
 
 	crs := func(ctx iris.Context) {
@@ -96,7 +104,7 @@ func newApp(rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler
 	}).Describe("healthcheck")
 
 	v1 := app.Party("/v1")
-	zkapp.Initialize(v1, rh, ch, ih, ah)
+	zkapp.Initialize(v1, rh, ch, ih, ah, oh)
 
 	return app
 }

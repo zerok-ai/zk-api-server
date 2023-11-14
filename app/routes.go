@@ -5,11 +5,12 @@ import (
 	"zk-api-server/app/attribute/handler"
 	clusterHandler "zk-api-server/app/cluster/handler"
 	integrationsHandler "zk-api-server/app/integrations/handler"
+	obfuscationHandler "zk-api-server/app/obfuscation/handler"
 	scenarioHandler "zk-api-server/app/scenario/handler"
 	"zk-api-server/app/utils"
 )
 
-func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler, ih integrationsHandler.IntegrationsHandler, ah handler.AttributeHandler) {
+func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler, ih integrationsHandler.IntegrationsHandler, ah handler.AttributeHandler, oh obfuscationHandler.ObfuscationHandler) {
 	{
 		clusterAPI := app.Party("/u/cluster")
 		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/service/list", utils.ValidateApiKeyMiddleware, ch.GetServiceDetailsList)
@@ -27,6 +28,12 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 		clusterAPI.Post("/{"+utils.ClusterIdxPathParam+"}/integration", ih.UpsertIntegration)
 		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/integration", ih.GetAllIntegrationsDashboard)
 		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/integration/{"+utils.IntegrationIdxPathParam+"}/status", ih.GetIntegrationStatus)
+
+		clusterAPI.Post("/{"+utils.ClusterIdxPathParam+"}/obfuscation/rule", oh.InsertObfuscationRule)
+		clusterAPI.Put("/{"+utils.ClusterIdxPathParam+"}/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.UpdateObfuscationRule)
+		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/obfuscation/rule/list", oh.GetAllRulesDashboard)
+		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.GetObfuscationById)
+		clusterAPI.Delete("/{"+utils.ClusterIdxPathParam+"}/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.DeleteObfuscationRule)
 
 		clusterAPI.Get("/attribute", ah.GetAttributes)
 		clusterAPI.Put("/attribute", ah.UploadAttributesCSV)
