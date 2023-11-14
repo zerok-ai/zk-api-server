@@ -30,7 +30,7 @@ func (o obfuscationService) GetAllObfuscations(orgId string, offset, limit strin
 	obfuscations, err := o.repo.GetAllObfuscations(orgId, offset, limit)
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while getting all obfuscations: ", err)
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, nil)
 		return transformer.ObfuscationListResponse{}, &zkError
 	}
 
@@ -41,7 +41,7 @@ func (o obfuscationService) GetObfuscationById(id string, orgId string) (transfo
 	obfuscation, err := o.repo.GetObfuscationById(id, orgId)
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while getting obfuscation by ID: ", id, err)
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, nil)
 		return transformer.ObfuscationResponse{Response: nil}, &zkError
 	}
 
@@ -55,7 +55,7 @@ func (o obfuscationService) GetObfuscationById(id string, orgId string) (transfo
 
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while converting obfuscation to response: ", err)
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, nil)
 		return transformer.ObfuscationResponse{Response: nil}, &zkError
 	}
 
@@ -63,11 +63,10 @@ func (o obfuscationService) GetObfuscationById(id string, orgId string) (transfo
 }
 
 func (o obfuscationService) InsertObfuscation(obfuscation dto.Obfuscation) (bool, *zkerrors.ZkError) {
-	//TODO: Perform validation on regex here.
 	done, err := o.repo.InsertObfuscation(obfuscation)
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while inserting obfuscation: ", err)
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, nil)
 		return false, &zkError
 	}
 
@@ -75,11 +74,10 @@ func (o obfuscationService) InsertObfuscation(obfuscation dto.Obfuscation) (bool
 }
 
 func (o obfuscationService) UpdateObfuscation(obfuscation dto.Obfuscation) (bool, *zkerrors.ZkError) {
-	//TODO: Perform validation on regex here.
 	done, err := o.repo.UpdateObfuscation(obfuscation)
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while updating obfuscation: ", err)
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, nil)
 		return false, &zkError
 	}
 
@@ -90,7 +88,7 @@ func (o obfuscationService) DeleteObfuscation(orgId string, id string) (bool, *z
 	done, err := o.repo.DeleteObfuscation(orgId, id)
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while deleting obfuscation: ", err)
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, nil)
 		return false, &zkError
 	}
 
