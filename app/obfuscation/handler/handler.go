@@ -9,6 +9,7 @@ import (
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"zk-api-server/app/obfuscation/model/transformer"
 	"zk-api-server/app/obfuscation/service"
+	"zk-api-server/app/obfuscation/validation"
 	"zk-api-server/app/utils"
 	zkApiModel "zk-api-server/internal/model"
 )
@@ -115,22 +116,16 @@ func (o obfuscationHandler) UpsertObfuscation(ctx iris.Context, isInsert bool) {
 		ctx.WriteString("Error decoding JSON")
 		return
 	}
-
-	//TODO: Add validation for request here. Especially for regex, request type and operation.
-
-	var done bool
 	var zkError *zkerrors.ZkError
 
-	if isInsert {
-		done, zkError = o.service.InsertObfuscation(*transformer.FromObfuscationRequestToObfuscationDto(request, orgId, ""))
+	done, message := validation.ValidateObfuscationRule(request)
+	if !done {
+		zkError2 := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequest, message)
+		zkError = &zkError2
 	} else {
-		id := ctx.Params().Get(utils.ObfuscationIdxPathParam)
-		if zkCommon.IsEmpty(orgId) {
-			ctx.StatusCode(iris.StatusBadRequest)
-			ctx.WriteString("Id is required")
-			return
-		}
-		done, zkError = o.service.UpdateObfuscation(*transformer.FromObfuscationRequestToObfuscationDto(request, orgId, id))
+		result, zkError2 := o.handlerUpsertInternal(ctx, isInsert, request, orgId)
+		done = result
+		zkError = zkError2
 	}
 
 	if o.cfg.Http.Debug {
@@ -141,6 +136,23 @@ func (o obfuscationHandler) UpsertObfuscation(ctx iris.Context, isInsert bool) {
 
 	ctx.StatusCode(zkHttpResponse.Status)
 	ctx.JSON(zkHttpResponse)
+}
+
+func (o obfuscationHandler) handlerUpsertInternal(ctx iris.Context, isInsert bool, request zkObfuscation.Rule, orgId string) (bool, *zkerrors.ZkError) {
+	var done bool
+	var zkError *zkerrors.ZkError
+	if isInsert {
+		done, zkError = o.service.InsertObfuscation(*transformer.FromObfuscationRequestToObfuscationDto(request, orgId, ""))
+	} else {
+		id := ctx.Params().Get(utils.ObfuscationIdxPathParam)
+		if zkCommon.IsEmpty(orgId) {
+			ctx.StatusCode(iris.StatusBadRequest)
+			ctx.WriteString("Id is required")
+			return false, nil
+		}
+		done, zkError = o.service.UpdateObfuscation(*transformer.FromObfuscationRequestToObfuscationDto(request, orgId, id))
+	}
+	return done, zkError
 }
 
 func (o obfuscationHandler) DeleteObfuscationRule(ctx iris.Context) {
