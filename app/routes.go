@@ -29,16 +29,17 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/integration", ih.GetAllIntegrationsDashboard)
 		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/integration/{"+utils.IntegrationIdxPathParam+"}/status", ih.GetIntegrationStatus)
 
-		clusterAPI.Post("/{"+utils.ClusterIdxPathParam+"}/obfuscation/rule", oh.InsertObfuscationRule)
-		clusterAPI.Put("/{"+utils.ClusterIdxPathParam+"}/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.UpdateObfuscationRule)
-		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/obfuscation/rule/list", oh.GetAllRulesDashboard)
-		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.GetObfuscationById)
-		clusterAPI.Delete("/{"+utils.ClusterIdxPathParam+"}/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.DeleteObfuscationRule)
-
 		clusterAPI.Get("/attribute", ah.GetAttributes)
 		clusterAPI.Put("/attribute", ah.UploadAttributesCSV)
 
 	}
+
+	orgAPI := app.Party("/u/org")
+	orgAPI.Post("/obfuscation/rule", oh.InsertObfuscationRule)
+	orgAPI.Put("/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.UpdateObfuscationRule)
+	orgAPI.Get("/obfuscation/rule/list", oh.GetAllRulesDashboard)
+	orgAPI.Get("/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.GetObfuscationById)
+	orgAPI.Delete("/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.DeleteObfuscationRule)
 
 	ruleEngineAPI := app.Party("/o/cluster")
 	{

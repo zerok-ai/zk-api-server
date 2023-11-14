@@ -5,7 +5,6 @@ import (
 	"github.com/kataras/iris/v12"
 	zkCommon "github.com/zerok-ai/zk-utils-go/common"
 	zkHttp "github.com/zerok-ai/zk-utils-go/http"
-	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	zkObfuscation "github.com/zerok-ai/zk-utils-go/obfuscation/model"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"zk-api-server/app/obfuscation/model/transformer"
@@ -15,6 +14,7 @@ import (
 )
 
 var LogTag = "obfuscation_handler"
+var HTTP_UTILS_ORG_ID = "X-ORG-ID"
 
 type ObfuscationHandler interface {
 	GetAllRulesDashboard(ctx iris.Context)
@@ -34,10 +34,7 @@ func NewObfuscationHandler(s service.ObfuscationService, cfg zkApiModel.ZkApiSer
 }
 
 func (o obfuscationHandler) GetAllRulesDashboard(ctx iris.Context) {
-	clusterId := ctx.Params().Get(utils.ClusterIdxPathParam)
-	zkLogger.Debug(LogTag, "clusterId: ", clusterId)
-	//TODO: Add code to fetch orgId from clusterId from zk-auth
-	orgId := "cdb38453-5220-465e-a8ec-956bc1c3f585"
+	orgId := ctx.GetHeader(HTTP_UTILS_ORG_ID)
 	if zkCommon.IsEmpty(orgId) {
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.WriteString("OrgId is required")
@@ -64,10 +61,7 @@ func (o obfuscationHandler) GetAllRulesDashboard(ctx iris.Context) {
 }
 
 func (o obfuscationHandler) GetObfuscationById(ctx iris.Context) {
-	clusterId := ctx.Params().Get(utils.ClusterIdxPathParam)
-	zkLogger.Debug(LogTag, "clusterId: ", clusterId)
-	//TODO: Add code to fetch orgId from clusterId from zk-auth
-	orgId := "cdb38453-5220-465e-a8ec-956bc1c3f585"
+	orgId := ctx.GetHeader(HTTP_UTILS_ORG_ID)
 	id := ctx.Params().Get(utils.ObfuscationIdxPathParam)
 	if zkCommon.IsEmpty(orgId) || zkCommon.IsEmpty(id) {
 		ctx.StatusCode(iris.StatusBadRequest)
@@ -100,10 +94,7 @@ func (o obfuscationHandler) UpdateObfuscationRule(ctx iris.Context) {
 }
 
 func (o obfuscationHandler) UpsertObfuscation(ctx iris.Context, isInsert bool) {
-	clusterId := ctx.Params().Get(utils.ClusterIdxPathParam)
-	zkLogger.Debug(LogTag, "clusterId: ", clusterId)
-	//TODO: Add code to fetch orgId from clusterId from zk-auth
-	orgId := "cdb38453-5220-465e-a8ec-956bc1c3f585"
+	orgId := ctx.GetHeader(HTTP_UTILS_ORG_ID)
 	if zkCommon.IsEmpty(orgId) {
 		ctx.StatusCode(iris.StatusBadRequest)
 		ctx.WriteString("OrgId is required")
@@ -155,10 +146,7 @@ func (o obfuscationHandler) UpsertObfuscation(ctx iris.Context, isInsert bool) {
 }
 
 func (o obfuscationHandler) DeleteObfuscationRule(ctx iris.Context) {
-	clusterId := ctx.Params().Get(utils.ClusterIdxPathParam)
-	zkLogger.Debug(LogTag, "clusterId: ", clusterId)
-	//TODO: Add code to fetch orgId from clusterId from zk-auth
-	orgId := "cdb38453-5220-465e-a8ec-956bc1c3f585"
+	orgId := ctx.GetHeader(HTTP_UTILS_ORG_ID)
 	id := ctx.Params().Get(utils.ObfuscationIdxPathParam)
 	if zkCommon.IsEmpty(orgId) || zkCommon.IsEmpty(id) {
 		ctx.StatusCode(iris.StatusBadRequest)
