@@ -101,9 +101,14 @@ func (i integrationsService) UpsertIntegration(integration dto.Integration) (boo
 }
 
 func (i integrationsService) GetIntegrationsStatusResponse(clusterId, url, username, password string) (*http.Response, *zkerrors.ZkError) {
-	prometheusStatusQueryPath := "/api/v1/query"
+	if common.IsEmpty(clusterId) || common.IsEmpty(url) {
+		zkLogger.Error(LogTag, "ClusterId or url is empty")
+		zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestInvalidClusterAndUrlCombination, nil)
+		return nil, &zkError
+	}
+
+	prometheusStatusQueryPath := "/api/v1/query?query=up"
 	return zkHttp.Create().
-		QueryParam("query", "up").
 		BasicAuth(username, password).
 		Header("X-PROXY-DESTINATION", url+prometheusStatusQueryPath).
 		Header("X-CLIENT-ID", clusterId).
