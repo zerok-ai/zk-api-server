@@ -39,6 +39,8 @@ func ToObfuscationResponse(obj dto.Obfuscation) (ObfuscationResponse, error) {
 		return ObfuscationResponse{}, err
 	}
 	rule.Id = obj.ID
+	rule.CreatedAt = obj.CreatedAt
+	rule.UpdatedAt = obj.UpdatedAt
 	return ObfuscationResponse{Response: &rule}, nil
 }
 
