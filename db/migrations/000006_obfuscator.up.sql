@@ -1,4 +1,4 @@
-CREATE TABLE public.zk_obfuscation (
+CREATE TABLE IF NOT EXISTS public.zk_obfuscation (
    id uuid NOT NULL DEFAULT uuid_generate_v4(),
    org_id character varying(255) NOT NULL,
    rule_name character varying(255) NOT NULL,

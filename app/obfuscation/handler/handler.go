@@ -34,6 +34,17 @@ func NewObfuscationHandler(s service.ObfuscationService, cfg zkApiModel.ZkApiSer
 	return &obfuscationHandler{service: s, cfg: cfg}
 }
 
+// GetAllRulesDashboard godoc
+// @Summary Get all non-deleted obfuscation rules for an organization
+// @Description Get all non-deleted obfuscation rules for an organization
+// @Tags Obfuscation
+// @Accept json
+// @Produce json
+// @Param orgId header string true "Organization ID"
+// @Param limit query string false "Limit". Default 20
+// @Param offset query string false "Offset". Default 0
+// @Success 200 {object} ObfuscationListResponse
+// @Failure 400 {string} string "OrgId is required"
 func (o obfuscationHandler) GetAllRulesDashboard(ctx iris.Context) {
 	orgId := ctx.GetHeader(HTTP_UTILS_ORG_ID)
 	if zkCommon.IsEmpty(orgId) {
@@ -60,6 +71,14 @@ func (o obfuscationHandler) GetAllRulesDashboard(ctx iris.Context) {
 	ctx.StatusCode(zkHttpResponse.Status)
 	ctx.JSON(zkHttpResponse)
 }
+
+// GetObfuscationById godoc
+// @Summary Get obfuscation rule by id
+// @Description Get obfuscation rule by id.
+// @Tags Obfuscation
+// @Accept json
+// @Produce json
+// @Param orgId header string true "Organization ID"
 
 func (o obfuscationHandler) GetObfuscationById(ctx iris.Context) {
 	orgId := ctx.GetHeader(HTTP_UTILS_ORG_ID)
