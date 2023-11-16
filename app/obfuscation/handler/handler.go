@@ -7,6 +7,7 @@ import (
 	zkHttp "github.com/zerok-ai/zk-utils-go/http"
 	zkObfuscation "github.com/zerok-ai/zk-utils-go/obfuscation/model"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
+	"strconv"
 	"zk-api-server/app/obfuscation/model/transformer"
 	"zk-api-server/app/obfuscation/service"
 	"zk-api-server/app/obfuscation/validation"
@@ -23,11 +24,39 @@ type ObfuscationHandler interface {
 	InsertObfuscationRule(ctx iris.Context)
 	UpdateObfuscationRule(ctx iris.Context)
 	DeleteObfuscationRule(ctx iris.Context)
+	GetAllRulesOperator(ctx iris.Context)
 }
 
 type obfuscationHandler struct {
 	service service.ObfuscationService
 	cfg     zkApiModel.ZkApiServerConfig
+}
+
+func (o obfuscationHandler) GetAllRulesOperator(ctx iris.Context) {
+	orgId := ctx.GetHeader(HTTP_UTILS_ORG_ID)
+	if zkCommon.IsEmpty(orgId) {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString("OrgId is required")
+		return
+	}
+
+	var zkHttpResponse zkHttp.ZkHttpResponse[transformer.ObfuscationResponseOperator]
+	var zkErr *zkerrors.ZkError
+	var resp transformer.ObfuscationResponseOperator
+
+	updateTimeStr := ctx.URLParamDefault(utils.LastSyncTS, "0")
+	updateTime := parseIntWithDefault(updateTimeStr, 0)
+
+	resp, zkErr = o.service.GetAllObfuscationsOperator(orgId, updateTime) // You can specify offset and limit as needed
+
+	if o.cfg.Http.Debug {
+		zkHttpResponse = zkHttp.ToZkResponse[transformer.ObfuscationResponseOperator](200, resp, resp, zkErr)
+	} else {
+		zkHttpResponse = zkHttp.ToZkResponse[transformer.ObfuscationResponseOperator](200, resp, nil, zkErr)
+	}
+
+	ctx.StatusCode(zkHttpResponse.Status)
+	ctx.JSON(zkHttpResponse)
 }
 
 func NewObfuscationHandler(s service.ObfuscationService, cfg zkApiModel.ZkApiServerConfig) ObfuscationHandler {
@@ -60,7 +89,7 @@ func (o obfuscationHandler) GetAllRulesDashboard(ctx iris.Context) {
 	limit := ctx.URLParamDefault(utils.Limit, "20")
 	offset := ctx.URLParamDefault(utils.Offset, "0")
 
-	resp, zkErr = o.service.GetAllObfuscations(orgId, offset, limit) // You can specify offset and limit as needed
+	resp, zkErr = o.service.GetAllObfuscationsDashboard(orgId, offset, limit) // You can specify offset and limit as needed
 
 	if o.cfg.Http.Debug {
 		zkHttpResponse = zkHttp.ToZkResponse[transformer.ObfuscationListResponse](200, resp, resp, zkErr)
@@ -196,4 +225,17 @@ func (o obfuscationHandler) DeleteObfuscationRule(ctx iris.Context) {
 
 	ctx.StatusCode(zkHttpResponse.Status)
 	ctx.JSON(zkHttpResponse)
+}
+
+func parseIntWithDefault(s string, defaultVal int64) int64 {
+	if s == "" {
+		return defaultVal
+	}
+
+	val, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		// If there is an error during conversion, return the default value
+		return defaultVal
+	}
+	return val
 }

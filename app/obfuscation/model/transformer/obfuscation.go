@@ -10,12 +10,50 @@ import (
 
 var LogTag = "obfuscation_transformer"
 
+type ObfuscationResponseOperator struct {
+	Obfuscations []zkObfuscation.RuleOperator `json:"obfuscations"`
+	DeletedIds   []string                     `json:"deleted_obfuscation"`
+	DisabledIds  []string                     `json:"disabled_obfuscation"`
+}
+
 type ObfuscationListResponse struct {
 	Response []zkObfuscation.Rule `json:"obfuscations"`
 }
 
 type ObfuscationResponse struct {
 	Response *zkObfuscation.Rule `json:"obfuscation"`
+}
+
+func ToObfuscationResponseOperator(obj dto.Obfuscation) (zkObfuscation.RuleOperator, error) {
+	var rule zkObfuscation.RuleOperator
+	err := json.Unmarshal(obj.RuleDef, &rule)
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while unmarshalling the obfuscation rule: ", err)
+		return zkObfuscation.RuleOperator{}, err
+	}
+	rule.Id = obj.ID
+	return rule, nil
+}
+
+func ToObfuscationListResponseOperator(oArr []dto.Obfuscation) ObfuscationResponseOperator {
+	var active []zkObfuscation.RuleOperator
+	var deleted []string
+	var disabled []string
+	for _, o := range oArr {
+		rule, err := ToObfuscationResponseOperator(o)
+		if err != nil {
+			zkLogger.Error(LogTag, "Error while converting dto.obfuscation the obfuscation response model: ", err)
+			continue
+		}
+		if o.Deleted {
+			deleted = append(deleted, rule.Id)
+		} else if o.Disabled {
+			disabled = append(disabled, rule.Id)
+		} else {
+			active = append(active, rule)
+		}
+	}
+	return ObfuscationResponseOperator{Obfuscations: active, DeletedIds: deleted, DisabledIds: disabled}
 }
 
 func ToObfuscationListResponse(oArr []dto.Obfuscation) ObfuscationListResponse {
@@ -45,7 +83,7 @@ func ToObfuscationResponse(obj dto.Obfuscation) (ObfuscationResponse, error) {
 }
 
 func FromObfuscationRequestToObfuscationDto(oReq zkObfuscation.Rule, orgId string, id string) *dto.Obfuscation {
-	currentTime := time.Now()
+	currentTime := time.Now().Unix()
 	ruleDef, err := json.Marshal(oReq)
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while marshalling the obfuscation rule: ", err)

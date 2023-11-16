@@ -9,17 +9,19 @@ import (
 )
 
 const (
-	GetObfuscationById = "SELECT id, org_id, rule_name, rule_type, rule_def, created_at, updated_at, deleted, disabled FROM zk_obfuscation WHERE id=$1 AND org_id=$2"
-	GetAllObfuscations = "SELECT id, org_id, rule_name, rule_type, rule_def, created_at, updated_at, deleted, disabled FROM zk_obfuscation WHERE org_id=$1 AND deleted = false ORDER BY updated_at LIMIT $2 OFFSET $3"
-	InsertObfuscation  = "INSERT INTO zk_obfuscation (org_id, rule_name, rule_type, rule_def, created_at, updated_at, deleted, disabled) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
-	UpdateObfuscation  = "UPDATE zk_obfuscation SET rule_name=$1, rule_type=$2, rule_def=$3, updated_at=$4, deleted=$5, disabled=$6 WHERE id=$7 AND org_id=$8"
-	DeleteObfuscation  = "UPDATE zk_obfuscation SET deleted = true WHERE id=$1 AND org_id=$2"
+	GetObfuscationById             = "SELECT id, org_id, rule_name, rule_type, rule_def, created_at, updated_at, deleted, disabled FROM zk_obfuscation WHERE id=$1 AND org_id=$2"
+	GetAllObfuscationsForDashboard = "SELECT id, org_id, rule_name, rule_type, rule_def, created_at, updated_at, deleted, disabled FROM zk_obfuscation WHERE org_id=$1 AND deleted = false ORDER BY updated_at LIMIT $2 OFFSET $3"
+	GetAllObfuscationsOperator     = "SELECT id, org_id, rule_name, rule_type, rule_def, created_at, updated_at, deleted, disabled FROM zk_obfuscation WHERE org_id=$1 AND updated_at>$2"
+	InsertObfuscation              = "INSERT INTO zk_obfuscation (org_id, rule_name, rule_type, rule_def, created_at, updated_at, deleted, disabled) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
+	UpdateObfuscation              = "UPDATE zk_obfuscation SET rule_name=$1, rule_type=$2, rule_def=$3, updated_at=$4, deleted=$5, disabled=$6 WHERE id=$7 AND org_id=$8"
+	DeleteObfuscation              = "UPDATE zk_obfuscation SET deleted = true WHERE id=$1 AND org_id=$2"
 )
 
 var LogTag = "obfuscations_repo"
 
 type ObfuscationRepo interface {
-	GetAllObfuscations(orgId string, offset, limit string) ([]dto.Obfuscation, error)
+	GetAllObfuscationsForDashboard(orgId string, offset, limit string) ([]dto.Obfuscation, error)
+	GetAllObfuscationsOperator(orgId string, updatedTime int64) ([]dto.Obfuscation, error)
 	GetObfuscationById(id string, orgId string) (*dto.Obfuscation, error)
 	InsertObfuscation(obfuscation dto.Obfuscation) (bool, error)
 	UpdateObfuscation(obfuscation dto.Obfuscation) (bool, error)
@@ -31,12 +33,17 @@ type zkPostgresObfuscationRepo struct {
 	dbRepo sqlDB.DatabaseRepo
 }
 
+func (z zkPostgresObfuscationRepo) GetAllObfuscationsOperator(orgId string, updatedTime int64) ([]dto.Obfuscation, error) {
+	rows, err, closeRow := z.dbRepo.GetAll(GetAllObfuscationsOperator, []any{orgId, updatedTime})
+	return ObfuscationProcessor(rows, err, closeRow)
+}
+
 func NewZkPostgresObfuscationRepo(db sqlDB.DatabaseRepo) ObfuscationRepo {
 	return &zkPostgresObfuscationRepo{db}
 }
 
-func (z zkPostgresObfuscationRepo) GetAllObfuscations(orgId string, offset, limit string) ([]dto.Obfuscation, error) {
-	rows, err, closeRow := z.dbRepo.GetAll(GetAllObfuscations, []any{orgId, limit, offset})
+func (z zkPostgresObfuscationRepo) GetAllObfuscationsForDashboard(orgId string, offset, limit string) ([]dto.Obfuscation, error) {
+	rows, err, closeRow := z.dbRepo.GetAll(GetAllObfuscationsForDashboard, []any{orgId, limit, offset})
 	return ObfuscationProcessor(rows, err, closeRow)
 }
 

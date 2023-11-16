@@ -41,6 +41,9 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 	orgAPI.Get("/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.GetObfuscationById)
 	orgAPI.Delete("/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.DeleteObfuscationRule)
 
+	orgAPIOperator := app.Party("/o/org")
+	orgAPIOperator.Post("/obfuscation/rule", oh.InsertObfuscationRule)
+
 	ruleEngineAPI := app.Party("/o/cluster")
 	{
 		ruleEngineAPI.Get("/{"+utils.ClusterIdxPathParam+"}/scenario", rh.GetAllScenarioOperator)

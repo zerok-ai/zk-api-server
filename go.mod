@@ -1,13 +1,15 @@
 module zk-api-server
 
-go 1.18
+go 1.21
+
+toolchain go1.21.0
 
 require (
 	github.com/kataras/iris/v12 v12.2.0
 	github.com/lib/pq v1.10.9
 	github.com/stretchr/testify v1.8.3
 	github.com/swaggo/swag v1.16.1
-	github.com/zerok-ai/zk-utils-go v0.5.18-test1
+	github.com/zerok-ai/zk-utils-go v0.5.18-test2
 	px.dev/pxapi v0.4.1
 )
 

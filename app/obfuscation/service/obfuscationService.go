@@ -9,7 +9,8 @@ import (
 )
 
 type ObfuscationService interface {
-	GetAllObfuscations(orgId string, offset, limit string) (transformer.ObfuscationListResponse, *zkerrors.ZkError)
+	GetAllObfuscationsDashboard(orgId string, offset, limit string) (transformer.ObfuscationListResponse, *zkerrors.ZkError)
+	GetAllObfuscationsOperator(orgId string, updatedTime int64) (transformer.ObfuscationResponseOperator, *zkerrors.ZkError)
 	GetObfuscationById(id string, orgId string) (transformer.ObfuscationResponse, *zkerrors.ZkError)
 	InsertObfuscation(obfuscation dto.Obfuscation) (bool, *zkerrors.ZkError)
 	UpdateObfuscation(obfuscation dto.Obfuscation) (bool, *zkerrors.ZkError)
@@ -22,12 +23,22 @@ type obfuscationService struct {
 	repo repository.ObfuscationRepo
 }
 
+func (o obfuscationService) GetAllObfuscationsOperator(orgId string, updatedTime int64) (transformer.ObfuscationResponseOperator, *zkerrors.ZkError) {
+	obfuscations, err := o.repo.GetAllObfuscationsOperator(orgId, updatedTime)
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while getting all obfuscations: ", err)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, nil)
+		return transformer.ObfuscationResponseOperator{}, &zkError
+	}
+	return transformer.ToObfuscationListResponseOperator(obfuscations), nil
+}
+
 func NewObfuscationService(repo repository.ObfuscationRepo) ObfuscationService {
 	return &obfuscationService{repo: repo}
 }
 
-func (o obfuscationService) GetAllObfuscations(orgId string, offset, limit string) (transformer.ObfuscationListResponse, *zkerrors.ZkError) {
-	obfuscations, err := o.repo.GetAllObfuscations(orgId, offset, limit)
+func (o obfuscationService) GetAllObfuscationsDashboard(orgId string, offset, limit string) (transformer.ObfuscationListResponse, *zkerrors.ZkError) {
+	obfuscations, err := o.repo.GetAllObfuscationsForDashboard(orgId, offset, limit)
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while getting all obfuscations: ", err)
 		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, nil)
