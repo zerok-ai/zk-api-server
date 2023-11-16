@@ -36,9 +36,9 @@ func ToObfuscationResponseOperator(obj dto.Obfuscation) (zkObfuscation.RuleOpera
 }
 
 func ToObfuscationListResponseOperator(oArr []dto.Obfuscation) ObfuscationResponseOperator {
-	var active []zkObfuscation.RuleOperator
-	var deleted []string
-	var disabled []string
+	active := []zkObfuscation.RuleOperator{}
+	deleted := []string{}
+	disabled := []string{}
 	for _, o := range oArr {
 		rule, err := ToObfuscationResponseOperator(o)
 		if err != nil {
