@@ -57,7 +57,7 @@ func ToObfuscationListResponseOperator(oArr []dto.Obfuscation) ObfuscationRespon
 }
 
 func ToObfuscationListResponse(oArr []dto.Obfuscation) ObfuscationListResponse {
-	var obfuscations []zkObfuscation.Rule
+	obfuscations := []zkObfuscation.Rule{}
 	for _, o := range oArr {
 		rule, err := ToObfuscationResponse(o)
 		if err != nil {
