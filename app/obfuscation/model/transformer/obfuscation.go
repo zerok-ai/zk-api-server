@@ -32,6 +32,7 @@ func ToObfuscationResponseOperator(obj dto.Obfuscation) (zkObfuscation.RuleOpera
 		return zkObfuscation.RuleOperator{}, err
 	}
 	rule.Id = obj.ID
+	rule.UpdatedAt = obj.UpdatedAt
 	return rule, nil
 }
 
