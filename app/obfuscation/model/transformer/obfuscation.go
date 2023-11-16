@@ -12,8 +12,8 @@ var LogTag = "obfuscation_transformer"
 
 type ObfuscationResponseOperator struct {
 	Obfuscations []zkObfuscation.RuleOperator `json:"obfuscations"`
-	DeletedIds   []string                     `json:"deleted_obfuscation"`
-	DisabledIds  []string                     `json:"disabled_obfuscation"`
+	DeletedIds   []string                     `json:"deleted_obfuscations"`
+	DisabledIds  []string                     `json:"disabled_obfuscations"`
 }
 
 type ObfuscationListResponse struct {
