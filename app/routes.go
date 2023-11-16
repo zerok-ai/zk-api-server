@@ -42,7 +42,7 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 	orgAPI.Delete("/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.DeleteObfuscationRule)
 
 	orgAPIOperator := app.Party("/o/org")
-	orgAPIOperator.Post("/obfuscation/rule", oh.InsertObfuscationRule)
+	orgAPIOperator.Get("/obfuscation/rule", oh.GetAllRulesOperator)
 
 	ruleEngineAPI := app.Party("/o/cluster")
 	{
