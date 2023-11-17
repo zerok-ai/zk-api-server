@@ -1,12 +1,15 @@
 package service
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/kataras/iris/v12"
 	"github.com/zerok-ai/zk-utils-go/common"
 	zkHttp "github.com/zerok-ai/zk-utils-go/http"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
+	"io"
 	"net/http"
 	"zk-api-server/app/integrations/model/dto"
 	"zk-api-server/app/integrations/model/transformer"
@@ -17,8 +20,8 @@ import (
 type IntegrationsService interface {
 	GetAllIntegrations(clusterId string, onlyActive bool) (transformer.IntegrationResponse, *zkerrors.ZkError)
 	UpsertIntegration(integration dto.Integration) (bool, *string, *zkerrors.ZkError)
-	GetAnIntegrationDetails(insertId string) (int, *zkerrors.ZkError)
-	GetIntegrationsStatusResponse(clusterId, url, username, password string) (*http.Response, *zkerrors.ZkError)
+	TestIntegrationConnection(integrationId string) (int, *zkerrors.ZkError)
+	TestUnSyncedIntegrationConnection(integration dto.Integration) (int, *zkerrors.ZkError)
 }
 
 var LogTag = "integrations_service"
@@ -41,25 +44,13 @@ func (i integrationsService) GetAllIntegrations(clusterId string, onlyActive boo
 	return transformer.FromIntegrationArrayToIntegrationResponse(integrations), nil
 }
 
-func (i integrationsService) GetAnIntegrationDetails(insertId string) (int, *zkerrors.ZkError) {
-	integration, err := i.repo.GetAnIntegrationDetails(insertId)
-	if err != nil {
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
-		return iris.StatusInternalServerError, &zkError
-	} else if integration == nil || len(integration) == 0 {
-		zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestInvalidClusterAndUrlCombination, err)
-		return iris.StatusBadRequest, &zkError
+func (i integrationsService) TestIntegrationConnection(integrationId string) (int, *zkerrors.ZkError) {
+	integration, zkError := getIntegrationDetails(i, integrationId)
+	if zkError != nil {
+		return zkError.Error.Status, zkError
 	}
 
-	var auth dto.Auth
-	var username, password string
-	err = json.Unmarshal(integration[0].Authentication, &auth)
-	if err == nil {
-		username = auth.Username
-		password = auth.Password
-	}
-
-	httpResp, zkErr := i.GetIntegrationsStatusResponse(integration[0].ClusterId, integration[0].URL, username, password)
+	httpResp, zkErr := getPrometheusApiResponse(integration[0])
 	if zkErr != nil {
 		zkLogger.Error(LogTag, "Error while getting the integration status: ", zkErr)
 		newZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, zkErr)
@@ -67,6 +58,64 @@ func (i integrationsService) GetAnIntegrationDetails(insertId string) (int, *zke
 	}
 
 	return httpResp.StatusCode, nil
+}
+
+func (i integrationsService) TestUnSyncedIntegrationConnection(integration dto.Integration) (int, *zkerrors.ZkError) {
+	if common.IsEmpty(integration.URL) {
+		zkLogger.Error(LogTag, "url is empty")
+		zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestInvalidClusterAndUrlCombination, nil)
+		return zkError.Error.Status, &zkError
+	}
+
+	username, password := getUsernamePassword(integration)
+	body := struct {
+		Url string `json:"url"`
+		dto.Auth
+	}{
+		Url: integration.URL,
+		Auth: dto.Auth{
+			Username: username,
+			Password: password,
+		},
+	}
+
+	reqBody, err := json.Marshal(body)
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while marshalling the request body: ", err)
+		newZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		return iris.StatusInternalServerError, &newZkErr
+	}
+	reader := bytes.NewReader(reqBody)
+
+	r, e := zkHttp.
+		Create().
+		Header("X-PROXY-DESTINATION", "http://zk-axon.zk-client.svc.cluster.local:80/v1/c/axon/prom/unsaved/status").
+		Header("X-CLIENT-ID", integration.ClusterId).
+		Post("http://zk-wsp-server.zkcloud.svc.cluster.local:8989/request", reader)
+
+	if e != nil {
+		zkLogger.Error(LogTag, "Error while getting the integration status: ", e)
+		newZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, e)
+		return iris.StatusInternalServerError, &newZkErr
+	}
+
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while reading the response body: ", err)
+		newZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		return iris.StatusInternalServerError, &newZkErr
+	}
+
+	x := map[string]transformer.TestConnectionResponse{}
+
+	err = json.Unmarshal(bodyBytes, &x)
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while unmarshalling the response body: ", err)
+		newZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		return iris.StatusInternalServerError, &newZkErr
+	}
+
+	return r.StatusCode, e
 }
 
 func (i integrationsService) UpsertIntegration(integration dto.Integration) (bool, *string, *zkerrors.ZkError) {
@@ -97,21 +146,45 @@ func (i integrationsService) UpsertIntegration(integration dto.Integration) (boo
 		return false, nil, &zkError
 	}
 
-	return done, common.ToString(id), nil
+	return done, common.ToPtr(id), nil
 }
 
-func (i integrationsService) GetIntegrationsStatusResponse(clusterId, url, username, password string) (*http.Response, *zkerrors.ZkError) {
-	if common.IsEmpty(clusterId) || common.IsEmpty(url) {
+func getIntegrationDetails(i integrationsService, integrationId string) ([]dto.Integration, *zkerrors.ZkError) {
+	var zkError *zkerrors.ZkError
+	integration, err := i.repo.GetAnIntegrationDetails(integrationId)
+	if err != nil {
+		zkError = common.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err))
+	} else if integration == nil || len(integration) == 0 {
+		zkError = common.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestInvalidClusterAndUrlCombination, err))
+	}
+
+	return integration, zkError
+}
+
+func getUsernamePassword(integration dto.Integration) (string, string) {
+	var auth dto.Auth
+	var username, password string
+	err := json.Unmarshal(integration.Authentication, &auth)
+	if err == nil {
+		username = auth.Username
+		password = auth.Password
+	}
+
+	return username, password
+}
+
+func getPrometheusApiResponse(integration dto.Integration) (*http.Response, *zkerrors.ZkError) {
+	if common.IsEmpty(integration.ClusterId) || common.IsEmpty(integration.URL) {
 		zkLogger.Error(LogTag, "ClusterId or url is empty")
 		zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestInvalidClusterAndUrlCombination, nil)
 		return nil, &zkError
 	}
 
-	prometheusStatusQueryPath := "/api/v1/query?query=up"
+	url := fmt.Sprintf("http://zk-axon.zk-client.svc.cluster.local:80/v1/c/axon/prom/%s/status", *integration.ID)
+
 	return zkHttp.Create().
-		BasicAuth(username, password).
-		Header("X-PROXY-DESTINATION", url+prometheusStatusQueryPath).
-		Header("X-CLIENT-ID", clusterId).
+		Header("X-PROXY-DESTINATION", url).
+		Header("X-CLIENT-ID", integration.ClusterId).
 		Get("http://zk-wsp-server.zkcloud.svc.cluster.local:8989/request")
 }
 

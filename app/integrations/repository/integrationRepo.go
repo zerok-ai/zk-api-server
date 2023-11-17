@@ -20,7 +20,7 @@ const (
 type IntegrationRepo interface {
 	GetAllIntegrations(clusterId string, onlyActive bool) ([]dto.Integration, error)
 	GetIntegrationsById(id string, clusterId string) (*dto.Integration, error)
-	InsertIntegration(integration dto.Integration) (bool, int, error)
+	InsertIntegration(integration dto.Integration) (bool, string, error)
 	UpdateIntegration(integration dto.Integration) (bool, error)
 	GetAnIntegrationDetails(integrationId string) ([]dto.Integration, error)
 }
@@ -94,17 +94,21 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) ([]dto.Integration, error
 	return integrationArr, nil
 }
 
-func (z zkPostgresRepo) InsertIntegration(integration dto.Integration) (bool, int, error) {
+func (z zkPostgresRepo) InsertIntegration(integration dto.Integration) (bool, string, error) {
 	tx, err := z.dbRepo.CreateTransaction()
 	integrationUpsertStmt, err := common.GetStmtRawQuery(tx, InsertIntegration)
 
-	integrationId := -1
+	integrationId := ""
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while creating the integration insert  ", err)
 		return false, integrationId, handleTxError(tx, err)
 	}
 
-	err = z.dbRepo.InsertWithReturnRow(integrationUpsertStmt, []any{integration}, []any{&integrationId})
+	params := []any{integration.ClusterId, integration.Alias, integration.Type, integration.URL,
+		integration.Authentication, integration.Level, integration.CreatedAt, integration.UpdatedAt,
+		integration.Deleted, integration.Disabled, integration.MetricServer}
+
+	err = z.dbRepo.InsertWithReturnRow(integrationUpsertStmt, params, []any{&integrationId})
 	if err != nil {
 		zkLogger.Error(LogTag, err)
 		return false, integrationId, handleTxError(tx, err)

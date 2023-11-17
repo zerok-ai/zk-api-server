@@ -48,3 +48,20 @@ type UpsertIntegrationResponse struct {
 	IntegrationId string `json:"integration_id"`
 	Status        int    `json:"status"`
 }
+
+type IsIntegrationMetricServerResponse struct {
+	MetricServer bool `json:"metric_server"`
+}
+
+type IntegrationMetricsListResponse struct {
+	Metrics []string `json:"metrics"`
+}
+
+type IntegrationAlertsListResponse struct {
+	Alerts []string `json:"alerts"`
+}
+
+type LabelNameResponse struct {
+	Status string   `json:"status"`
+	Data   []string `json:"data"`
+}
