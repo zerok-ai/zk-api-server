@@ -21,13 +21,12 @@ const (
 var LogTag = "obfuscations_repo"
 
 type ObfuscationRepo interface {
-	GetAllObfuscationsForDashboard(orgId string, offset, limit string) ([]dto.Obfuscation, error)
+	GetAllObfuscationsForDashboard(orgId string, offset, limit string) ([]dto.Obfuscation, int, error)
 	GetAllObfuscationsOperator(orgId string, updatedTime int64) ([]dto.Obfuscation, error)
 	GetObfuscationById(id string, orgId string) (*dto.Obfuscation, error)
 	InsertObfuscation(obfuscation dto.Obfuscation) (bool, error)
 	UpdateObfuscation(obfuscation dto.Obfuscation) (bool, error)
 	DeleteObfuscation(orgId string, id string) (bool, error)
-	GetTotalRowsCount(orgId string) (int, error)
 }
 
 // ObfuscationRepo implementation
@@ -44,9 +43,45 @@ func NewZkPostgresObfuscationRepo(db sqlDB.DatabaseRepo) ObfuscationRepo {
 	return &zkPostgresObfuscationRepo{db}
 }
 
-func (z zkPostgresObfuscationRepo) GetAllObfuscationsForDashboard(orgId string, offset, limit string) ([]dto.Obfuscation, error) {
-	rows, err, closeRow := z.dbRepo.GetAll(GetAllObfuscationsForDashboard, []any{orgId, limit, offset})
-	return ObfuscationProcessor(rows, err, closeRow)
+func (z zkPostgresObfuscationRepo) GetAllObfuscationsForDashboard(orgId string, offset, limit string) ([]dto.Obfuscation, int, error) {
+	tx, err := z.dbRepo.CreateTransactionWithIsolation(sql.LevelRepeatableRead)
+	if err != nil {
+		z.rollbackTransaction(tx)
+		zkLogger.Error(LogTag, "Error while creating a transaction ", err)
+		return nil, 0, err
+	}
+	rows, err, closeRow := z.dbRepo.GetAllWithTx(tx, GetAllObfuscationsForDashboard, []any{orgId, limit, offset})
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while getting all obfuscations for dashboard ", err)
+		z.rollbackTransaction(tx)
+		return nil, 0, err
+	}
+	obfuscations, err := ObfuscationProcessor(rows, err, closeRow)
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while processing obfuscations ", err)
+		z.rollbackTransaction(tx)
+		return nil, 0, err
+	}
+
+	var count int
+	params := []any{orgId}
+	err = z.dbRepo.GetWithTx(tx, GetTotalRowsCountStatement, params, []any{&count})
+	if err != nil {
+		zkLogger.Error(LogTag, "Error in GetTotalRowsCount ", err)
+		z.rollbackTransaction(tx)
+		return nil, 0, err
+	}
+	z.dbRepo.CommitTransaction(tx)
+	return obfuscations, count, nil
+}
+
+func (z zkPostgresObfuscationRepo) rollbackTransaction(tx *sql.Tx) error {
+	err := z.dbRepo.RollbackTransaction(tx)
+	if err != nil {
+		zkLogger.Error(LogTag, "Error while rolling back a transaction ", err)
+		return err
+	}
+	return nil
 }
 
 func (z zkPostgresObfuscationRepo) GetObfuscationById(id string, orgId string) (*dto.Obfuscation, error) {
@@ -107,18 +142,6 @@ func (z zkPostgresObfuscationRepo) DeleteObfuscation(orgId string, id string) (b
 	zkLogger.Info(LogTag, "Obfuscation Deleted successfully ", result.RowsAffected)
 
 	return true, nil
-}
-
-func (z zkPostgresObfuscationRepo) GetTotalRowsCount(orgId string) (int, error) {
-	var count int
-	params := []any{orgId}
-	err := z.dbRepo.Get(GetTotalRowsCountStatement, params, []any{&count})
-	if err != nil {
-		zkLogger.Error(LogTag, "Error in GetTotalRowsCount ", err)
-		return 0, err
-	}
-
-	return count, nil
 }
 
 func ObfuscationProcessor(rows *sql.Rows, sqlErr error, f func()) ([]dto.Obfuscation, error) {
