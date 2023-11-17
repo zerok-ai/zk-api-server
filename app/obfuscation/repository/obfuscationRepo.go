@@ -50,12 +50,25 @@ func (z zkPostgresObfuscationRepo) GetAllObfuscationsForDashboard(orgId string, 
 		zkLogger.Error(LogTag, "Error while creating a transaction ", err)
 		return nil, 0, err
 	}
+	// Function to handle panic and rollback transaction
+	handlePanic := func(tx *sql.Tx) {
+		if r := recover(); r != nil {
+			zkLogger.Error(LogTag, "Recovered from panic: ", err)
+			z.rollbackTransaction(tx)
+		}
+	}
+
+	defer handlePanic(tx)
+
+	// Get all obfuscations for dashboard
 	rows, err, closeRow := z.dbRepo.GetAllWithTx(tx, GetAllObfuscationsForDashboard, []any{orgId, limit, offset})
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while getting all obfuscations for dashboard ", err)
 		z.rollbackTransaction(tx)
 		return nil, 0, err
 	}
+
+	// Process obfuscations
 	obfuscations, err := ObfuscationProcessor(rows, err, closeRow)
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while processing obfuscations ", err)
@@ -63,6 +76,7 @@ func (z zkPostgresObfuscationRepo) GetAllObfuscationsForDashboard(orgId string, 
 		return nil, 0, err
 	}
 
+	// Get total rows count
 	var count int
 	params := []any{orgId}
 	err = z.dbRepo.GetWithTx(tx, GetTotalRowsCountStatement, params, []any{&count})
@@ -71,6 +85,7 @@ func (z zkPostgresObfuscationRepo) GetAllObfuscationsForDashboard(orgId string, 
 		z.rollbackTransaction(tx)
 		return nil, 0, err
 	}
+
 	z.dbRepo.CommitTransaction(tx)
 	return obfuscations, count, nil
 }
