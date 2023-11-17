@@ -44,6 +44,11 @@ func NewZkPostgresObfuscationRepo(db sqlDB.DatabaseRepo) ObfuscationRepo {
 }
 
 func (z zkPostgresObfuscationRepo) GetAllObfuscationsForDashboard(orgId string, offset, limit string) ([]dto.Obfuscation, int, error) {
+	// Creating a Repeatable read transaction here, since we are running two queries here:
+	// One to get the obfuscations with limit and offset and another to get the total rows count.
+	// In case of an update in the obfuscation table, the total rows count might change after the first query is executed.
+	// This will lead to a wrong total rows count give to the dashboard.
+	// So doing a Repeatable read transaction here to avoid this issue.
 	tx, err := z.dbRepo.CreateTransactionWithIsolation(sql.LevelRepeatableRead)
 	if err != nil {
 		z.rollbackTransaction(tx)
