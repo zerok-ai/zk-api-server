@@ -17,7 +17,8 @@ type ObfuscationResponseOperator struct {
 }
 
 type ObfuscationListResponse struct {
-	Response []zkObfuscation.Rule `json:"obfuscations"`
+	Response  []zkObfuscation.Rule `json:"obfuscations"`
+	TotalRows int                  `json:"total_rows"`
 }
 
 type ObfuscationResponse struct {
@@ -57,7 +58,7 @@ func ToObfuscationListResponseOperator(oArr []dto.Obfuscation) ObfuscationRespon
 	return ObfuscationResponseOperator{Obfuscations: active, DeletedIds: deleted, DisabledIds: disabled}
 }
 
-func ToObfuscationListResponse(oArr []dto.Obfuscation) ObfuscationListResponse {
+func ToObfuscationListResponse(oArr []dto.Obfuscation, totalRows int) ObfuscationListResponse {
 	obfuscations := []zkObfuscation.Rule{}
 	for _, o := range oArr {
 		rule, err := ToObfuscationResponse(o)
@@ -67,7 +68,7 @@ func ToObfuscationListResponse(oArr []dto.Obfuscation) ObfuscationListResponse {
 		}
 		obfuscations = append(obfuscations, *rule.Response)
 	}
-	return ObfuscationListResponse{Response: obfuscations}
+	return ObfuscationListResponse{Response: obfuscations, TotalRows: totalRows}
 }
 
 func ToObfuscationResponse(obj dto.Obfuscation) (ObfuscationResponse, error) {

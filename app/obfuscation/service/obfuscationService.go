@@ -38,6 +38,10 @@ func NewObfuscationService(repo repository.ObfuscationRepo) ObfuscationService {
 }
 
 func (o obfuscationService) GetAllObfuscationsDashboard(orgId string, offset, limit string) (transformer.ObfuscationListResponse, *zkerrors.ZkError) {
+	//TODO: Here queries for getting obfuscation and total count is being executed separately.
+	// This might be lead to a mismatch between between data from two queries. In case if an update happens in between these two.
+	// Current dbRepo implementation doesn't support transactions. So, we need to implement transactions in dbRepo.
+	// Same issue is there in scenario data as well.
 	obfuscations, err := o.repo.GetAllObfuscationsForDashboard(orgId, offset, limit)
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while getting all obfuscations: ", err)
@@ -45,7 +49,13 @@ func (o obfuscationService) GetAllObfuscationsDashboard(orgId string, offset, li
 		return transformer.ObfuscationListResponse{}, &zkError
 	}
 
-	return transformer.ToObfuscationListResponse(obfuscations), nil
+	totalRows, err := o.repo.GetTotalRowsCount(orgId)
+	if err != nil {
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorDbError, err)
+		return transformer.ObfuscationListResponse{}, &zkError
+	}
+
+	return transformer.ToObfuscationListResponse(obfuscations, totalRows), nil
 }
 
 func (o obfuscationService) GetObfuscationById(id string, orgId string) (transformer.ObfuscationResponse, *zkerrors.ZkError) {

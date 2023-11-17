@@ -34,9 +34,10 @@ type obfuscationHandler struct {
 
 func (o obfuscationHandler) GetAllRulesOperator(ctx iris.Context) {
 	orgId := ctx.GetHeader(HTTP_UTILS_ORG_ID)
-	if zkCommon.IsEmpty(orgId) {
+	validationResult, errorMessage := validation.ValidateOrgId(orgId)
+	if !validationResult {
 		ctx.StatusCode(iris.StatusBadRequest)
-		ctx.WriteString("OrgId is required")
+		ctx.WriteString(errorMessage)
 		return
 	}
 
@@ -76,18 +77,33 @@ func NewObfuscationHandler(s service.ObfuscationService, cfg zkApiModel.ZkApiSer
 // @Failure 400 {string} string "OrgId is required"
 func (o obfuscationHandler) GetAllRulesDashboard(ctx iris.Context) {
 	orgId := ctx.GetHeader(HTTP_UTILS_ORG_ID)
-	if zkCommon.IsEmpty(orgId) {
+	limit := ctx.URLParamDefault(utils.Limit, "20")
+	offset := ctx.URLParamDefault(utils.Offset, "0")
+
+	validationResult, errorMessage := validation.ValidateOrgId(orgId)
+	if !validationResult {
 		ctx.StatusCode(iris.StatusBadRequest)
-		ctx.WriteString("OrgId is required")
+		ctx.WriteString(errorMessage)
+		return
+	}
+
+	validationResult, errorMessage = validation.ValidateLimit(limit)
+	if !validationResult {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString(errorMessage)
+		return
+	}
+
+	validationResult, errorMessage = validation.ValidateOffset(offset)
+	if !validationResult {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString(errorMessage)
 		return
 	}
 
 	var zkHttpResponse zkHttp.ZkHttpResponse[transformer.ObfuscationListResponse]
 	var zkErr *zkerrors.ZkError
 	var resp transformer.ObfuscationListResponse
-
-	limit := ctx.URLParamDefault(utils.Limit, "20")
-	offset := ctx.URLParamDefault(utils.Offset, "0")
 
 	resp, zkErr = o.service.GetAllObfuscationsDashboard(orgId, offset, limit) // You can specify offset and limit as needed
 
