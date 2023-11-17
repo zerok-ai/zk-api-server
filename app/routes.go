@@ -5,11 +5,12 @@ import (
 	"zk-api-server/app/attribute/handler"
 	clusterHandler "zk-api-server/app/cluster/handler"
 	integrationsHandler "zk-api-server/app/integrations/handler"
+	obfuscationHandler "zk-api-server/app/obfuscation/handler"
 	scenarioHandler "zk-api-server/app/scenario/handler"
 	"zk-api-server/app/utils"
 )
 
-func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler, ih integrationsHandler.IntegrationsHandler, ah handler.AttributeHandler) {
+func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler, ih integrationsHandler.IntegrationsHandler, ah handler.AttributeHandler, oh obfuscationHandler.ObfuscationHandler) {
 	{
 		clusterAPI := app.Party("/u/cluster")
 		clusterAPI.Get("/{"+utils.ClusterIdxPathParam+"}/service/list", utils.ValidateApiKeyMiddleware, ch.GetServiceDetailsList)
@@ -32,6 +33,16 @@ func Initialize(app router.Party, rh scenarioHandler.ScenarioHandler, ch cluster
 		clusterAPI.Put("/attribute", ah.UploadAttributesCSV)
 
 	}
+
+	orgAPI := app.Party("/u/org")
+	orgAPI.Post("/obfuscation/rule", oh.InsertObfuscationRule)
+	orgAPI.Put("/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.UpdateObfuscationRule)
+	orgAPI.Get("/obfuscation/rule/list", oh.GetAllRulesDashboard)
+	orgAPI.Get("/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.GetObfuscationById)
+	orgAPI.Delete("/obfuscation/{"+utils.ObfuscationIdxPathParam+"}/rule", oh.DeleteObfuscationRule)
+
+	orgAPIOperator := app.Party("/o/org")
+	orgAPIOperator.Get("/obfuscation/rule/list", oh.GetAllRulesOperator)
 
 	ruleEngineAPI := app.Party("/o/cluster")
 	{

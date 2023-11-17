@@ -94,15 +94,9 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) ([]dto.Integration, error
 	return integrationArr, nil
 }
 
-func (z zkPostgresRepo) InsertIntegration(integration dto.Integration) (bool, string, error) {
-	tx, err := z.dbRepo.CreateTransaction()
-	integrationUpsertStmt, err := common.GetStmtRawQuery(tx, InsertIntegration)
-
+func (z zkPostgresRepo) InsertIntegration(integration dto.Integration) (bool, int, error) {
 	integrationId := ""
-	if err != nil {
-		zkLogger.Error(LogTag, "Error while creating the integration insert  ", err)
-		return false, integrationId, handleTxError(tx, err)
-	}
+	integrationUpsertStmt := z.dbRepo.CreateStatement(InsertIntegration)
 
 	params := []any{integration.ClusterId, integration.Alias, integration.Type, integration.URL,
 		integration.Authentication, integration.Level, integration.CreatedAt, integration.UpdatedAt,
@@ -111,38 +105,23 @@ func (z zkPostgresRepo) InsertIntegration(integration dto.Integration) (bool, st
 	err = z.dbRepo.InsertWithReturnRow(integrationUpsertStmt, params, []any{&integrationId})
 	if err != nil {
 		zkLogger.Error(LogTag, err)
-		return false, integrationId, handleTxError(tx, err)
+		return false, integrationId, err
 	}
 
-	b, txErr := common.CommitTransaction(tx, LogTag)
-	if txErr != nil || !b {
-		zkLogger.Error(LogTag, "Error while committing the transaction ", txErr.Error)
-		return false, integrationId, handleTxError(tx, err)
-	}
+	zkLogger.Info(LogTag, "Integration insert successfully.")
 
 	return true, integrationId, nil
 }
 
 func (z zkPostgresRepo) UpdateIntegration(integration dto.Integration) (bool, error) {
-	tx, err := z.dbRepo.CreateTransaction()
-	integrationUpsertStmt, err := common.GetStmtRawQuery(tx, UpdateIntegration)
-
-	if err != nil {
-		zkLogger.Error(LogTag, "Error while creating the integration update  ", err)
-		return false, handleTxError(tx, err)
-	}
+	integrationUpsertStmt := z.dbRepo.CreateStatement(UpdateIntegration)
 
 	result, err := z.dbRepo.Update(integrationUpsertStmt, []any{integration.Alias, integration.Type, integration.URL, integration.Authentication, integration.Level, integration.Deleted, integration.Disabled, integration.UpdatedAt, integration.MetricServer, integration.ID})
 	if err != nil {
 		zkLogger.Error(LogTag, err)
-		return false, handleTxError(tx, err)
+		return false, err
 	}
 
-	b, txErr := common.CommitTransaction(tx, LogTag)
-	if txErr != nil || !b {
-		zkLogger.Error(LogTag, "Error while committing the transaction ", txErr.Error)
-		return false, handleTxError(tx, err)
-	}
 	zkLogger.Info(LogTag, "Integration update successfully ", result.RowsAffected)
 
 	return true, nil
