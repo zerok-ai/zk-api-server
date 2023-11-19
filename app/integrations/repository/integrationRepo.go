@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"github.com/zerok-ai/zk-utils-go/common"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/storage/sqlDB"
 	"zk-api-server/app/integrations/model/dto"
@@ -94,7 +93,7 @@ func Processor(rows *sql.Rows, sqlErr error, f func()) ([]dto.Integration, error
 	return integrationArr, nil
 }
 
-func (z zkPostgresRepo) InsertIntegration(integration dto.Integration) (bool, int, error) {
+func (z zkPostgresRepo) InsertIntegration(integration dto.Integration) (bool, string, error) {
 	integrationId := ""
 	integrationUpsertStmt := z.dbRepo.CreateStatement(InsertIntegration)
 
@@ -102,7 +101,7 @@ func (z zkPostgresRepo) InsertIntegration(integration dto.Integration) (bool, in
 		integration.Authentication, integration.Level, integration.CreatedAt, integration.UpdatedAt,
 		integration.Deleted, integration.Disabled, integration.MetricServer}
 
-	err = z.dbRepo.InsertWithReturnRow(integrationUpsertStmt, params, []any{&integrationId})
+	err := z.dbRepo.InsertWithReturnRow(integrationUpsertStmt, params, []any{&integrationId})
 	if err != nil {
 		zkLogger.Error(LogTag, err)
 		return false, integrationId, err
@@ -125,15 +124,4 @@ func (z zkPostgresRepo) UpdateIntegration(integration dto.Integration) (bool, er
 	zkLogger.Info(LogTag, "Integration update successfully ", result.RowsAffected)
 
 	return true, nil
-}
-
-func handleTxError(tx *sql.Tx, err2 error) error {
-	done, err := common.RollbackTransaction(tx, LogTag)
-	if err != nil {
-		zkLogger.Error(LogTag, "Error while rolling back the transaction ", err.Error)
-	}
-	if !done {
-		zkLogger.Error(LogTag, "Rolling back the transaction failed.")
-	}
-	return err2
 }
