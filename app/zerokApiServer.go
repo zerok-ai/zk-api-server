@@ -1,9 +1,6 @@
 package app
 
 import (
-	"main/app/cluster"
-	"main/app/px"
-
 	"github.com/kataras/iris/v12"
 )
 
@@ -35,13 +32,7 @@ func newApp() *iris.Application {
 	app.AllowMethods(iris.MethodOptions)
 
 	v1 := app.Party("/v1")
-	cluster.Initialize(v1)
-	px.Initialize(v1)
+	Initialize(v1, nil, nil, nil, nil, nil)
 
 	return app
-}
-
-func Start() {
-	app := newApp()
-	app.Listen(":8080")
 }

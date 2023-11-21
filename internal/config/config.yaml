@@ -1,0 +1,17 @@
+server:
+  host: localhost
+  port: 80
+
+logs:
+  color: true
+  level: DEBUG
+
+http:
+  debug: true
+
+postgres:
+  host: postgres.plc.svc.cluster.local
+  port: 5432
+  user: "pl"
+  password: "pl"
+  dbname: "pl"

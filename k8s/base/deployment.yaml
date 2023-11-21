@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zk-api-server
+  labels:
+    app: zk-api-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zk-api-server
+  template:
+    metadata:
+      labels:
+        app: zk-api-server
+    spec:
+      containers:
+        - name: zk-api-server
+          imagePullPolicy: Always
+          image: us-west1-docker.pkg.dev/zerok-dev/api-server/zk-api-server:dev
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: cluster-details
+              mountPath: /opt
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            successThreshold: 3
+          env: # Setting Enviornmental Variables
+            - name: PL_POSTGRES_USERNAME  # Setting Database username from Secret
+              valueFrom:
+                secretKeyRef:
+                  name: pl-db-secrets
+                  key: PL_POSTGRES_USERNAME
+
+            - name: PL_POSTGRES_PASSWORD # Setting Database password from Secret
+              valueFrom:
+                secretKeyRef:
+                  name: pl-db-secrets
+                  key: PL_POSTGRES_PASSWORD
+      volumes:
+        - name: cluster-details
+          configMap:
+            name: cluster-details-config-file
+
