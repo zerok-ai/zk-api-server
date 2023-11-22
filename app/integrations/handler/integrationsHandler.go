@@ -97,7 +97,7 @@ func (i integrationsHandler) TestUnSyncedIntegrationConnection(ctx iris.Context)
 	}
 
 	var request dto.IntegrationRequest
-	var zkHttpResponse zkHttp.ZkHttpResponse[dto.UpsertIntegrationResponse]
+	var zkHttpResponse zkHttp.ZkHttpResponse[dto.TestConnectionResponse]
 
 	body, err := ctx.GetBody()
 	if err != nil {
@@ -129,13 +129,13 @@ func (i integrationsHandler) TestUnSyncedIntegrationConnection(ctx iris.Context)
 	if zkError != nil {
 		zkLogger.Error(LogTag, "Error while getting the integration status: ", zkError)
 	} else {
-		zkHttpResponse.Data.TestConnectionResponse = resp
+		zkHttpResponse.Data = resp
 	}
 
 	if i.cfg.Http.Debug {
-		zkHttpResponse = zkHttp.ToZkResponse[dto.UpsertIntegrationResponse](200, zkHttpResponse.Data, nil, zkError)
+		zkHttpResponse = zkHttp.ToZkResponse[dto.TestConnectionResponse](200, zkHttpResponse.Data, zkHttpResponse.Data, zkError)
 	} else {
-		zkHttpResponse = zkHttp.ToZkResponse[dto.UpsertIntegrationResponse](200, zkHttpResponse.Data, nil, zkError)
+		zkHttpResponse = zkHttp.ToZkResponse[dto.TestConnectionResponse](200, zkHttpResponse.Data, zkHttpResponse.Data, zkError)
 	}
 
 	ctx.StatusCode(zkHttpResponse.Status)
