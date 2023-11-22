@@ -61,7 +61,7 @@ func (i integrationsService) TestIntegrationConnection(integrationId string) (dt
 
 	if httpResp.StatusCode != iris.StatusOK {
 		zkLogger.Error(LogTag, "Status Code not 200")
-		resp.Status = utils.ConnectionFailed
+		resp.Status = utils.StatusError
 		resp.Message = httpResp.Status
 		return resp, nil
 	} else {
@@ -126,7 +126,7 @@ func (i integrationsService) TestUnSyncedIntegrationConnection(integration dto.I
 
 	if r.StatusCode != iris.StatusOK {
 		zkLogger.Error(LogTag, "Status Code not 200")
-		resp.Status = utils.ConnectionFailed
+		resp.Status = utils.StatusError
 		resp.Message = r.Status
 		return resp, nil
 	}

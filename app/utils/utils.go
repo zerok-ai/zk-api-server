@@ -59,8 +59,7 @@ const (
 	Enable  = "enable"
 	Disable = "disable"
 
-	ConnectionSuccessful = "Connection Successful"
-	ConnectionFailed     = "Connection Failed"
+	StatusError = "error"
 )
 
 func GetDataByIdx(tag string, datatypeName string, r *types.Record) interface{} {
