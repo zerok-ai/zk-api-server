@@ -46,7 +46,7 @@ type Auth struct {
 
 type UpsertIntegrationResponse struct {
 	IntegrationId string `json:"integration_id"`
-	Status        int    `json:"status"`
+	TestConnectionResponse
 }
 
 type IsIntegrationMetricServerResponse struct {
@@ -64,4 +64,9 @@ type IntegrationAlertsListResponse struct {
 type LabelNameResponse struct {
 	Status string   `json:"status"`
 	Data   []string `json:"data"`
+}
+
+type TestConnectionResponse struct {
+	Status  string `json:"status"`
+	Message string `json:"message,omitempty"`
 }

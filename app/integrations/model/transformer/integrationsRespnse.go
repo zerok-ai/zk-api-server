@@ -50,9 +50,3 @@ func FromIntegrationsRequestToIntegrationsDto(iReq dto.IntegrationRequest) dto.I
 		MetricServer:   iReq.MetricServer,
 	}
 }
-
-type TestConnectionResponse struct {
-	Status    string `json:"status"`
-	Message   string `json:"message,omitempty"`
-	ErrorType string `json:"errorType,omitempty"`
-}

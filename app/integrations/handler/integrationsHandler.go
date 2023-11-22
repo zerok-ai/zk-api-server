@@ -76,12 +76,12 @@ func (i integrationsHandler) TestIntegrationConnectionStatus(ctx iris.Context) {
 
 	var zkHttpResponse zkHttp.ZkHttpResponse[any]
 	var zkErr *zkerrors.ZkError
-	statusCode, zkErr := i.service.TestIntegrationConnection(integrationId)
+	resp, zkErr := i.service.TestIntegrationConnection(integrationId)
 
 	if i.cfg.Http.Debug {
-		zkHttpResponse = zkHttp.ToZkResponse[any](statusCode, nil, nil, zkErr)
+		zkHttpResponse = zkHttp.ToZkResponse[any](200, resp, resp, zkErr)
 	} else {
-		zkHttpResponse = zkHttp.ToZkResponse[any](statusCode, nil, nil, zkErr)
+		zkHttpResponse = zkHttp.ToZkResponse[any](200, resp, resp, zkErr)
 	}
 
 	ctx.StatusCode(zkHttpResponse.Status)
@@ -125,11 +125,11 @@ func (i integrationsHandler) TestUnSyncedIntegrationConnection(ctx iris.Context)
 
 	integration := transformer.FromIntegrationsRequestToIntegrationsDto(request)
 
-	status, zkError := i.service.TestUnSyncedIntegrationConnection(integration)
+	resp, zkError := i.service.TestUnSyncedIntegrationConnection(integration)
 	if zkError != nil {
 		zkLogger.Error(LogTag, "Error while getting the integration status: ", zkError)
 	} else {
-		zkHttpResponse.Data.Status = status
+		zkHttpResponse.Data.TestConnectionResponse = resp
 	}
 
 	if i.cfg.Http.Debug {
@@ -198,11 +198,11 @@ func (i integrationsHandler) UpsertIntegration(ctx iris.Context) {
 	done, insertId, zkError := i.service.UpsertIntegration(integration)
 	if done {
 		zkHttpResponse.Data.IntegrationId = *insertId
-		status, zkError := i.service.TestUnSyncedIntegrationConnection(integration)
+		resp, zkError := i.service.TestUnSyncedIntegrationConnection(integration)
 		if zkError != nil {
 			zkLogger.Error(LogTag, "Error while getting the integration status: ", zkError)
 		} else {
-			zkHttpResponse.Data.Status = status
+			zkHttpResponse.Data.TestConnectionResponse = resp
 		}
 	}
 
