@@ -67,6 +67,7 @@ type LabelNameResponse struct {
 }
 
 type TestConnectionResponse struct {
-	Status  string `json:"status"`
-	Message string `json:"message,omitempty"`
+	ConnectionStatus  string `json:"connection_status"`
+	ConnectionMessage string `json:"connection_message,omitempty"`
+	HasMetricServer   bool   `json:"has_metric_server,omitempty"`
 }

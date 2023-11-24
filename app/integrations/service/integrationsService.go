@@ -61,8 +61,8 @@ func (i integrationsService) TestIntegrationConnection(integrationId string) (dt
 
 	if httpResp.StatusCode != iris.StatusOK {
 		zkLogger.Error(LogTag, "Status Code not 200")
-		resp.Status = utils.StatusError
-		resp.Message = httpResp.Status
+		resp.ConnectionStatus = utils.StatusError
+		resp.ConnectionMessage = httpResp.Status
 		return resp, nil
 	} else {
 		respBody, err := io.ReadAll(httpResp.Body)
@@ -112,26 +112,26 @@ func (i integrationsService) TestUnSyncedIntegrationConnection(integration dto.I
 	}
 	reader := bytes.NewReader(reqBody)
 
-	r, e := zkHttp.
+	response, zkErr := zkHttp.
 		Create().
 		Header("X-PROXY-DESTINATION", "http://zk-axon.zk-client.svc.cluster.local:80/v1/c/axon/prom/unsaved/status").
 		Header("X-CLIENT-ID", integration.ClusterId).
 		Post("http://zk-wsp-server.zkcloud.svc.cluster.local:8989/request", reader)
 
-	if e != nil {
-		zkLogger.Error(LogTag, "Error while getting the integration status: ", e)
-		newZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, e)
+	if zkErr != nil {
+		zkLogger.Error(LogTag, "Error while getting the integration status: ", zkErr)
+		newZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, zkErr)
 		return resp, &newZkErr
 	}
 
-	if r.StatusCode != iris.StatusOK {
+	if response.StatusCode != iris.StatusOK {
 		zkLogger.Error(LogTag, "Status Code not 200")
-		resp.Status = utils.StatusError
-		resp.Message = r.Status
+		resp.ConnectionStatus = utils.StatusError
+		resp.ConnectionMessage = response.Status
 		return resp, nil
 	}
 
-	bodyBytes, err := io.ReadAll(r.Body)
+	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while reading the response body: ", err)
 		newZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
@@ -147,7 +147,7 @@ func (i integrationsService) TestUnSyncedIntegrationConnection(integration dto.I
 		return resp, &newZkErr
 	}
 
-	return x["payload"], e
+	return x["payload"], nil
 }
 
 func (i integrationsService) UpsertIntegration(integration dto.Integration) (bool, *string, *zkerrors.ZkError) {
