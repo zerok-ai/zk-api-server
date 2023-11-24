@@ -59,7 +59,8 @@ const (
 	Enable  = "enable"
 	Disable = "disable"
 
-	StatusError = "error"
+	StatusError     = "error"
+	ResponsePayload = "payload"
 )
 
 func GetDataByIdx(tag string, datatypeName string, r *types.Record) interface{} {

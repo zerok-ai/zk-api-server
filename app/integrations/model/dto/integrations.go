@@ -45,8 +45,8 @@ type Auth struct {
 }
 
 type UpsertIntegrationResponse struct {
-	IntegrationId string `json:"integration_id"`
-	TestConnectionResponse
+	IntegrationId     string            `json:"integration_id"`
+	IntegrationStatus IntegrationStatus `json:"integration_status"`
 }
 
 type IsIntegrationMetricServerResponse struct {
@@ -66,8 +66,12 @@ type LabelNameResponse struct {
 	Data   []string `json:"data"`
 }
 
-type TestConnectionResponse struct {
+type IntegrationStatus struct {
 	ConnectionStatus  string `json:"connection_status"`
 	ConnectionMessage string `json:"connection_message,omitempty"`
 	HasMetricServer   bool   `json:"has_metric_server,omitempty"`
+}
+
+type TestConnectionResponse struct {
+	IntegrationStatus IntegrationStatus `json:"integration_status"`
 }

@@ -61,8 +61,8 @@ func (i integrationsService) TestIntegrationConnection(integrationId string) (dt
 
 	if httpResp.StatusCode != iris.StatusOK {
 		zkLogger.Error(LogTag, "Status Code not 200")
-		resp.ConnectionStatus = utils.StatusError
-		resp.ConnectionMessage = httpResp.Status
+		resp.IntegrationStatus.ConnectionStatus = utils.StatusError
+		resp.IntegrationStatus.ConnectionMessage = httpResp.Status
 		return resp, nil
 	} else {
 		respBody, err := io.ReadAll(httpResp.Body)
@@ -72,15 +72,16 @@ func (i integrationsService) TestIntegrationConnection(integrationId string) (dt
 			return resp, &zkError
 		}
 
-		body := map[string]dto.TestConnectionResponse{}
-		err = json.Unmarshal(respBody, &body)
+		integrationStatus := map[string]dto.IntegrationStatus{}
+		err = json.Unmarshal(respBody, &integrationStatus)
 		if err != nil {
 			zkLogger.Error(LogTag, "Error while unmarshalling the response body: ", err)
 			newZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
 			return resp, &newZkErr
 		}
 
-		return body["payload"], nil
+		resp.IntegrationStatus = integrationStatus[utils.ResponsePayload]
+		return resp, nil
 	}
 }
 
@@ -126,8 +127,8 @@ func (i integrationsService) TestUnSyncedIntegrationConnection(integration dto.I
 
 	if response.StatusCode != iris.StatusOK {
 		zkLogger.Error(LogTag, "Status Code not 200")
-		resp.ConnectionStatus = utils.StatusError
-		resp.ConnectionMessage = response.Status
+		resp.IntegrationStatus.ConnectionStatus = utils.StatusError
+		resp.IntegrationStatus.ConnectionMessage = response.Status
 		return resp, nil
 	}
 
@@ -138,16 +139,18 @@ func (i integrationsService) TestUnSyncedIntegrationConnection(integration dto.I
 		return resp, &newZkErr
 	}
 
-	x := map[string]dto.TestConnectionResponse{}
+	integrationStatus := map[string]dto.IntegrationStatus{}
 
-	err = json.Unmarshal(bodyBytes, &x)
+	err = json.Unmarshal(bodyBytes, &integrationStatus)
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while unmarshalling the response body: ", err)
 		newZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
 		return resp, &newZkErr
 	}
 
-	return x["payload"], nil
+	resp.IntegrationStatus = integrationStatus[utils.ResponsePayload]
+
+	return resp, nil
 }
 
 func (i integrationsService) UpsertIntegration(integration dto.Integration) (bool, *string, *zkerrors.ZkError) {

@@ -202,7 +202,7 @@ func (i integrationsHandler) UpsertIntegration(ctx iris.Context) {
 		if zkError != nil {
 			zkLogger.Error(LogTag, "Error while getting the integration status: ", zkError)
 		} else {
-			zkHttpResponse.Data.TestConnectionResponse = resp
+			zkHttpResponse.Data.IntegrationStatus = resp.IntegrationStatus
 		}
 	}
 
