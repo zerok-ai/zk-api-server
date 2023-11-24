@@ -195,11 +195,12 @@ func (i integrationsHandler) UpsertIntegration(ctx iris.Context) {
 	}
 
 	integration := transformer.FromIntegrationsRequestToIntegrationsDto(request)
+	resp, zkErrorTestConnection := i.service.TestUnSyncedIntegrationConnection(integration)
+	integration.MetricServer = resp.IntegrationStatus.HasMetricServer
 	done, insertId, zkError := i.service.UpsertIntegration(integration)
 	if done {
 		zkHttpResponse.Data.IntegrationId = *insertId
-		resp, zkError := i.service.TestUnSyncedIntegrationConnection(integration)
-		if zkError != nil {
+		if zkErrorTestConnection != nil {
 			zkLogger.Error(LogTag, "Error while getting the integration status: ", zkError)
 		} else {
 			zkHttpResponse.Data.IntegrationStatus = resp.IntegrationStatus

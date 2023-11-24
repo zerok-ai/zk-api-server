@@ -19,7 +19,7 @@ type Integration struct {
 	UpdatedAt      time.Time           `json:"updated_at"`
 	Deleted        bool                `json:"deleted"`
 	Disabled       bool                `json:"disabled"`
-	MetricServer   bool                `json:"metric_server"`
+	MetricServer   *bool               `json:"metric_server"`
 }
 
 func (integration Integration) GetAllColumns() []any {
@@ -27,8 +27,8 @@ func (integration Integration) GetAllColumns() []any {
 }
 
 type IntegrationRequest struct {
-	ID             *string `json:"id"`
-	ClusterId      string
+	ID             *string             `json:"id"`
+	ClusterId      string              `json:"cluster_id"`
 	Alias          string              `json:"alias"`
 	Type           zkIntegration.Type  `json:"type"`
 	URL            string              `json:"url"`
@@ -36,7 +36,7 @@ type IntegrationRequest struct {
 	Level          zkIntegration.Level `json:"level"`
 	Deleted        bool                `json:"deleted"`
 	Disabled       bool                `json:"disabled"`
-	MetricServer   bool                `json:"metric_server"`
+	MetricServer   *bool               `json:"metric_server"`
 }
 
 type Auth struct {
@@ -69,7 +69,7 @@ type LabelNameResponse struct {
 type IntegrationStatus struct {
 	ConnectionStatus  string `json:"connection_status"`
 	ConnectionMessage string `json:"connection_message,omitempty"`
-	HasMetricServer   bool   `json:"has_metric_server,omitempty"`
+	HasMetricServer   *bool  `json:"has_metric_server,omitempty"`
 }
 
 type TestConnectionResponse struct {

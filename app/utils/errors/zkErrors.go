@@ -23,6 +23,7 @@ var (
 	ZkErrorBadRequestVersionEmpty                    = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Filter Version is empty"}
 	ZkErrorBadRequestDeletedIsNotBoolean             = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "deleted is not bool"}
 	ZkErrorBadRequestInvalidClusterAndUrlCombination = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "This integration does not exist for this cluster"}
+	ZkErrorBadRequestUrl                             = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "url cannot be empty"}
 
 	ZkErrorBadRequestDifferentVersions      = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Different versions in sheet"}
 	ZkErrorBadRequestEmptyOrInvalidVersions = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Empty or Invalid versions in sheet"}

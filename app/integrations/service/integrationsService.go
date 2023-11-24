@@ -87,9 +87,12 @@ func (i integrationsService) TestIntegrationConnection(integrationId string) (dt
 
 func (i integrationsService) TestUnSyncedIntegrationConnection(integration dto.Integration) (dto.TestConnectionResponse, *zkerrors.ZkError) {
 	var resp dto.TestConnectionResponse
+	resp.IntegrationStatus.ConnectionStatus = utils.StatusError
+
 	if common.IsEmpty(integration.URL) {
 		zkLogger.Error(LogTag, "url is empty")
-		zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestInvalidClusterAndUrlCombination, nil)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestUrl, nil)
+		resp.IntegrationStatus.ConnectionMessage = zkError.Error.Message
 		return resp, &zkError
 	}
 
@@ -108,8 +111,9 @@ func (i integrationsService) TestUnSyncedIntegrationConnection(integration dto.I
 	reqBody, err := json.Marshal(body)
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while marshalling the request body: ", err)
-		newZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
-		return resp, &newZkErr
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		resp.IntegrationStatus.ConnectionMessage = zkError.Error.Message
+		return resp, &zkError
 	}
 	reader := bytes.NewReader(reqBody)
 
@@ -122,6 +126,7 @@ func (i integrationsService) TestUnSyncedIntegrationConnection(integration dto.I
 	if zkErr != nil {
 		zkLogger.Error(LogTag, "Error while getting the integration status: ", zkErr)
 		newZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, zkErr)
+		resp.IntegrationStatus.ConnectionMessage = newZkErr.Error.Message
 		return resp, &newZkErr
 	}
 
@@ -136,6 +141,7 @@ func (i integrationsService) TestUnSyncedIntegrationConnection(integration dto.I
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while reading the response body: ", err)
 		newZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		resp.IntegrationStatus.ConnectionMessage = newZkErr.Error.Message
 		return resp, &newZkErr
 	}
 
@@ -145,6 +151,7 @@ func (i integrationsService) TestUnSyncedIntegrationConnection(integration dto.I
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while unmarshalling the response body: ", err)
 		newZkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		resp.IntegrationStatus.ConnectionMessage = newZkErr.Error.Message
 		return resp, &newZkErr
 	}
 
