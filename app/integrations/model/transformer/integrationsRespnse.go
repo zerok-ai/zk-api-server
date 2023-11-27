@@ -14,23 +14,27 @@ type IntegrationResponse struct {
 func FromIntegrationArrayToIntegrationResponse(iArr []dto.Integration) IntegrationResponse {
 	responseArr := make([]zkIntegrationResponse.IntegrationResponseObj, 0)
 	for _, i := range iArr {
-		responseArr = append(responseArr, zkIntegrationResponse.IntegrationResponseObj{
-			ID:             *i.ID,
-			ClusterId:      i.ClusterId,
-			Alias:          i.Alias,
-			Type:           i.Type,
-			URL:            i.URL,
-			Authentication: i.Authentication,
-			Level:          i.Level,
-			CreatedAt:      i.CreatedAt,
-			UpdatedAt:      i.UpdatedAt,
-			Deleted:        i.Deleted,
-			Disabled:       i.Disabled,
-			MetricServer:   i.MetricServer,
-		})
+		responseArr = append(responseArr, IntegrationsDtoToIntegrationsResp(i))
 	}
 
 	return IntegrationResponse{Response: responseArr}
+}
+
+func IntegrationsDtoToIntegrationsResp(i dto.Integration) zkIntegrationResponse.IntegrationResponseObj {
+	return zkIntegrationResponse.IntegrationResponseObj{
+		ID:             *i.ID,
+		ClusterId:      i.ClusterId,
+		Alias:          i.Alias,
+		Type:           i.Type,
+		URL:            i.URL,
+		Authentication: i.Authentication,
+		Level:          i.Level,
+		CreatedAt:      i.CreatedAt,
+		UpdatedAt:      i.UpdatedAt,
+		Deleted:        i.Deleted,
+		Disabled:       i.Disabled,
+		MetricServer:   i.MetricServer,
+	}
 }
 
 func FromIntegrationsRequestToIntegrationsDto(iReq dto.IntegrationRequest) dto.Integration {

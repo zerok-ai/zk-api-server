@@ -25,6 +25,7 @@ type IntegrationsHandler interface {
 	UpsertIntegration(ctx iris.Context)
 	TestIntegrationConnectionStatus(ctx iris.Context)
 	TestUnSyncedIntegrationConnection(ctx iris.Context)
+	GetIntegrationsById(ctx iris.Context)
 }
 
 type integrationsHandler struct {
@@ -47,6 +48,37 @@ func (i integrationsHandler) GetAllIntegrationsOperator(ctx iris.Context) {
 	}
 
 	zkHttpResponse := getAllIntegrations(i, true, clusterIdx)
+
+	ctx.StatusCode(zkHttpResponse.Status)
+	ctx.JSON(zkHttpResponse)
+}
+
+func (i integrationsHandler) GetIntegrationsById(ctx iris.Context) {
+	integrationId := ctx.Params().Get(utils.IntegrationIdxPathParam)
+	if zkCommon.IsEmpty(integrationId) {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString("IntegrationId is required")
+		return
+	}
+
+	clusterIdx := ctx.Params().Get(utils.ClusterIdxPathParam)
+	if zkCommon.IsEmpty(clusterIdx) {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString("ClusterIdx is required")
+		return
+	}
+
+	var zkHttpResponse zkHttp.ZkHttpResponse[zkIntegration.IntegrationResponseObj]
+	var zkErr *zkerrors.ZkError
+	var resp zkIntegration.IntegrationResponseObj
+
+	resp, zkErr = i.service.GetIntegrationById(clusterIdx, integrationId)
+
+	if i.cfg.Http.Debug {
+		zkHttpResponse = zkHttp.ToZkResponse[zkIntegration.IntegrationResponseObj](200, resp, resp, zkErr)
+	} else {
+		zkHttpResponse = zkHttp.ToZkResponse[zkIntegration.IntegrationResponseObj](200, resp, nil, zkErr)
+	}
 
 	ctx.StatusCode(zkHttpResponse.Status)
 	ctx.JSON(zkHttpResponse)

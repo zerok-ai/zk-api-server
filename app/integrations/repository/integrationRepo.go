@@ -18,7 +18,7 @@ const (
 
 type IntegrationRepo interface {
 	GetAllIntegrations(clusterId string, onlyActive bool) ([]dto.Integration, error)
-	GetIntegrationsById(id string, clusterId string) (*dto.Integration, error)
+	GetIntegrationsById(id string, clusterId string) (dto.Integration, error)
 	InsertIntegration(integration dto.Integration) (bool, string, error)
 	UpdateIntegration(integration dto.Integration) (bool, error)
 	GetAnIntegrationDetails(integrationId string) ([]dto.Integration, error)
@@ -52,14 +52,14 @@ func (z zkPostgresRepo) GetAnIntegrationDetails(integrationId string) ([]dto.Int
 	return Processor(rows, err, closeRow)
 }
 
-func (z zkPostgresRepo) GetIntegrationsById(id string, clusterId string) (*dto.Integration, error) {
+func (z zkPostgresRepo) GetIntegrationsById(id string, clusterId string) (dto.Integration, error) {
 	var row dto.Integration
 	err := z.dbRepo.Get(GetIntegrationById, []any{id, clusterId}, []any{&row.ID, &row.ClusterId, &row.Alias, &row.Type, &row.URL, &row.Authentication, &row.Level, &row.CreatedAt, &row.UpdatedAt, &row.Deleted, &row.Disabled, &row.MetricServer})
 	if err != nil {
 		zkLogger.Error(LogTag, "Error while getting the integration by id: ", id, err)
-		return nil, err
 	}
-	return &row, err
+
+	return row, err
 }
 
 func Processor(rows *sql.Rows, sqlErr error, f func()) ([]dto.Integration, error) {

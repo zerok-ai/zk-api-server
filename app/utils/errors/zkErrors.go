@@ -40,6 +40,7 @@ var (
 	ZkErrorBadRequestJSON                   = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Invalid value for JSON in sheet"}
 	ZkErrorBadRequestErrorInReadingFile     = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Error in reading file"}
 	ZkErrorBadRequestFileNotFound           = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "File not found"}
+	ZkErrorBadRequestIntegrationNotFound    = zkerrors.ZkErrorType{Status: iris.StatusBadRequest, Type: "BAD_REQUEST", Message: "Integration not found"}
 )
 
 var (

@@ -7,6 +7,7 @@ import (
 	"github.com/kataras/iris/v12"
 	"github.com/zerok-ai/zk-utils-go/common"
 	zkHttp "github.com/zerok-ai/zk-utils-go/http"
+	"github.com/zerok-ai/zk-utils-go/integration/model"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"io"
@@ -23,6 +24,7 @@ type IntegrationsService interface {
 	UpsertIntegration(integration dto.Integration) (bool, *string, *zkerrors.ZkError)
 	TestIntegrationConnection(integrationId string) (dto.TestConnectionResponse, *zkerrors.ZkError)
 	TestUnSyncedIntegrationConnection(integration dto.Integration) (dto.TestConnectionResponse, *zkerrors.ZkError)
+	GetIntegrationById(clusterId, integrationId string) (model.IntegrationResponseObj, *zkerrors.ZkError)
 }
 
 var LogTag = "integrations_service"
@@ -43,6 +45,23 @@ func (i integrationsService) GetAllIntegrations(clusterId string, onlyActive boo
 	}
 
 	return transformer.FromIntegrationArrayToIntegrationResponse(integrations), nil
+}
+
+func (i integrationsService) GetIntegrationById(clusterId string, integrationId string) (model.IntegrationResponseObj, *zkerrors.ZkError) {
+	var resp model.IntegrationResponseObj
+	integration, err := i.repo.GetIntegrationsById(integrationId, clusterId)
+	if err != nil {
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		return resp, &zkError
+	}
+
+	if integration.ID == nil {
+		zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestIntegrationNotFound, err)
+		return resp, &zkError
+	}
+
+	resp = transformer.IntegrationsDtoToIntegrationsResp(integration)
+	return resp, nil
 }
 
 func (i integrationsService) TestIntegrationConnection(integrationId string) (dto.TestConnectionResponse, *zkerrors.ZkError) {
@@ -162,11 +181,14 @@ func (i integrationsService) TestUnSyncedIntegrationConnection(integration dto.I
 
 func (i integrationsService) UpsertIntegration(integration dto.Integration) (bool, *string, *zkerrors.ZkError) {
 	if integration.ID != nil {
-		if row, err := i.repo.GetIntegrationsById(*integration.ID, integration.ClusterId); err != nil || row == nil {
+		if row, err := i.repo.GetIntegrationsById(*integration.ID, integration.ClusterId); err != nil {
 			zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
 			return false, nil, &zkError
-		} else if row != nil {
-			if valid := validateIntegrationsForUpsert(*row, integration); !valid {
+		} else if row.ID == nil {
+			zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestIntegrationNotFound, nil)
+			return false, nil, &zkError
+		} else if row.ID != nil {
+			if valid := validateIntegrationsForUpsert(row, integration); !valid {
 				zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequest, nil)
 				zkLogger.Error(LogTag, "Integration validation failed")
 				return false, nil, &zkError
