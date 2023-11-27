@@ -231,9 +231,9 @@ func getIntegrationDetails(i integrationsService, integrationId string) ([]dto.I
 	return integration, zkError
 }
 
-func getUsernamePassword(integration dto.Integration) (string, string) {
+func getUsernamePassword(integration dto.Integration) (*string, *string) {
 	var auth dto.Auth
-	var username, password string
+	var username, password *string
 	err := json.Unmarshal(integration.Authentication, &auth)
 	if err == nil {
 		username = auth.Username

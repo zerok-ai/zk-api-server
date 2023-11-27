@@ -40,8 +40,8 @@ type IntegrationRequest struct {
 }
 
 type Auth struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username *string `json:"username,omitempty"`
+	Password *string `json:"password,omitempty"`
 }
 
 type UpsertIntegrationResponse struct {
