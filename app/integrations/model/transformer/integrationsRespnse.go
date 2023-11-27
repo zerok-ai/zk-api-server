@@ -1,6 +1,7 @@
 package transformer
 
 import (
+	"encoding/json"
 	"time"
 	"zk-api-server/app/integrations/model/dto"
 
@@ -11,23 +12,31 @@ type IntegrationResponse struct {
 	Response []zkIntegrationResponse.IntegrationResponseObj `json:"integrations"`
 }
 
-func FromIntegrationArrayToIntegrationResponse(iArr []dto.Integration) IntegrationResponse {
+func FromIntegrationArrayToIntegrationResponse(iArr []dto.Integration, forOperator bool) IntegrationResponse {
+	sendAuthDetails := forOperator
 	responseArr := make([]zkIntegrationResponse.IntegrationResponseObj, 0)
 	for _, i := range iArr {
-		responseArr = append(responseArr, IntegrationsDtoToIntegrationsResp(i))
+		responseArr = append(responseArr, IntegrationsDtoToIntegrationsResp(i, sendAuthDetails))
 	}
 
 	return IntegrationResponse{Response: responseArr}
 }
 
-func IntegrationsDtoToIntegrationsResp(i dto.Integration) zkIntegrationResponse.IntegrationResponseObj {
+func IntegrationsDtoToIntegrationsResp(i dto.Integration, sendAuthDetails bool) zkIntegrationResponse.IntegrationResponseObj {
+	var authDetails json.RawMessage
+	if sendAuthDetails {
+		authDetails = i.Authentication
+	} else {
+		authDetails = nil
+	}
+
 	return zkIntegrationResponse.IntegrationResponseObj{
 		ID:             *i.ID,
 		ClusterId:      i.ClusterId,
 		Alias:          i.Alias,
 		Type:           i.Type,
 		URL:            i.URL,
-		Authentication: i.Authentication,
+		Authentication: authDetails,
 		Level:          i.Level,
 		CreatedAt:      i.CreatedAt,
 		UpdatedAt:      i.UpdatedAt,

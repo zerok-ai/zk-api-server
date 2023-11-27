@@ -22,7 +22,7 @@ import (
 )
 
 type IntegrationsService interface {
-	GetAllIntegrations(clusterId string, onlyActive bool) (transformer.IntegrationResponse, *zkerrors.ZkError)
+	GetAllIntegrations(clusterId string, forOperator bool) (transformer.IntegrationResponse, *zkerrors.ZkError)
 	UpsertIntegration(integration dto.Integration) (bool, *string, *zkerrors.ZkError)
 	TestIntegrationConnection(integrationId string) (dto.TestConnectionResponse, *zkerrors.ZkError)
 	TestUnSyncedIntegrationConnection(integration dto.Integration) (dto.TestConnectionResponse, *zkerrors.ZkError)
@@ -39,14 +39,15 @@ func NewIntegrationsService(repo repository.IntegrationRepo) IntegrationsService
 	return &integrationsService{repo: repo}
 }
 
-func (i integrationsService) GetAllIntegrations(clusterId string, onlyActive bool) (transformer.IntegrationResponse, *zkerrors.ZkError) {
+func (i integrationsService) GetAllIntegrations(clusterId string, forOperator bool) (transformer.IntegrationResponse, *zkerrors.ZkError) {
+	onlyActive := forOperator
 	integrations, err := i.repo.GetAllIntegrations(clusterId, onlyActive)
 	if err != nil {
 		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
 		return transformer.IntegrationResponse{}, &zkError
 	}
 
-	return transformer.FromIntegrationArrayToIntegrationResponse(integrations), nil
+	return transformer.FromIntegrationArrayToIntegrationResponse(integrations, forOperator), nil
 }
 
 func (i integrationsService) GetIntegrationById(clusterId string, integrationId string) (model.IntegrationResponseObj, *zkerrors.ZkError) {
@@ -65,7 +66,7 @@ func (i integrationsService) GetIntegrationById(clusterId string, integrationId 
 		return resp, &zkError
 	}
 
-	resp = transformer.IntegrationsDtoToIntegrationsResp(integration)
+	resp = transformer.IntegrationsDtoToIntegrationsResp(integration, false)
 	return resp, nil
 }
 

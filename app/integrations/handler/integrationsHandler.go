@@ -174,13 +174,13 @@ func (i integrationsHandler) TestUnSyncedIntegrationConnection(ctx iris.Context)
 	ctx.JSON(zkHttpResponse)
 }
 
-func getAllIntegrations(i integrationsHandler, onlyActive bool, clusterId string) zkHttp.ZkHttpResponse[transformer.IntegrationResponse] {
+func getAllIntegrations(i integrationsHandler, forOperator bool, clusterId string) zkHttp.ZkHttpResponse[transformer.IntegrationResponse] {
 
 	var zkHttpResponse zkHttp.ZkHttpResponse[transformer.IntegrationResponse]
 	var zkErr *zkerrors.ZkError
 	var resp transformer.IntegrationResponse
 
-	resp, zkErr = i.service.GetAllIntegrations(clusterId, onlyActive)
+	resp, zkErr = i.service.GetAllIntegrations(clusterId, forOperator)
 
 	if i.cfg.Http.Debug {
 		zkHttpResponse = zkHttp.ToZkResponse[transformer.IntegrationResponse](200, resp, resp, zkErr)
