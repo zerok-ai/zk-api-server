@@ -2,7 +2,9 @@ package service
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/kataras/iris/v12"
 	"github.com/zerok-ai/zk-utils-go/common"
@@ -16,7 +18,7 @@ import (
 	"zk-api-server/app/integrations/model/transformer"
 	"zk-api-server/app/integrations/repository"
 	"zk-api-server/app/utils"
-	"zk-api-server/app/utils/errors"
+	zkApiServerErrors "zk-api-server/app/utils/errors"
 )
 
 type IntegrationsService interface {
@@ -50,13 +52,16 @@ func (i integrationsService) GetAllIntegrations(clusterId string, onlyActive boo
 func (i integrationsService) GetIntegrationById(clusterId string, integrationId string) (model.IntegrationResponseObj, *zkerrors.ZkError) {
 	var resp model.IntegrationResponseObj
 	integration, err := i.repo.GetIntegrationsById(integrationId, clusterId)
-	if err != nil {
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkApiServerErrors.ZkErrorBadRequestIntegrationNotFound, err)
+		return resp, &zkError
+	} else if err != nil {
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorDbError, err)
 		return resp, &zkError
 	}
 
 	if integration.ID == nil {
-		zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestIntegrationNotFound, err)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkApiServerErrors.ZkErrorBadRequestIntegrationNotFound, err)
 		return resp, &zkError
 	}
 
@@ -110,7 +115,7 @@ func (i integrationsService) TestUnSyncedIntegrationConnection(integration dto.I
 
 	if common.IsEmpty(integration.URL) {
 		zkLogger.Error(LogTag, "url is empty")
-		zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestUrl, nil)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkApiServerErrors.ZkErrorBadRequestUrl, nil)
 		resp.IntegrationStatus.ConnectionMessage = zkError.Error.Message
 		return resp, &zkError
 	}
@@ -185,7 +190,7 @@ func (i integrationsService) UpsertIntegration(integration dto.Integration) (boo
 			zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
 			return false, nil, &zkError
 		} else if row.ID == nil {
-			zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestIntegrationNotFound, nil)
+			zkError := zkerrors.ZkErrorBuilder{}.Build(zkApiServerErrors.ZkErrorBadRequestIntegrationNotFound, nil)
 			return false, nil, &zkError
 		} else if row.ID != nil {
 			if valid := validateIntegrationsForUpsert(row, integration); !valid {
@@ -219,7 +224,7 @@ func getIntegrationDetails(i integrationsService, integrationId string) ([]dto.I
 	if err != nil {
 		zkError = common.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err))
 	} else if integration == nil || len(integration) == 0 {
-		zkError = common.ToPtr(zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestInvalidClusterAndUrlCombination, err))
+		zkError = common.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkApiServerErrors.ZkErrorBadRequestInvalidClusterAndUrlCombination, err))
 	}
 
 	return integration, zkError
@@ -240,7 +245,7 @@ func getUsernamePassword(integration dto.Integration) (string, string) {
 func getPrometheusApiResponse(integration dto.Integration) (*http.Response, *zkerrors.ZkError) {
 	if common.IsEmpty(integration.ClusterId) || common.IsEmpty(integration.URL) {
 		zkLogger.Error(LogTag, "ClusterId or url is empty")
-		zkError := zkerrors.ZkErrorBuilder{}.Build(errors.ZkErrorBadRequestInvalidClusterAndUrlCombination, nil)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkApiServerErrors.ZkErrorBadRequestInvalidClusterAndUrlCombination, nil)
 		return nil, &zkError
 	}
 
