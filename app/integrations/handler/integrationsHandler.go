@@ -138,9 +138,16 @@ func (i integrationsHandler) TestIntegrationConnectionStatus(ctx iris.Context) {
 		return
 	}
 
+	clusterId := ctx.Params().Get(utils.ClusterIdxPathParam)
+	if zkCommon.IsEmpty(clusterId) {
+		ctx.StatusCode(iris.StatusBadRequest)
+		ctx.WriteString("ClusterIdx is required")
+		return
+	}
+
 	var zkHttpResponse zkHttp.ZkHttpResponse[any]
 	var zkErr *zkerrors.ZkError
-	resp, zkErr := i.service.TestIntegrationConnection(integrationId)
+	resp, zkErr := i.service.TestIntegrationConnection(integrationId, clusterId)
 
 	if i.cfg.Http.Debug {
 		zkHttpResponse = zkHttp.ToZkResponse[any](200, resp, resp, zkErr)

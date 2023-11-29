@@ -25,7 +25,7 @@ import (
 type IntegrationsService interface {
 	GetAllIntegrations(clusterId string, forOperator bool) (transformer.IntegrationResponse, *zkerrors.ZkError)
 	UpsertIntegration(integration dto.Integration) (bool, *string, *zkerrors.ZkError)
-	TestIntegrationConnection(integrationId string) (dto.TestConnectionResponse, *zkerrors.ZkError)
+	TestIntegrationConnection(integrationId string, clusterId string) (dto.TestConnectionResponse, *zkerrors.ZkError)
 	TestUnSyncedIntegrationConnection(integration dto.Integration) (dto.TestConnectionResponse, *zkerrors.ZkError)
 	GetIntegrationById(clusterId, integrationId string) (model.IntegrationResponseObj, *zkerrors.ZkError)
 	DeleteIntegrationById(clusterId, integrationId string) *zkerrors.ZkError
@@ -99,14 +99,14 @@ func getIntegrationById(i integrationsService, clusterId string, integrationId s
 	return integration, nil
 }
 
-func (i integrationsService) TestIntegrationConnection(integrationId string) (dto.TestConnectionResponse, *zkerrors.ZkError) {
+func (i integrationsService) TestIntegrationConnection(integrationId, clusterId string) (dto.TestConnectionResponse, *zkerrors.ZkError) {
 	var resp dto.TestConnectionResponse
-	integration, zkError := getIntegrationDetails(i, integrationId)
+	integration, zkError := getIntegrationById(i, clusterId, integrationId)
 	if zkError != nil {
 		return resp, zkError
 	}
 
-	httpResp, zkErr := getPrometheusApiResponse(integration[0])
+	httpResp, zkErr := getPrometheusApiResponse(integration)
 	if zkErr != nil {
 		zkLogger.Error(LogTag, "Error while getting the integration status: ", zkErr)
 		zkErr := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, zkErr)
@@ -246,18 +246,6 @@ func (i integrationsService) UpsertIntegration(integration dto.Integration) (boo
 	}
 
 	return done, common.ToPtr(id), nil
-}
-
-func getIntegrationDetails(i integrationsService, integrationId string) ([]dto.Integration, *zkerrors.ZkError) {
-	var zkError *zkerrors.ZkError
-	integration, err := i.repo.GetAnIntegrationDetails(integrationId)
-	if err != nil {
-		zkError = common.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err))
-	} else if integration == nil || len(integration) == 0 {
-		zkError = common.ToPtr(zkerrors.ZkErrorBuilder{}.Build(zkApiServerErrors.ZkErrorBadRequestInvalidClusterAndUrlCombination, err))
-	}
-
-	return integration, zkError
 }
 
 func getUsernamePassword(integration dto.Integration) (*string, *string) {
