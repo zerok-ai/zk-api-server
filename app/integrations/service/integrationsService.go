@@ -216,18 +216,23 @@ func (i integrationsService) TestUnSyncedIntegrationConnection(integration dto.I
 
 func (i integrationsService) UpsertIntegration(integration dto.Integration) (bool, *string, *zkerrors.ZkError) {
 	if integration.ID != nil {
-		if row, err := i.repo.GetIntegrationsById(*integration.ID, integration.ClusterId); err != nil {
+		integrationDto, err := i.repo.GetIntegrationsById(*integration.ID, integration.ClusterId)
+		if err != nil {
 			zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
 			return false, nil, &zkError
-		} else if row.ID == nil {
+		} else if integrationDto.ID == nil {
 			zkError := zkerrors.ZkErrorBuilder{}.Build(zkApiServerErrors.ZkErrorBadRequestIntegrationNotFound, nil)
 			return false, nil, &zkError
-		} else if row.ID != nil {
-			if valid := validateIntegrationsForUpsert(row, integration); !valid {
+		} else if integrationDto.ID != nil {
+			if valid := validateIntegrationsForUpsert(integrationDto, integration); !valid {
 				zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorBadRequest, nil)
 				zkLogger.Error(LogTag, "Integration validation failed")
 				return false, nil, &zkError
 			}
+		}
+
+		if integration.Authentication == nil {
+			integration.Authentication = integrationDto.Authentication
 		}
 
 		done, err := i.repo.UpdateIntegration(integration)
