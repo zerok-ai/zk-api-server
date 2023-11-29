@@ -14,6 +14,7 @@ import (
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"io"
 	"net/http"
+	"time"
 	"zk-api-server/app/integrations/model/dto"
 	"zk-api-server/app/integrations/model/transformer"
 	"zk-api-server/app/integrations/repository"
@@ -27,6 +28,7 @@ type IntegrationsService interface {
 	TestIntegrationConnection(integrationId string) (dto.TestConnectionResponse, *zkerrors.ZkError)
 	TestUnSyncedIntegrationConnection(integration dto.Integration) (dto.TestConnectionResponse, *zkerrors.ZkError)
 	GetIntegrationById(clusterId, integrationId string) (model.IntegrationResponseObj, *zkerrors.ZkError)
+	DeleteIntegrationById(clusterId, integrationId string) *zkerrors.ZkError
 }
 
 var LogTag = "integrations_service"
@@ -52,22 +54,49 @@ func (i integrationsService) GetAllIntegrations(clusterId string, forOperator bo
 
 func (i integrationsService) GetIntegrationById(clusterId string, integrationId string) (model.IntegrationResponseObj, *zkerrors.ZkError) {
 	var resp model.IntegrationResponseObj
-	integration, err := i.repo.GetIntegrationsById(integrationId, clusterId)
-	if err != nil && errors.Is(err, sql.ErrNoRows) {
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkApiServerErrors.ZkErrorBadRequestIntegrationNotFound, err)
-		return resp, &zkError
-	} else if err != nil {
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorDbError, err)
-		return resp, &zkError
-	}
-
-	if integration.ID == nil {
-		zkError := zkerrors.ZkErrorBuilder{}.Build(zkApiServerErrors.ZkErrorBadRequestIntegrationNotFound, err)
-		return resp, &zkError
+	integration, zkErr := getIntegrationById(i, clusterId, integrationId)
+	if zkErr != nil {
+		return resp, zkErr
 	}
 
 	resp = transformer.IntegrationsDtoToIntegrationsResp(integration, false)
 	return resp, nil
+}
+
+func (i integrationsService) DeleteIntegrationById(clusterId, integrationId string) *zkerrors.ZkError {
+	_, zkErr := getIntegrationById(i, clusterId, integrationId)
+	if zkErr != nil {
+		return zkErr
+	}
+
+	_, err := i.repo.DeleteIntegration(clusterId, time.Now(), integrationId)
+	if err != nil {
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorInternalServer, err)
+		return &zkError
+	}
+
+	return nil
+}
+
+func getIntegrationById(i integrationsService, clusterId string, integrationId string) (dto.Integration, *zkerrors.ZkError) {
+	integration, err := i.repo.GetIntegrationsById(integrationId, clusterId)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		zkLogger.Error(LogTag, "Error while getting the integration details: ", clusterId, integrationId, err)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkApiServerErrors.ZkErrorBadRequestIntegrationNotFound, err)
+		return dto.Integration{}, &zkError
+	} else if err != nil {
+		zkLogger.Error(LogTag, "Error while getting the integration details: ", clusterId, integrationId, err)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkerrors.ZkErrorDbError, err)
+		return dto.Integration{}, &zkError
+	}
+
+	if integration.ID == nil {
+		zkLogger.Error(LogTag, "Error while getting the integration details: ", clusterId, integrationId, err)
+		zkError := zkerrors.ZkErrorBuilder{}.Build(zkApiServerErrors.ZkErrorBadRequestIntegrationNotFound, err)
+		return dto.Integration{}, &zkError
+	}
+
+	return integration, nil
 }
 
 func (i integrationsService) TestIntegrationConnection(integrationId string) (dto.TestConnectionResponse, *zkerrors.ZkError) {

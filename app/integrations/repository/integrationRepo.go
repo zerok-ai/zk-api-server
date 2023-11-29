@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/storage/sqlDB"
+	"time"
 	"zk-api-server/app/integrations/model/dto"
 )
 
@@ -14,6 +15,7 @@ const (
 	GetAllNonDeletedIntegrations = "SELECT id, cluster_id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server FROM zk_integrations WHERE cluster_id=$1 AND deleted = false"
 	InsertIntegration            = "INSERT INTO zk_integrations (cluster_id, alias, type, url, authentication, level, created_at, updated_at, deleted, disabled, metric_server) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id"
 	UpdateIntegration            = "UPDATE zk_integrations SET alias=$1, type = $2, url = $3, authentication = $4, level = $5, deleted = $6, disabled = $7, updated_at = $8, metric_server = $9 WHERE id = $10"
+	DeleteIntegration            = "UPDATE zk_integrations SET deleted = $1, updated_at = $2 WHERE id = $3 AND cluster_id = $4"
 )
 
 type IntegrationRepo interface {
@@ -22,6 +24,7 @@ type IntegrationRepo interface {
 	InsertIntegration(integration dto.Integration) (bool, string, error)
 	UpdateIntegration(integration dto.Integration) (bool, error)
 	GetAnIntegrationDetails(integrationId string) ([]dto.Integration, error)
+	DeleteIntegration(clusterId string, deleteTimestamp time.Time, integrationId string) (bool, error)
 }
 
 var LogTag = "integrations_repo"
@@ -123,5 +126,18 @@ func (z zkPostgresRepo) UpdateIntegration(integration dto.Integration) (bool, er
 
 	zkLogger.Info(LogTag, "Integration update successfully ", result.RowsAffected)
 
+	return true, nil
+}
+
+func (z zkPostgresRepo) DeleteIntegration(clusterId string, timeStamp time.Time, integrationId string) (bool, error) {
+	deleteIntegrationStmt := z.dbRepo.CreateStatement(DeleteIntegration)
+
+	_, err := z.dbRepo.Delete(deleteIntegrationStmt, []any{true, timeStamp, integrationId, clusterId})
+	if err != nil {
+		zkLogger.Error(LogTag, err)
+		return false, err
+	}
+
+	zkLogger.Info(LogTag, "Integration deleted successfully")
 	return true, nil
 }
