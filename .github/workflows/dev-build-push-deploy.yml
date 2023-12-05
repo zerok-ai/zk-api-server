@@ -57,18 +57,6 @@ jobs:
       GKE_SA_KEY: ${{ secrets.GKE_SA_KEY_DEV }}
     needs: init
 
-  copy_plc_secrets:
-    uses: zerok-ai/zk-git-actions/.github/workflows/zk-copy-secrets.yml@main
-    with:
-      CLUSTERNAME: ${{ needs.init.outputs.CLUSTERNAME }}
-      FROM_NAMESPACE: 'plc'
-      TO_NAMESPACE: 'zkcloud'
-      SECRET_NAME: 'pl-db-secrets'
-      ENVIRONMENT: ${{ needs.init.outputs.ENVIRONMENT }}
-    secrets:
-      GKE_SA_KEY: ${{ secrets.GKE_SA_KEY_DEV }}
-    needs: init
-
   deploy:
     uses: zerok-ai/zk-git-actions/.github/workflows/zk-deploy.yml@main
     with:
@@ -79,4 +67,4 @@ jobs:
       ENVIRONMENT: ${{ needs.init.outputs.ENVIRONMENT }}
     secrets:
       GKE_SA_KEY: ${{ secrets.GKE_SA_KEY_DEV }}
-    needs: [init,build-push,migration-build-push,copy_plc_secrets]
+    needs: [init,build-push,migration-build-push]

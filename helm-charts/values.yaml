@@ -20,7 +20,7 @@ image:
   tag: "latest"
 
 postgres:
-  host: "postgres.plc.svc.cluster.local"
+  host: "postgres.zkcloud.svc.cluster.local"
   port: 5432
   user:  "pl"
   password:  ""
