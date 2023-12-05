@@ -47,6 +47,11 @@ jobs:
     run: |
       echo "USERNAME=$ZK_POSTGRES_USERNAME"
       echo "PASSWORD=ZK_POSTGRES_PASSWORD"
+    steps:
+      - name: Print environment vars
+        run: |
+          echo "USERNAME=$ZK_POSTGRES_USERNAME"
+          echo "PASSWORD=ZK_POSTGRES_PASSWORD"
     needs: init
 
   build-push:
