@@ -34,8 +34,8 @@ spec:
           image: "{{ .Values.global.dockerBase }}/{{ .Values.image.repo }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
-          - secretRef:
-              name: pl-db-secrets
+            - secretRef:
+                name: postgres
           ports:
             - name: http
               containerPort: 80
@@ -53,17 +53,15 @@ spec:
           volumeMounts:
             - name: cluster-details
               mountPath: /opt
-          env: # Setting Enviornmental Variables
-            - name: PL_POSTGRES_USERNAME  # Setting Database username from Secret
+          env:
+            - name: ZK_POSTGRES_USERNAME  # Setting Database username from Secret
+              value: {{ .Values.postgres.user }}
+
+            - name: ZK_POSTGRES_PASSWORD # Setting Database password from Secret
               valueFrom:
                 secretKeyRef:
-                  name: pl-db-secrets
-                  key: PL_POSTGRES_USERNAME
-            - name: PL_POSTGRES_PASSWORD # Setting Database password from Secret
-              valueFrom:
-                secretKeyRef:
-                  name: pl-db-secrets
-                  key: PL_POSTGRES_PASSWORD
+                  name: postgres
+                  key: postgres-password
       volumes:
         - name: cluster-details
           configMap:

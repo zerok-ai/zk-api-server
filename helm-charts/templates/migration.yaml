@@ -19,14 +19,11 @@ spec:
           image: "{{ .Values.global.dockerBase }}/{{ .Values.image.migrationRepo }}:{{ .Values.image.migrationTag  }}"
           command: [ "/bin/sh", "-c", "migrate -path=/zk/migrations -database=postgres://$PL_POSTGRES_USERNAME:$PL_POSTGRES_PASSWORD@{{ .Values.postgres.host }}:5432/{{ .Values.postgres.database }}?sslmode=disable\\&x-migrations-table=zk_api_server_migrations up" ]
           env:
-            - name: PL_POSTGRES_USERNAME  # Setting Database username from Secret
-              valueFrom:
-                secretKeyRef:
-                  name: pl-db-secrets
-                  key: PL_POSTGRES_USERNAME
+            - name: ZK_POSTGRES_USERNAME  # Setting Database username from Secret
+              value: {{ .Values.postgres.user }}
 
-            - name: PL_POSTGRES_PASSWORD # Setting Database password from Secret
+            - name: ZK_POSTGRES_PASSWORD # Setting Database password from Secret
               valueFrom:
                 secretKeyRef:
-                  name: pl-db-secrets
-                  key: PL_POSTGRES_PASSWORD
+                  name: postgres
+                  key: postgres-password
