@@ -44,14 +44,6 @@ jobs:
       APP_NAME_VAR: 'APP_NAME_MIGRATION'
     secrets:
       GKE_SA_KEY: ${{ secrets.GKE_SA_KEY_DEV }}
-    run: |
-      echo "USERNAME=$ZK_POSTGRES_USERNAME"
-      echo "PASSWORD=ZK_POSTGRES_PASSWORD"
-    steps:
-      - name: Print environment vars
-        run: |
-          echo "USERNAME=$ZK_POSTGRES_USERNAME"
-          echo "PASSWORD=ZK_POSTGRES_PASSWORD"
     needs: init
 
   build-push:
