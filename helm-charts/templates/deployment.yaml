@@ -63,7 +63,7 @@ spec:
                   name: postgres
                   key: postgres-password
       volumes:
-          configMap:
+        - configMap:
             name: {{ include "zk-api-server.fullname" . }}
           name: config
       {{- with .Values.nodeSelector }}
