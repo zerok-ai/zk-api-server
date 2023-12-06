@@ -7,10 +7,10 @@ import (
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
 	"strconv"
-	"zk-api-server/app/cluster/validation"
 	scenarioModel "zk-api-server/app/scenario/model"
 	"zk-api-server/app/scenario/service"
 	"zk-api-server/app/scenario/transformer"
+	"zk-api-server/app/scenario/validation"
 	"zk-api-server/app/utils"
 	"zk-api-server/internal/model"
 )

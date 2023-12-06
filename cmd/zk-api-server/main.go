@@ -5,7 +5,6 @@ import (
 	attributeHandler "zk-api-server/app/attribute/handler"
 	attributeRepo "zk-api-server/app/attribute/repository"
 	attributeService "zk-api-server/app/attribute/service"
-	clusterHandler "zk-api-server/app/cluster/handler"
 	integrationsHandler "zk-api-server/app/integrations/handler"
 	integrationRepo "zk-api-server/app/integrations/repository"
 	integrationService "zk-api-server/app/integrations/service"
@@ -49,8 +48,6 @@ func main() {
 	rs := service.NewScenarioService(rr)
 	rh := scenarioHandler.NewScenarioHandler(rs, cfg)
 
-	ch := clusterHandler.NewClusterHandler()
-
 	ir := integrationRepo.NewZkPostgresRepo(zkPostgresRepo)
 	is := integrationService.NewIntegrationsService(ir)
 	ih := integrationsHandler.NewIntegrationsHandler(is, cfg)
@@ -63,7 +60,7 @@ func main() {
 	os := obfuscationService.NewObfuscationService(or)
 	oh := obfuscationHandler.NewObfuscationHandler(os, cfg)
 
-	app := newApp(rh, ch, ih, ah, oh)
+	app := newApp(rh, ih, ah, oh)
 
 	config := iris.WithConfiguration(iris.Configuration{
 		DisablePathCorrection: true,
@@ -72,7 +69,7 @@ func main() {
 	app.Listen(":"+cfg.Server.Port, config)
 }
 
-func newApp(rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler, ih integrationsHandler.IntegrationsHandler, ah attributeHandler.AttributeHandler, oh obfuscationHandler.ObfuscationHandler) *iris.Application {
+func newApp(rh scenarioHandler.ScenarioHandler, ih integrationsHandler.IntegrationsHandler, ah attributeHandler.AttributeHandler, oh obfuscationHandler.ObfuscationHandler) *iris.Application {
 	app := iris.Default()
 
 	crs := func(ctx iris.Context) {
@@ -104,7 +101,7 @@ func newApp(rh scenarioHandler.ScenarioHandler, ch clusterHandler.ClusterHandler
 	}).Describe("healthcheck")
 
 	v1 := app.Party("/v1")
-	zkapp.Initialize(v1, rh, ch, ih, ah, oh)
+	zkapp.Initialize(v1, rh, ih, ah, oh)
 
 	return app
 }
