@@ -7,7 +7,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/stretchr/testify v1.8.3
 	github.com/swaggo/swag v1.16.1
-	github.com/zerok-ai/zk-utils-go v0.5.19-0.20231127073816-ecb8cd9ad707
+	github.com/zerok-ai/zk-utils-go v0.5.19-0.20231206100250-862452b7e0b1
 	px.dev/pxapi v0.4.1
 )
 

@@ -51,8 +51,8 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
-            - name: cluster-details
-              mountPath: /opt
+            - name: config
+              mountPath: /zk/config
           env:
             - name: ZK_POSTGRES_USERNAME  # Setting Database username from Secret
               value: {{ .Values.postgres.user }}
@@ -63,9 +63,9 @@ spec:
                   name: postgres
                   key: postgres-password
       volumes:
-        - name: cluster-details
           configMap:
-            name: zk-api-server-config
+            name: {{ include "zk-api-server.fullname" . }}
+          name: config
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

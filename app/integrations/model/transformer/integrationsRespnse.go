@@ -42,7 +42,7 @@ func IntegrationsDtoToIntegrationsResp(i dto.Integration, sendAuthDetails bool) 
 		UpdatedAt:      i.UpdatedAt,
 		Deleted:        i.Deleted,
 		Disabled:       i.Disabled,
-		MetricServer:   i.MetricServer,
+		MetricServer:   *i.MetricServer,
 	}
 }
 

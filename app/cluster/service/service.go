@@ -1,13 +1,10 @@
 package service
 
 import (
-	"encoding/json"
 	"github.com/kataras/iris/v12"
 	zkCommon "github.com/zerok-ai/zk-utils-go/common"
 	zkLogger "github.com/zerok-ai/zk-utils-go/logs"
 	"github.com/zerok-ai/zk-utils-go/zkerrors"
-	"log"
-	"os"
 	"px.dev/pxapi"
 	"sync"
 	"zk-api-server/app/cluster/transformer"
@@ -48,23 +45,23 @@ func NewClusterService(pixie tablemux.PixieRepository) ClusterService {
 var details Details
 
 func init() {
-	configFilePath := "/opt/cluster.conf"
-
-	jsonFile, err := os.Open(configFilePath)
-
-	if err != nil {
-		log.Println(err)
-		os.Exit(2)
-		return
-	} else {
-		defer jsonFile.Close()
-
-		err = json.NewDecoder(jsonFile).Decode(&details)
-		if err != nil {
-			log.Println(err)
-			os.Exit(2)
-		}
-	}
+	//configFilePath := "/opt/cluster.conf"
+	//
+	//jsonFile, err := os.Open(configFilePath)
+	//
+	//if err != nil {
+	//	log.Println(err)
+	//	os.Exit(2)
+	//	return
+	//} else {
+	//	defer jsonFile.Close()
+	//
+	//	err = json.NewDecoder(jsonFile).Decode(&details)
+	//	if err != nil {
+	//		log.Println(err)
+	//		os.Exit(2)
+	//	}
+	//}
 }
 
 func (cs *clusterService) GetNamespaceList(ctx iris.Context, id, st, apiKey string) (*transformer.PixieHTTPResponse[string], *zkerrors.ZkError) {
