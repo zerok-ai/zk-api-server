@@ -12,6 +12,6 @@ http:
 postgres:
   host: postgres.zkcloud.svc.cluster.local
   port: 5432
-  user: "pl"
-  password: "pl"
-  dbname: "pl"
+  user: "postgres"
+  password: "0kP@ssw0rD"
+  dbname: "zk"
