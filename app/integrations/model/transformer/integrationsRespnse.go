@@ -30,6 +30,11 @@ func IntegrationsDtoToIntegrationsResp(i dto.Integration, sendAuthDetails bool) 
 		authDetails = nil
 	}
 
+	isMetricServer := false
+	if i.MetricServer != nil {
+		isMetricServer = *i.MetricServer
+	}
+
 	return zkIntegrationResponse.IntegrationResponseObj{
 		ID:             *i.ID,
 		ClusterId:      i.ClusterId,
@@ -42,7 +47,7 @@ func IntegrationsDtoToIntegrationsResp(i dto.Integration, sendAuthDetails bool) 
 		UpdatedAt:      i.UpdatedAt,
 		Deleted:        i.Deleted,
 		Disabled:       i.Disabled,
-		MetricServer:   *i.MetricServer,
+		MetricServer:   isMetricServer,
 	}
 }
 
