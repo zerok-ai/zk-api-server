@@ -1,10 +1,23 @@
 apiVersion: v1
 data:
-  cluster.conf: |-
-    {
-        "Domain": "px.{{ .Values.global.zkcloud.host }}:443",
-        "Url": "{{ .Values.app.url }}"
-    }
+  config.yaml: |-
+    server:
+      host: localhost
+      port: 80
+
+    logs:
+      color: true
+      level: DEBUG
+
+    http:
+      debug: true
+
+    postgres:
+      host: "{{ .Values.postgres.host }}"
+      port: {{ .Values.postgres.port }}
+      user: "{{ .Values.postgres.user }}"
+      password: ""
+      dbname: "{{ .Values.postgres.database }}"
 kind: ConfigMap
 metadata:
-  name: zk-api-server-config
+  name: {{ include "zk-api-server.fullname" . }}

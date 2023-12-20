@@ -1,6 +1,7 @@
 package transformer
 
 import (
+	"encoding/json"
 	"time"
 	"zk-api-server/app/integrations/model/dto"
 
@@ -11,26 +12,43 @@ type IntegrationResponse struct {
 	Response []zkIntegrationResponse.IntegrationResponseObj `json:"integrations"`
 }
 
-func FromIntegrationArrayToIntegrationResponse(iArr []dto.Integration) IntegrationResponse {
+func FromIntegrationArrayToIntegrationResponse(iArr []dto.Integration, forOperator bool) IntegrationResponse {
+	sendAuthDetails := forOperator
 	responseArr := make([]zkIntegrationResponse.IntegrationResponseObj, 0)
 	for _, i := range iArr {
-		responseArr = append(responseArr, zkIntegrationResponse.IntegrationResponseObj{
-			ID:             *i.ID,
-			ClusterId:      i.ClusterId,
-			Alias:          i.Alias,
-			Type:           i.Type,
-			URL:            i.URL,
-			Authentication: i.Authentication,
-			Level:          i.Level,
-			CreatedAt:      i.CreatedAt,
-			UpdatedAt:      i.UpdatedAt,
-			Deleted:        i.Deleted,
-			Disabled:       i.Disabled,
-			MetricServer:   i.MetricServer,
-		})
+		responseArr = append(responseArr, IntegrationsDtoToIntegrationsResp(i, sendAuthDetails))
 	}
 
 	return IntegrationResponse{Response: responseArr}
+}
+
+func IntegrationsDtoToIntegrationsResp(i dto.Integration, sendAuthDetails bool) zkIntegrationResponse.IntegrationResponseObj {
+	var authDetails json.RawMessage
+	if sendAuthDetails {
+		authDetails = i.Authentication
+	} else {
+		authDetails = nil
+	}
+
+	isMetricServer := false
+	if i.MetricServer != nil {
+		isMetricServer = *i.MetricServer
+	}
+
+	return zkIntegrationResponse.IntegrationResponseObj{
+		ID:             *i.ID,
+		ClusterId:      i.ClusterId,
+		Alias:          i.Alias,
+		Type:           i.Type,
+		URL:            i.URL,
+		Authentication: authDetails,
+		Level:          i.Level,
+		CreatedAt:      i.CreatedAt,
+		UpdatedAt:      i.UpdatedAt,
+		Deleted:        i.Deleted,
+		Disabled:       i.Disabled,
+		MetricServer:   isMetricServer,
+	}
 }
 
 func FromIntegrationsRequestToIntegrationsDto(iReq dto.IntegrationRequest) dto.Integration {
@@ -49,10 +67,4 @@ func FromIntegrationsRequestToIntegrationsDto(iReq dto.IntegrationRequest) dto.I
 		Disabled:       iReq.Disabled,
 		MetricServer:   iReq.MetricServer,
 	}
-}
-
-type TestConnectionResponse struct {
-	Status    string `json:"status"`
-	Message   string `json:"message,omitempty"`
-	ErrorType string `json:"errorType,omitempty"`
 }

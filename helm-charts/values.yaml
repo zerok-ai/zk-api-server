@@ -20,15 +20,15 @@ image:
   tag: "latest"
 
 postgres:
-  host: "postgres.plc.svc.cluster.local"
+  host: "postgres.zkcloud.svc.cluster.local"
   port: 5432
-  user:  "pl"
-  password:  ""
-  database: "pl"
+  user:  "postgres"
+  password:  "0kP@ssw0rD"
+  database: "zk"
 
 imagePullSecrets: []
 nameOverride: ""
-fullnameOverride: ""
+fullnameOverride: "zk-api-server"
 
 serviceAccount:
   # Specifies whether a service account should be created
